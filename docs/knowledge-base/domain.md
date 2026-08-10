@@ -48,6 +48,17 @@ Additional states require a demonstrated current requirement before being introd
 
 Reservation expiration uses database timestamps. The API returns the authoritative deadline, and the frontend displays a countdown without deciding validity. Stale reservations are marked or ignored lazily during availability, hold, and payment operations; no scheduler is required initially.
 
+## Persistence Representation
+
+- Aggregate and credential identifiers use application-generated UUIDs.
+- Money is stored as integer minor units with a three-letter uppercase currency code.
+- Roles and lifecycle states are strings protected by named database `CHECK` constraints.
+- External source data is stored in a JSONB snapshot, but local event fields remain first-class columns.
+- The raw session credential is never persisted; its SHA-256 digest occupies exactly 32 bytes.
+- Ticket usage is represented by `used_at` and the gate user together, with a constraint preventing a partially recorded use.
+
+Database constraints protect row-local invariants. Role compatibility and cross-row rules, such as issuing tickets only from an approved reservation, remain transactional application rules because ordinary constraints cannot safely express them across tables.
+
 ## Deliberate Simplifications
 
 - General-admission quantity replaces numbered seats.

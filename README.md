@@ -6,14 +6,16 @@ The mandatory product flow will allow an organizer to create a local event from 
 
 ## Current Status
 
-The runnable project foundation is complete:
+The runnable project and persistence foundations are complete:
 
 - `frontend/` contains a React, Vite, and TypeScript single-page application.
 - `backend/` contains a Python 3.14 and FastAPI application.
+- PostgreSQL runs through the checked-in Compose definition and has a versioned Alembic schema.
+- The seed creates the four required accounts and one stable published event.
 - The frontend calls the backend through a credentialed JSON client.
 - Both applications expose a minimal status interface used to validate local integration.
 
-The next planned increment is `feat(database): model persistence and seed evaluation data`.
+The next planned increment is `feat(auth): implement persistent opaque-session authentication`.
 
 ## Prerequisites
 
@@ -22,7 +24,7 @@ The current increment was validated with:
 - Node.js 22.21.0 and npm 10.9.4.
 - `uv` 0.12.3.
 - `uv`-managed CPython 3.14.7.
-- Podman Desktop for the PostgreSQL increment that follows.
+- Podman Desktop 6.0.2 with an initialized and running Podman machine.
 
 ## Setup
 
@@ -40,7 +42,41 @@ uv --directory backend sync --locked --managed-python
 
 `backend/requirements.txt` is a runtime-only compatibility export generated from `uv.lock`. It is committed for evaluators that require `pip`, but it must never be edited manually.
 
-The checked-in `.env.example` files document optional local configuration, and the current defaults work without copying them. Vite automatically reads an untracked `frontend/.env` file. Backend overrides are process environment variables; set them in the terminal before starting FastAPI.
+The checked-in `.env.example` files document optional local configuration. Vite automatically reads an untracked `frontend/.env` file. The backend loads untracked `backend/.env` and `backend/.env.podman` files without overriding variables already defined by the process.
+
+## Prepare PostgreSQL
+
+Create the container, wait for PostgreSQL, apply the schema, and seed the evaluation data:
+
+```powershell
+npm run db:prepare
+```
+
+The project hook locates `podman.exe` from `PATH` or known Podman Desktop installation directories. It runs the pinned `podman-compose` 1.6.0 provider through `uvx`, so no global Compose installation or MCP server is required. When Podman's WSL port is not forwarded to Windows localhost, the hook resolves the current machine address and writes the ignored `backend/.env.podman` connection file.
+
+Database lifecycle commands:
+
+```powershell
+npm run db:up
+npm run db:status
+npm run db:logs
+npm run db:down
+```
+
+`db:down` preserves the named PostgreSQL volume. `npm run db:reset` deletes only this project's database volume and starts an empty database; run migrations and seed afterward, or use `npm run db:prepare`.
+
+The Compose credentials `elite` / `elite` are deliberately public local-development defaults. Production credentials must come from environment secrets.
+
+## Seeded Evaluation Data
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Organizer | `organizer@example.com` | `Organizer123!` |
+| Customer | `customer.one@example.com` | `Customer123!` |
+| Customer | `customer.two@example.com` | `Customer123!` |
+| Gate | `gate@example.com` | `Gate123!` |
+
+The seed also creates the published `Aurora Live 2030` event with capacity 100 and a BRL 150.00 price stored as `15000` minor units. Passwords are persisted only as Argon2id hashes.
 
 ## Run Locally
 
@@ -70,7 +106,7 @@ npm test
 npm run build
 ```
 
-Use `npm run format` to apply Prettier and Ruff formatting.
+Prepare PostgreSQL before `npm test`; the backend suite intentionally exercises the real database. Use `npm run format` to apply Prettier and Ruff formatting.
 
 ## Accepted Technology Direction
 
@@ -96,6 +132,7 @@ Use `npm run format` to apply Prettier and Ruff formatting.
 - [Backend knowledge](docs/knowledge-base/backend.md)
 - [Frontend knowledge](docs/knowledge-base/frontend.md)
 - [Development workflow](docs/development/workflow.md)
+- [Database workflow](docs/development/database.md)
 - [Current state](docs/development/current-state.md)
 - [Future improvements](docs/future-improvements.md)
 - [Original challenge](docs/challenge/Desafio-Elite-Dev-2026.pdf)
@@ -108,4 +145,4 @@ No remote push is performed by the AI collaborator. Publication remains under th
 
 ## Current Limitations
 
-This increment contains only the application shell and health integration. PostgreSQL, authentication, catalog access, event management, reservations, payments, tickets, and gate validation are intentionally scheduled as later commits.
+The database schema exists, but there are no authentication or business APIs yet. Role checks, session lifecycle, catalog access, event management, reservation locking, payment, ticket issuance, HMAC signatures, and gate validation remain scheduled as later commits.

@@ -2,7 +2,7 @@
 
 ## Current Status
 
-The requirements, architecture decisions, and runnable full-stack foundation are complete. PostgreSQL and business functionality have not been initialized yet. No later planned task is considered done until its changes are validated, staged, and committed locally.
+The requirements, architecture decisions, runnable full-stack foundation, and PostgreSQL persistence layer are complete. Authentication and business workflows have not been implemented yet. No later planned task is considered done until its changes are validated, staged, and committed locally.
 
 The local `main` branch is based on published commit `14d5d9c`. Local project commits remain unpushed until the candidate chooses to publish them.
 
@@ -121,35 +121,42 @@ Model PostgreSQL persistence and add reproducible evaluation seed data.
 
 ---
 
-## feat(database): model persistence and seed evaluation data
+## Done - feat(database): model persistence and seed evaluation data
 
 ### Goal
 
 Create the PostgreSQL schema required by the complete workflow and make evaluator setup reproducible.
 
-### Planned
+### Implemented
 
-- Add a Compose-compatible PostgreSQL service that runs with Podman.
-- Configure the accepted ORM or query layer and migration tooling.
-- Model users, sessions, external catalog snapshots, events, reservations, tickets, and ticket usage.
-- Represent reservation status and expiration explicitly.
-- Store monetary values as integer minor units.
-- Add ownership, role, uniqueness, capacity, status, and timestamp constraints.
-- Create the initial migration.
-- Seed one organizer, two customers, one gate user, and one published event with available quantity.
-- Seed a stable Ticketmaster-style snapshot so the mandatory demo does not depend on external API availability.
-- Document database startup, migration, reset, and seed commands.
+- Added a Compose-compatible PostgreSQL 17 service with a named volume and health check.
+- Added a Windows Podman hook that resolves stale `PATH`, runs pinned Compose through `uvx`, and adapts to WSL networking.
+- Configured synchronous SQLAlchemy 2, Psycopg 3, Alembic, and Argon2id seed hashing.
+- Modeled users, sessions, external catalog snapshots, events, reservations, tickets, and ticket usage.
+- Represented reservation status and expiration explicitly.
+- Stored monetary values as integer minor units.
+- Added ownership, role, uniqueness, capacity, status, normalization, digest, and timestamp constraints.
+- Created and reviewed initial migration `2db7467132b0`.
+- Seeded one organizer, two customers, one gate user, one published event, and one stable Ticketmaster-style snapshot.
+- Documented database startup, migration, reset, seed, credentials, and troubleshooting behavior.
+- Added PostgreSQL integration tests for seed correctness, idempotency, and quantity constraints.
 
 ### Validation
 
-- Start PostgreSQL through Podman Compose.
-- Apply migrations to an empty database.
-- Run the seed process twice and confirm its intended repeatability behavior.
-- Inspect the resulting constraints and seed records.
+- Started PostgreSQL through the project Podman Compose hook and confirmed healthy status.
+- Deleted and recreated only the project volume, then applied migrations to the empty database.
+- Ran the seed twice: the first inserted all required data and the second inserted zero rows.
+- Confirmed `alembic check` reports no metadata drift and the database is at head.
+- Inspected seven tables, 35 constraints, four Argon2id hashes, and the published seed event.
+- Passed Ruff, strict mypy, and four backend tests against PostgreSQL with 93% current backend coverage.
 
 ### Expected Result
 
 A fresh PostgreSQL database can be started, migrated, and populated with the required evaluation data.
+
+### Next
+
+Implement login, restoration, logout, persistent opaque sessions, and role boundaries.
 
 ---
 

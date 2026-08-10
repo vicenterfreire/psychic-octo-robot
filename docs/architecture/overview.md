@@ -27,7 +27,7 @@ flowchart LR
 - `frontend/` contains the React application and its npm lockfile.
 - `backend/` contains the FastAPI application, `pyproject.toml`, `uv.lock`, and generated `requirements.txt`.
 - `docs/` is persistent project knowledge and architecture history.
-- `compose.yaml` will be introduced with the database schema and will define local PostgreSQL for Podman Compose.
+- `compose.yaml` defines local PostgreSQL, and `scripts/podman-compose.ps1` provides the Windows Podman lifecycle hook.
 - `TODO.md` defines the ordered local commit plan.
 
 No Git worktree is needed because there is no experiment or parallel implementation to isolate.
@@ -42,6 +42,16 @@ No Git worktree is needed because there is no experiment or parallel implementat
 - **Gate:** event-context validation and one-time consumption.
 
 Pydantic models validate API boundaries. SQLAlchemy models represent persistence. Business decisions should not depend on browser state or external Ticketmaster response shapes.
+
+## Persistence Model
+
+- Users have exactly one constrained role and own sessions or role-specific resources.
+- Sessions store only a unique 32-byte token digest, never the raw cookie value.
+- Each event owns one immutable Ticketmaster-style snapshot and local sellable attributes.
+- Reservations record quantity, lifecycle state, and an authoritative expiration timestamp.
+- Tickets are ordered uniquely within a reservation and record optional gate usage atomically.
+
+Foreign keys establish ownership structure, while service-level authorization and cross-row business invariants remain explicit application responsibilities.
 
 ## Frontend State
 
