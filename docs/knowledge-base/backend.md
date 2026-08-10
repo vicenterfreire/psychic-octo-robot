@@ -74,6 +74,14 @@ Search is explicit rather than keystroke-driven and has no automatic retry. This
 
 Dates must carry a timezone and remain in the future. Capacity and price have bounded API validation in addition to database constraints. Before a capacity reduction, the service sums approved reservations and unexpired pending holds using PostgreSQL time. The new capacity must cover that committed quantity. This rule is already future-compatible with the reservation transaction, which will acquire the same event-row lock before allocating inventory.
 
+## Published Discovery Boundary
+
+`GET /api/events` and `GET /api/events/{id}` are public because discovery itself is not an authorization boundary. Both query only local events with `published` status and a start later than PostgreSQL's current time. They do not call Ticketmaster and return a minimized contract without organizer identity, lifecycle status, provider links, or raw snapshots.
+
+The optional `q` parameter is trimmed and matched case-insensitively against event name, venue, and city. SQLAlchemy's auto-escaped containment treats `%` and `_` as user text rather than SQL wildcard controls. Results are ordered by start time and bounded to 50 while pagination remains deferred.
+
+A correlated aggregate calculates committed quantity for each event from approved reservations and pending reservations whose expiry is still in the future according to PostgreSQL. `available_quantity` is clamped at zero for defensive presentation. This read does not lock inventory: it is a useful snapshot, while the reservation command will recalculate under an event-row lock before creating a hold.
+
 ## Persistence Boundary
 
 The schema contains users, opaque-session records, immutable catalog snapshots, organizer-owned events, temporary reservations, and one ticket row per issued admission. PostgreSQL constraints protect local invariants such as normalized emails, valid roles and statuses, positive capacity and quantities, fixed-length session digests, unique ticket positions, and coherent usage timestamps.

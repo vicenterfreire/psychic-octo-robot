@@ -37,12 +37,14 @@ Additional states require a demonstrated current requirement before being introd
 ## Business Invariants
 
 - Only published events are customer-visible and reservable.
+- Discovery additionally hides past events and orders upcoming events by start time.
 - Authentication accepts only an unrevoked session whose expiration is later than PostgreSQL's current time.
 - Organizer ownership is enforced for event management.
 - Event publication is explicit, requires a future start, and does not alter its source snapshot.
 - Event capacity cannot be reduced below approved quantity plus unexpired pending holds.
 - Customer ownership is enforced for reservations and private ticket lists.
 - Sold quantity plus active pending holds never exceeds event capacity.
+- Displayed availability equals capacity minus approved quantity and active pending holds, but remains a non-locking snapshot until reservation.
 - A pending hold is active only while its expiration is later than PostgreSQL's current time.
 - An approved reservation cannot be expired or declined later.
 - A declined or expired reservation consumes no inventory.

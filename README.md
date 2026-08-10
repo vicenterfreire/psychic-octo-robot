@@ -6,7 +6,7 @@ The mandatory product flow will allow an organizer to create a local event from 
 
 ## Current Status
 
-The runnable project, persistence, authentication, Ticketmaster catalog, and organizer event-management foundations are complete:
+The runnable project, persistence, authentication, Ticketmaster catalog, organizer management, and published-event discovery are complete:
 
 - `frontend/` contains a React, Vite, and TypeScript single-page application.
 - `backend/` contains a Python 3.14 and FastAPI application.
@@ -17,8 +17,9 @@ The runnable project, persistence, authentication, Ticketmaster catalog, and org
 - Organizer, customer, and gate routes are separated in both frontend navigation and reusable backend authorization dependencies.
 - Organizers can search and select normalized Ticketmaster events without exposing the provider credential to the browser.
 - Organizers can create a local draft from a trusted provider snapshot, edit only their own events, and publish explicitly.
+- Visitors and Customers can search upcoming published events and inspect date, location, price, and current availability.
 
-The next planned increment is `feat(discovery): implement published event discovery`.
+The next planned increment is `feat(reservations): implement temporary inventory holds`.
 
 ## Prerequisites
 
@@ -104,11 +105,21 @@ Search runs only when an Organizer submits the form and returns at most 12 norma
 
 Creating an event sends the selected provider identifier back to the backend. The backend fetches that item again, verifies the returned identifier, and stores its provider response as an immutable snapshot beside the Organizer's editable local date, venue, capacity, and price. A later provider change therefore does not silently alter an existing local event.
 
+The configured credential was exercised against both the live Ticketmaster search and event-detail endpoints. Validation output contained only normalized identifiers/names and confirmed that the credential was absent from the persisted snapshot candidate.
+
 ## Organizer Event Management
 
 The Organizer workspace lists only events owned by the current account. `POST /api/events` creates a draft, `PUT /api/events/{id}` replaces its editable local details, and `POST /api/events/{id}/publish` makes publication explicit. Unknown or foreign event identifiers return the same not-found outcome, avoiding cross-account disclosure.
 
 Capacity cannot be reduced below approved reservations or pending reservations whose hold has not expired according to PostgreSQL time. The event row is locked while that quantity is checked, matching the lock that the reservation flow will use in its later increment. Dates must be timezone-aware and in the future; money crosses the API and is stored as integer minor units.
+
+## Published Event Discovery
+
+`GET /api/events?q=...` and `GET /api/events/{id}` are public read endpoints backed only by local PostgreSQL data. They expose upcoming published events and never depend on Ticketmaster availability. Drafts, past events, organizer identity, provider payloads, and management state are excluded from the public contract.
+
+Basic text search is case-insensitive across local event name, venue, and city and returns at most 50 upcoming results ordered by start time. Advanced filters and pagination remain deliberately deferred. Availability is calculated as capacity minus approved quantities and unexpired pending holds according to PostgreSQL time. It is an informative snapshot; the reservation transaction remains authoritative when the Customer selects a quantity.
+
+The public interface is available at `http://localhost:5173/events`. A seeded Customer sees the same discovery flow at `/customer`, with event details under the corresponding public or authenticated route.
 
 ## Run Locally
 
@@ -186,4 +197,4 @@ No remote push is performed by the AI collaborator. Publication remains under th
 
 ## Current Limitations
 
-Authentication, catalog search, and organizer event management are complete, but customer discovery and all reservation, payment, ticket, and gate business APIs remain scheduled as later commits. A live Ticketmaster request was not executed because no developer key is stored in the workspace; provider success paths use deterministic HTTP transports. Server-side catalog caching, login rate limiting, session rotation/device management, automatic expired-session cleanup, and production-topology CSRF hardening are intentionally deferred.
+Authentication, catalog search, organizer event management, and published discovery are complete, but reservation, payment, ticket, and gate business APIs remain scheduled as later commits. Displayed availability can change before a reservation is created and is not an inventory guarantee. Server-side catalog caching, advanced discovery filters, pagination, login rate limiting, session rotation/device management, automatic expired-session cleanup, and production-topology CSRF hardening are intentionally deferred.

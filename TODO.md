@@ -271,29 +271,38 @@ Expose only published local events through customer discovery and basic text sea
 
 ---
 
-## feat(discovery): implement published event discovery
+## Done - feat(discovery): implement published event discovery
 
 ### Goal
 
 Let customers find published events and inspect the information required to start a reservation.
 
-### Planned
+### Implemented
 
-- List only published events.
-- Add mandatory basic text search.
-- Show event details, date, location, price, and current availability.
-- Build responsive public and customer-facing event screens.
-- Preserve advanced filters for the optional backlog.
+- Listed only upcoming published local events through public PostgreSQL-backed endpoints.
+- Added case-insensitive basic text search over event name, venue, and city.
+- Returned minimized list/detail contracts with date, location, price, image, and current availability.
+- Calculated availability from approved quantity and unexpired pending holds using PostgreSQL time.
+- Built responsive public and authenticated Customer listing/detail screens.
+- Preserved advanced filters and pagination for the optional backlog.
 
 ### Validation
 
-- Confirm unpublished events never appear publicly.
-- Confirm basic search behavior and empty states.
-- Confirm date, location, price, and availability are displayed consistently.
+- Confirmed drafts and past events never appear in public list or detail responses.
+- Confirmed case-insensitive search, whitespace normalization, literal wildcard handling, and empty states.
+- Confirmed expired and declined reservations do not reduce displayed availability.
+- Confirmed the public response excludes Organizer, lifecycle, provider-link, and raw snapshot fields.
+- Passed 11 frontend tests and 33 backend tests with successful JSON/XML reports.
+- Passed formatting, linting, strict type checking, lock verification, builds, and Alembic drift detection.
+- Exercised live Ticketmaster search/detail calls without exposing the credential and a live local discovery HTTP query against the seed.
 
 ### Expected Result
 
 A customer can find a published event and proceed to quantity selection.
+
+### Next
+
+Create temporary inventory holds with PostgreSQL-time expiry and transactional capacity protection.
 
 ---
 

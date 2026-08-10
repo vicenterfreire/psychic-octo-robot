@@ -4,14 +4,15 @@
 
 - Date: 2026-08-10.
 - Branch: local `main`, based on published commit `14d5d9c` and developed through small local commits.
-- Phase: organizer event management complete; customer discovery is next.
+- Phase: published event discovery complete; temporary reservations are next.
 - Frontend: React, Vite, and TypeScript application initialized.
 - Backend: Python 3.14 and FastAPI application initialized.
 - Database: PostgreSQL 17 schema migrated and seeded through Podman.
 - Authentication: persistent opaque PostgreSQL sessions with role-aware frontend and backend boundaries.
 - External catalog: organizer-only Ticketmaster search normalized entirely by the backend.
 - Event management: trusted provider snapshots with organizer-owned draft, edit, list, and publication flows.
-- Automated tests: eight frontend tests and 32 backend tests, including PostgreSQL event-management integration.
+- Discovery: public and Customer-facing upcoming event search, details, and calculated availability.
+- Automated tests: 11 frontend tests and 33 backend tests, including PostgreSQL discovery integration.
 - Deployment: not selected.
 
 ## Implemented Foundation
@@ -37,6 +38,10 @@
 - Organizer event routes scope reads and row locks by the authenticated owner and return not found for foreign identifiers.
 - Event editing validates future timezone-aware dates, integer-minor-unit prices, positive capacities, and capacity floors imposed by active or approved reservations.
 - The Organizer interface creates drafts, lists local events, edits details, and publishes through explicit actions with TanStack Query invalidation.
+- Public discovery queries only upcoming published local events and searches local name, venue, and city without contacting Ticketmaster.
+- Public responses exclude organizer identity, lifecycle status, provider links, and raw snapshot data.
+- Availability subtracts approved reservations and unexpired pending holds using PostgreSQL time in the discovery query.
+- Public and authenticated Customer screens share responsive listing and detail components while preserving their navigation boundaries.
 
 ## Validated Environment
 
@@ -60,8 +65,11 @@
 - A live HTTP smoke test confirmed Gate login, HTTP-only cookie restoration, `204` logout, and subsequent `401` denial.
 - Ticketmaster success, empty, missing-key, rejected-key, quota, timeout, unavailable, malformed, and role-denial paths are covered without a live credential.
 - Provider detail snapshots, identifier matching, local persistence, ownership, invalid input, capacity reduction, and publication paths are covered.
-- All 32 backend tests pass with 93% coverage of the current backend.
-- All eight frontend tests pass, and frontend formatting, linting, type checking, and production build succeed.
+- Discovery integration covers draft/past exclusion, case-insensitive search, wildcard escaping, response minimization, event details, and active/expired availability.
+- A live Ticketmaster search returned 12 normalized results, and a live detail fetch confirmed identifier matching and credential absence from the snapshot body.
+- A live local HTTP query returned only the seeded published event with the expected availability and no management fields.
+- All 33 backend tests pass with 93% coverage of the current backend.
+- All 11 frontend tests pass, and frontend formatting, linting, type checking, and production build succeed.
 - Generated Vitest JSON, pytest JUnit XML, and summary JSON parse successfully and report no failures.
 
 ## Known Limitations
@@ -71,8 +79,9 @@
 - Expired and revoked session rows are not cleaned automatically.
 - Login rate limiting, session rotation/device management, and topology-specific CSRF hardening remain deferred.
 - Search selection remains transient until creation; created event snapshots and local details are persistent.
-- No live Ticketmaster request has been executed because the workspace intentionally contains no provider key.
 - Repeated catalog searches are not cached; each explicit submission consumes one provider request.
+- Discovery returns at most 50 upcoming events without pagination or advanced filters.
+- Displayed availability is a read snapshot; only the upcoming reservation transaction can guarantee inventory.
 - Cross-table rules such as "tickets only from approved reservations" cannot be expressed by simple row constraints and will be enforced transactionally by services.
 - The Podman hook is Windows-specific; other systems can use the standard `compose.yaml` with their installed Compose provider.
 - The backend test client still emits an upstream FastAPI/Starlette deprecation warning.
@@ -80,4 +89,4 @@
 
 ## Next Commit
 
-`feat(discovery): implement published event discovery`
+`feat(reservations): implement temporary inventory holds`

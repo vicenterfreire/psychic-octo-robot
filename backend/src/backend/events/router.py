@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from backend.auth.dependencies import require_roles
@@ -10,11 +10,18 @@ from backend.catalog.http_errors import catalog_http_exception
 from backend.catalog.ticketmaster import CatalogProviderError, TicketmasterClient
 from backend.database.dependencies import get_database_session
 from backend.database.models import User, UserRole
+from backend.events.discovery import (
+    PublishedEventNotFoundError,
+    get_published_event,
+    list_published_events,
+)
 from backend.events.schemas import (
     EventCreate,
     EventUpdate,
     OrganizerEventCollectionResponse,
     OrganizerEventResponse,
+    PublishedEventCollectionResponse,
+    PublishedEventResponse,
 )
 from backend.events.service import (
     EventCannotBePublishedError,
@@ -33,12 +40,32 @@ Database = Annotated[Session, Depends(get_database_session)]
 CatalogClient = Annotated[TicketmasterClient, Depends(get_ticketmaster_client)]
 
 
+@router.get("", response_model=PublishedEventCollectionResponse)
+def get_published_events(
+    database: Database,
+    q: Annotated[str | None, Query(max_length=100)] = None,
+) -> PublishedEventCollectionResponse:
+    search_query = q.strip() if q and q.strip() else None
+    return PublishedEventCollectionResponse(items=list_published_events(database, search_query))
+
+
 @router.get("/organizer", response_model=OrganizerEventCollectionResponse)
 def get_organizer_events(
     organizer: Organizer,
     database: Database,
 ) -> OrganizerEventCollectionResponse:
     return OrganizerEventCollectionResponse(items=list_organizer_events(database, organizer.id))
+
+
+@router.get("/{event_id}", response_model=PublishedEventResponse)
+def get_published_event_details(
+    event_id: UUID,
+    database: Database,
+) -> PublishedEventResponse:
+    try:
+        return get_published_event(database, event_id)
+    except PublishedEventNotFoundError as error:
+        raise _not_found() from error
 
 
 @router.post(

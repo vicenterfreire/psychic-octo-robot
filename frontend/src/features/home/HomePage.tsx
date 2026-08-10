@@ -22,8 +22,8 @@ export function HomePage() {
           event journey arrives in focused, reviewable increments.
         </p>
 
-        <Link className="hero-link" to="/login">
-          Enter the platform <span aria-hidden="true">→</span>
+        <Link className="hero-link" to="/events">
+          Browse published events <span aria-hidden="true">→</span>
         </Link>
 
         <div className="foundation-card">

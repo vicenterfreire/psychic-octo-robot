@@ -101,3 +101,46 @@ class OrganizerEventResponse(BaseModel):
 
 class OrganizerEventCollectionResponse(BaseModel):
     items: list[OrganizerEventResponse]
+
+
+class PublishedEventResponse(BaseModel):
+    id: UUID
+    name: str
+    description: str | None
+    venue_name: str
+    address: str
+    city: str
+    country_code: str
+    start_at: datetime
+    capacity: int
+    available_quantity: int
+    price_minor: int
+    currency: str
+    image_url: str | None
+
+    @classmethod
+    def from_models(
+        cls,
+        event: Event,
+        snapshot: CatalogSnapshot,
+        committed_quantity: int,
+    ) -> Self:
+        return cls(
+            id=event.id,
+            name=event.name,
+            description=event.description,
+            venue_name=event.venue_name,
+            address=event.address,
+            city=event.city,
+            country_code=event.country_code,
+            start_at=event.start_at,
+            capacity=event.capacity,
+            available_quantity=max(event.capacity - committed_quantity, 0),
+            price_minor=event.price_minor,
+            currency=event.currency,
+            image_url=snapshot.image_url,
+        )
+
+
+class PublishedEventCollectionResponse(BaseModel):
+    items: list[PublishedEventResponse]

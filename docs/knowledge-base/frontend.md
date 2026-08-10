@@ -13,6 +13,7 @@ The frontend is a React single-page application built by Vite. It presents role-
 - `src/features/auth/` contains session requests, login/logout interactions, and route guards.
 - `src/features/catalog/` contains the Organizer search, normalized result cards, and transient selection.
 - `src/features/events/` contains event transport types, local-detail forms, owned-event listing, editing, and publication interactions.
+- `src/features/discovery/` contains public/customer event queries, search, result cards, detail presentation, and session-aware navigation.
 - `src/features/` groups screens, requests, and tests by product feature.
 - `src/test/setup.ts` configures browser-like assertions for Vitest.
 
@@ -48,6 +49,14 @@ The event collection is a TanStack Query resource enabled after the Organizer se
 
 The form converts the displayed BRL decimal into integer minor units and the browser's local date-time into an ISO timestamp with an offset before submission. Backend validation remains authoritative. Drafts remain visible to their Organizer, while the public/customer query introduced in the next increment will select only published events.
 
+## Published Discovery Flow
+
+The public `/events` route and protected `/customer` route render the same discovery component with different header and detail-link boundaries. Public reads do not restore a session; authenticated Customer pages reuse the existing session query and logout behavior. Event details follow the same split at `/events/:id` and `/customer/events/:id`.
+
+TanStack Query keys include the applied search term, so default discovery, filtered results, and individual event details remain distinct server-state entries. Search executes only on form submission. Empty, loading, error, missing-image, sold-out, and result states are explicit.
+
+Cards and details format the backend's ISO timestamp and integer-minor-unit price, then display local venue/address and calculated availability. The UI states that availability is current rather than guaranteed. Quantity selection is intentionally left to the next reservation increment, where the backend will recalculate inventory transactionally.
+
 ## Quality Boundary
 
-Prettier owns formatting, Oxlint owns static linting, TypeScript runs with strict project settings, and Vitest with Testing Library protects meaningful interaction and integration boundaries. Tests cover health transport, login, session restoration, cross-role redirection, catalog search/selection, empty results, stable errors, provider-secret absence, event creation payloads, and explicit publication. The root test-report hook also writes a Vitest JSON result for automated inspection.
+Prettier owns formatting, Oxlint owns static linting, TypeScript runs with strict project settings, and Vitest with Testing Library protects meaningful interaction and integration boundaries. Tests cover health transport, login, session restoration, cross-role redirection, catalog search/selection, stable errors, provider-secret absence, event management, published discovery, basic search, empty results, event details, and availability presentation. The root test-report hook also writes a Vitest JSON result for automated inspection.
