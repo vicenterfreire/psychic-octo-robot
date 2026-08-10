@@ -1,4 +1,6 @@
-from urllib.parse import urlsplit
+from dataclasses import dataclass
+from typing import Any, cast
+from urllib.parse import quote, urlsplit
 
 import httpx
 from pydantic import BaseModel, Field, ValidationError
@@ -35,6 +37,16 @@ class CatalogUnavailableError(CatalogProviderError):
 
 class CatalogInvalidResponseError(CatalogProviderError):
     """The provider returned data outside the expected contract."""
+
+
+class CatalogItemNotFoundError(CatalogProviderError):
+    """The selected provider item no longer exists."""
+
+
+@dataclass(frozen=True, slots=True)
+class CatalogEventSnapshot:
+    event: CatalogEvent
+    raw_data: dict[str, Any]
 
 
 class _TicketmasterImage(BaseModel):
@@ -97,9 +109,52 @@ class TicketmasterClient:
         self._transport = transport
 
     def search_events(self, keyword: str) -> list[CatalogEvent]:
+        raw_data = self._get_json(
+            "events.json",
+            params={
+                "keyword": keyword,
+                "locale": "*",
+                "size": SEARCH_RESULT_LIMIT,
+                "sort": "relevance,desc",
+                "source": "ticketmaster",
+            },
+        )
+        try:
+            provider_response = _TicketmasterResponse.model_validate(raw_data)
+        except ValidationError as error:
+            raise CatalogInvalidResponseError from error
+
+        if provider_response.embedded is None:
+            return []
+
+        return [_normalize_event(event) for event in provider_response.embedded.events]
+
+    def get_event_snapshot(self, provider_event_id: str) -> CatalogEventSnapshot:
+        raw_data = self._get_json(
+            f"events/{quote(provider_event_id, safe='')}.json",
+            params={"locale": "*"},
+            not_found_is_item=True,
+        )
+        try:
+            provider_event = _TicketmasterEvent.model_validate(raw_data)
+        except ValidationError as error:
+            raise CatalogInvalidResponseError from error
+        if provider_event.id != provider_event_id:
+            raise CatalogInvalidResponseError
+
+        return CatalogEventSnapshot(event=_normalize_event(provider_event), raw_data=raw_data)
+
+    def _get_json(
+        self,
+        path: str,
+        *,
+        params: dict[str, str | int],
+        not_found_is_item: bool = False,
+    ) -> dict[str, Any]:
         if not self._api_key:
             raise CatalogConfigurationError
 
+        request_params = {"apikey": self._api_key, **params}
         try:
             with httpx.Client(
                 base_url=self._base_url,
@@ -107,17 +162,7 @@ class TicketmasterClient:
                 transport=self._transport,
                 headers={"Accept": "application/json", "User-Agent": "Gather/0.1"},
             ) as client:
-                response = client.get(
-                    "events.json",
-                    params={
-                        "apikey": self._api_key,
-                        "keyword": keyword,
-                        "locale": "*",
-                        "size": SEARCH_RESULT_LIMIT,
-                        "sort": "relevance,desc",
-                        "source": "ticketmaster",
-                    },
-                )
+                response = client.get(path, params=request_params)
         except httpx.TimeoutException as error:
             raise CatalogTimeoutError from error
         except httpx.RequestError as error:
@@ -125,26 +170,27 @@ class TicketmasterClient:
 
         if response.status_code in {401, 403}:
             raise CatalogCredentialsError
+        if response.status_code == 404 and not_found_is_item:
+            raise CatalogItemNotFoundError
         if response.status_code == 429:
             raise CatalogQuotaError
         if response.status_code >= 400:
             raise CatalogUnavailableError
 
         try:
-            provider_response = _TicketmasterResponse.model_validate(response.json())
-        except (ValueError, ValidationError) as error:
+            raw_data = response.json()
+        except ValueError as error:
             raise CatalogInvalidResponseError from error
+        if not isinstance(raw_data, dict):
+            raise CatalogInvalidResponseError
+        return cast(dict[str, Any], raw_data)
 
-        if provider_response.embedded is None:
-            return []
 
-        return [
-            CatalogEvent(
-                provider_event_id=event.id,
-                name=event.name,
-                description=event.info or event.please_note,
-                image_url=_select_image(event.images),
-                source_url=_safe_public_url(event.url),
-            )
-            for event in provider_response.embedded.events
-        ]
+def _normalize_event(event: _TicketmasterEvent) -> CatalogEvent:
+    return CatalogEvent(
+        provider_event_id=event.id,
+        name=event.name,
+        description=event.info or event.please_note,
+        image_url=_select_image(event.images),
+        source_url=_safe_public_url(event.url),
+    )

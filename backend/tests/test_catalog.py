@@ -11,6 +11,7 @@ from backend.catalog.schemas import CatalogEvent
 from backend.catalog.ticketmaster import (
     CatalogConfigurationError,
     CatalogCredentialsError,
+    CatalogEventSnapshot,
     CatalogInvalidResponseError,
     CatalogProviderError,
     CatalogQuotaError,
@@ -100,6 +101,46 @@ def test_ticketmaster_client_returns_an_empty_list_without_embedded_events() -> 
     client = make_provider_client(lambda _request: httpx.Response(200, json={"page": {}}))
 
     assert client.search_events("nothing") == []
+
+
+def test_ticketmaster_client_fetches_a_trusted_event_snapshot() -> None:
+    raw_provider_event = {
+        "id": "event-123",
+        "name": "Aurora World Tour",
+        "info": "Provider copy preserved at creation time.",
+        "url": "https://www.ticketmaster.com/event-123",
+        "images": [{"url": "https://images.test/event.jpg", "width": 1024}],
+        "dates": {"start": {"dateTime": "2030-08-10T22:00:00Z"}},
+    }
+
+    def provider_response(request: httpx.Request) -> httpx.Response:
+        assert request.url.path == "/discovery/v2/events/event-123.json"
+        assert request.url.params["apikey"] == API_KEY
+        assert request.url.params["locale"] == "*"
+        return httpx.Response(200, json=raw_provider_event)
+
+    result = make_provider_client(provider_response).get_event_snapshot("event-123")
+
+    assert result == CatalogEventSnapshot(
+        event=CatalogEvent(
+            provider_event_id="event-123",
+            name="Aurora World Tour",
+            description="Provider copy preserved at creation time.",
+            image_url="https://images.test/event.jpg",
+            source_url="https://www.ticketmaster.com/event-123",
+        ),
+        raw_data=raw_provider_event,
+    )
+    assert API_KEY not in str(result.raw_data)
+
+
+def test_ticketmaster_client_rejects_a_mismatched_detail_identifier() -> None:
+    client = make_provider_client(
+        lambda _request: httpx.Response(200, json={"id": "different", "name": "Wrong event"})
+    )
+
+    with pytest.raises(CatalogInvalidResponseError):
+        client.get_event_snapshot("expected")
 
 
 def test_ticketmaster_client_filters_unsafe_urls_and_uses_the_provider_note() -> None:

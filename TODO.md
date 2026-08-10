@@ -235,13 +235,13 @@ Persist the selected source snapshot and implement organizer-owned local event c
 
 ---
 
-## feat(events): implement organizer event management
+## Done - feat(events): implement organizer event management
 
 ### Goal
 
 Allow organizers to create and manage local events derived from Ticketmaster data.
 
-### Planned
+### Implemented
 
 - Persist a snapshot of the selected Ticketmaster item.
 - Let the organizer define date, location, total capacity, and price.
@@ -252,14 +252,22 @@ Allow organizers to create and manage local events derived from Ticketmaster dat
 
 ### Validation
 
-- Create an event from a normalized catalog result.
-- Confirm organizer ownership enforcement.
-- Confirm that only valid published events become customer-visible.
-- Confirm that external provider changes do not modify an existing local event snapshot.
+- Created an event from a backend-verified Ticketmaster detail and persisted its immutable raw snapshot.
+- Confirmed list, update, and publication ownership enforcement against PostgreSQL.
+- Confirmed invalid local details and capacity reductions below active or approved reservations are rejected.
+- Confirmed a newly created event remains a draft until explicit publication with a future start.
+- Confirmed later provider changes do not modify an existing source snapshot or trigger another provider call.
+- Passed eight frontend tests and 32 backend tests, including PostgreSQL event-management integration.
+- Passed formatting, linting, strict type checking, production builds, lock verification, and Alembic drift detection.
+- Generated and parsed successful Vitest JSON, pytest JUnit XML, and summary JSON reports.
 
 ### Expected Result
 
 An organizer can create, edit, and publish a locally owned event based on Ticketmaster content.
+
+### Next
+
+Expose only published local events through customer discovery and basic text search.
 
 ---
 

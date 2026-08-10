@@ -39,6 +39,8 @@ Additional states require a demonstrated current requirement before being introd
 - Only published events are customer-visible and reservable.
 - Authentication accepts only an unrevoked session whose expiration is later than PostgreSQL's current time.
 - Organizer ownership is enforced for event management.
+- Event publication is explicit, requires a future start, and does not alter its source snapshot.
+- Event capacity cannot be reduced below approved quantity plus unexpired pending holds.
 - Customer ownership is enforced for reservations and private ticket lists.
 - Sold quantity plus active pending holds never exceeds event capacity.
 - A pending hold is active only while its expiration is later than PostgreSQL's current time.

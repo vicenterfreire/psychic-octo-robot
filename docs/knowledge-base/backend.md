@@ -11,6 +11,7 @@ The backend is a FastAPI modular monolith. It owns API behavior, authentication,
 - `src/backend/api/routes/health.py` provides the initial health contract.
 - `src/backend/auth/` owns password verification, opaque-session lifecycle, authentication routes, and reusable authorization checks.
 - `src/backend/catalog/` owns Ticketmaster transport, response validation, normalization, and organizer-only search.
+- `src/backend/events/` owns organizer-scoped event commands, responses, lifecycle rules, and persistence transactions.
 - `src/backend/core/settings.py` reads process configuration into an immutable settings object.
 - `src/backend/database/dependencies.py` supplies one synchronous SQLAlchemy session per request.
 - `src/backend/database/models.py` defines the complete relational mapping and database constraints.
@@ -59,11 +60,19 @@ Backend dependencies provide the authoritative current user and role checks. The
 
 `GET /api/catalog/events?q=...` requires an Organizer session. The backend sends `apikey`, the normalized keyword, `source=ticketmaster`, `locale=*`, a relevance sort, and a fixed limit of 12 to the official [Discovery API v2 event search](https://developer.ticketmaster.com/products-and-docs/apis/discovery-api/v2/).
 
-The provider response is validated and reduced to provider name, provider event identifier, name, description, one safe public image URL, and the public source URL. Dates, venues, arbitrary embedded data, rate-limit metadata, and credentials do not cross the API boundary. Local date, venue, capacity, and price remain organizer-owned event fields.
+The search response is validated and reduced to provider name, provider event identifier, name, description, one safe public image URL, and the public source URL. Dates, venues, arbitrary embedded data, rate-limit metadata, and credentials do not cross the browser boundary. Local date, venue, capacity, and price remain organizer-owned event fields.
+
+Event creation does not trust the selected card as a snapshot source. It sends only its external identifier and local form data, fetches the detail through the server-side client, rejects a mismatched response identifier, and persists both normalized source fields and the provider JSON. Existing events never resynchronize automatically.
 
 Requests have a configurable five-second default timeout. Missing/rejected credentials and exhausted quota map to `503`, timeouts to `504`, and transport or invalid-response failures to `502`. Upstream bodies and exception URLs are never returned because either may contain provider details or the query-string credential.
 
 Search is explicit rather than keystroke-driven and has no automatic retry. This protects the provider's finite quota and avoids duplicate calls during outages. A new synchronous client is opened per search; connection pooling, caching, and retry policy remain unnecessary at the current challenge scale.
+
+## Organizer Event Boundary
+
+`GET /api/events/organizer` scopes the collection by the authenticated Organizer. Creation produces a draft; full replacement updates local editable fields; publication is a separate idempotent state transition. Updates and publication select the event by both identifier and owner and lock that row, so a foreign identifier is indistinguishable from an unknown one.
+
+Dates must carry a timezone and remain in the future. Capacity and price have bounded API validation in addition to database constraints. Before a capacity reduction, the service sums approved reservations and unexpired pending holds using PostgreSQL time. The new capacity must cover that committed quantity. This rule is already future-compatible with the reservation transaction, which will acquire the same event-row lock before allocating inventory.
 
 ## Persistence Boundary
 

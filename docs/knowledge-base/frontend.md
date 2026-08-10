@@ -12,6 +12,7 @@ The frontend is a React single-page application built by Vite. It presents role-
 - `src/lib/api-client.ts` is the credentialed JSON transport boundary.
 - `src/features/auth/` contains session requests, login/logout interactions, and route guards.
 - `src/features/catalog/` contains the Organizer search, normalized result cards, and transient selection.
+- `src/features/events/` contains event transport types, local-detail forms, owned-event listing, editing, and publication interactions.
 - `src/features/` groups screens, requests, and tests by product feature.
 - `src/test/setup.ts` configures browser-like assertions for Vitest.
 
@@ -37,10 +38,16 @@ Login writes the returned user into the shared session query and redirects to th
 
 The Organizer submits a complete query before the frontend calls `/catalog/events`; typing does not consume provider quota. The browser receives only the small internal event contract and never receives or knows the Ticketmaster API key.
 
-Search is a TanStack Query mutation because it is an explicit user action rather than continuously loaded server state. The selected source item remains local component state for now. The next increment will connect it to a validated local-event form and backend persistence; refreshing the page currently clears the selection.
+Search is a TanStack Query mutation because it is an explicit user action rather than continuously loaded server state. The selected source item remains local component state until creation. Selecting it opens the local event form, and the browser submits only the provider identifier plus Organizer-managed fields. A refresh clears an unsubmitted selection but does not affect any created event.
 
-The interface provides loading, empty, provider-error, missing-image, external-source, and selected states. External links are opened with a separate browsing context and no referrer relationship.
+The interface provides loading, empty, provider-error, missing-image, external-source, selected, draft, editing, and publication states. External links are opened with a separate browsing context and no referrer relationship.
+
+## Organizer Event Flow
+
+The event collection is a TanStack Query resource enabled after the Organizer session resolves. Creation, full-detail editing, and explicit publication are mutations that invalidate that collection. This keeps server responses authoritative without introducing a client-side global event store.
+
+The form converts the displayed BRL decimal into integer minor units and the browser's local date-time into an ISO timestamp with an offset before submission. Backend validation remains authoritative. Drafts remain visible to their Organizer, while the public/customer query introduced in the next increment will select only published events.
 
 ## Quality Boundary
 
-Prettier owns formatting, Oxlint owns static linting, TypeScript runs with strict project settings, and Vitest with Testing Library protects meaningful interaction and integration boundaries. Tests cover health transport, login, session restoration, cross-role redirection, catalog search/selection, empty results, stable errors, and the absence of provider credentials in browser requests. The root test-report hook also writes a Vitest JSON result for automated inspection.
+Prettier owns formatting, Oxlint owns static linting, TypeScript runs with strict project settings, and Vitest with Testing Library protects meaningful interaction and integration boundaries. Tests cover health transport, login, session restoration, cross-role redirection, catalog search/selection, empty results, stable errors, provider-secret absence, event creation payloads, and explicit publication. The root test-report hook also writes a Vitest JSON result for automated inspection.

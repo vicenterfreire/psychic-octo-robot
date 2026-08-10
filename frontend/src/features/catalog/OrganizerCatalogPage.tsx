@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { logout, sessionQueryKey } from '../auth/auth-api'
 import { useSession } from '../auth/use-session'
 import { ApiError } from '../../lib/api-client'
+import { OrganizerEventCreator, OrganizerEventList } from '../events/OrganizerEventManagement'
 import { type CatalogEvent, searchCatalogEvents } from './catalog-api'
 
 function providerErrorMessage(error: unknown): string {
@@ -65,8 +66,8 @@ export function OrganizerCatalogPage() {
             <h1>Start with something people already love.</h1>
           </div>
           <p>
-            Search Ticketmaster for source material. You will define the local date, venue,
-            capacity, and price in the next step.
+            Search Ticketmaster for source material, then define the local date, venue, capacity,
+            and price before publishing.
           </p>
         </section>
 
@@ -99,8 +100,7 @@ export function OrganizerCatalogPage() {
           )}
           {selectedEvent && (
             <p className="selection-notice">
-              Selected <strong>{selectedEvent.name}</strong>. Local event details arrive in the next
-              increment.
+              Selected <strong>{selectedEvent.name}</strong>. Complete its local details below.
             </p>
           )}
         </div>
@@ -143,6 +143,15 @@ export function OrganizerCatalogPage() {
             })}
           </section>
         )}
+
+        {selectedEvent && (
+          <OrganizerEventCreator
+            selectedEvent={selectedEvent}
+            onCreated={() => setSelectedEvent(null)}
+          />
+        )}
+
+        <OrganizerEventList enabled={session.data?.role === 'organizer'} />
       </main>
     </div>
   )

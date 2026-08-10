@@ -4,14 +4,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from backend.auth.dependencies import require_roles
 from backend.catalog.dependencies import get_ticketmaster_client
+from backend.catalog.http_errors import catalog_http_exception
 from backend.catalog.schemas import CatalogSearchResponse
 from backend.catalog.ticketmaster import (
-    CatalogConfigurationError,
-    CatalogCredentialsError,
-    CatalogInvalidResponseError,
-    CatalogQuotaError,
-    CatalogTimeoutError,
-    CatalogUnavailableError,
+    CatalogProviderError,
     TicketmasterClient,
 )
 from backend.database.models import User, UserRole
@@ -37,30 +33,7 @@ def search_catalog_events(
 
     try:
         items = client.search_events(keyword)
-    except CatalogConfigurationError as error:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Catalog search is not configured.",
-        ) from error
-    except CatalogCredentialsError as error:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Catalog provider credentials were rejected.",
-        ) from error
-    except CatalogQuotaError as error:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Catalog provider quota is temporarily unavailable.",
-        ) from error
-    except CatalogTimeoutError as error:
-        raise HTTPException(
-            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-            detail="Catalog provider timed out.",
-        ) from error
-    except (CatalogUnavailableError, CatalogInvalidResponseError) as error:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Catalog provider is unavailable.",
-        ) from error
+    except CatalogProviderError as error:
+        raise catalog_http_exception(error) from error
 
     return CatalogSearchResponse(items=items)

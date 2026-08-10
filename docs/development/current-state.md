@@ -4,13 +4,14 @@
 
 - Date: 2026-08-10.
 - Branch: local `main`, based on published commit `14d5d9c` and developed through small local commits.
-- Phase: authenticated full-stack with external catalog search.
+- Phase: organizer event management complete; customer discovery is next.
 - Frontend: React, Vite, and TypeScript application initialized.
 - Backend: Python 3.14 and FastAPI application initialized.
 - Database: PostgreSQL 17 schema migrated and seeded through Podman.
 - Authentication: persistent opaque PostgreSQL sessions with role-aware frontend and backend boundaries.
 - External catalog: organizer-only Ticketmaster search normalized entirely by the backend.
-- Automated tests: six frontend tests and 28 backend tests, including PostgreSQL authentication integration.
+- Event management: trusted provider snapshots with organizer-owned draft, edit, list, and publication flows.
+- Automated tests: eight frontend tests and 32 backend tests, including PostgreSQL event-management integration.
 - Deployment: not selected.
 
 ## Implemented Foundation
@@ -32,6 +33,10 @@
 - The test-report hook emits ignored machine-readable JSON/XML results for both suites.
 - The Ticketmaster client keeps `apikey` server-side, enforces a timeout and bounded result size, validates upstream JSON, and returns a small provider-normalized HTTP contract.
 - The Organizer interface supports explicit search, result selection, empty/error recovery, and provider source links.
+- Event creation refetches the selected provider item on the backend, verifies its identifier, and persists the raw provider response as an immutable snapshot.
+- Organizer event routes scope reads and row locks by the authenticated owner and return not found for foreign identifiers.
+- Event editing validates future timezone-aware dates, integer-minor-unit prices, positive capacities, and capacity floors imposed by active or approved reservations.
+- The Organizer interface creates drafts, lists local events, edits details, and publishes through explicit actions with TanStack Query invalidation.
 
 ## Validated Environment
 
@@ -54,17 +59,18 @@
 - Session restoration, expiration, logout revocation, cookie attributes, role denial, and ownership denial are covered.
 - A live HTTP smoke test confirmed Gate login, HTTP-only cookie restoration, `204` logout, and subsequent `401` denial.
 - Ticketmaster success, empty, missing-key, rejected-key, quota, timeout, unavailable, malformed, and role-denial paths are covered without a live credential.
-- All 28 backend tests pass with 95% coverage of the current backend.
-- All six frontend tests pass, and frontend formatting, linting, type checking, and production build succeed.
+- Provider detail snapshots, identifier matching, local persistence, ownership, invalid input, capacity reduction, and publication paths are covered.
+- All 32 backend tests pass with 93% coverage of the current backend.
+- All eight frontend tests pass, and frontend formatting, linting, type checking, and production build succeed.
 - Generated Vitest JSON, pytest JUnit XML, and summary JSON parse successfully and report no failures.
 
 ## Known Limitations
 
-- Role and ownership checks are implemented, but resource-specific enforcement begins when event, reservation, and ticket routes exist.
-- Frontend route guards improve navigation but are not security controls; every later protected backend route must use the authorization dependencies.
+- Event ownership is enforced in its resource queries; reservation and ticket resources must apply the same backend authority when introduced.
+- Frontend route guards improve navigation but are not security controls.
 - Expired and revoked session rows are not cleaned automatically.
 - Login rate limiting, session rotation/device management, and topology-specific CSRF hardening remain deferred.
-- Ticketmaster selection is component state until local event creation persists a trusted snapshot.
+- Search selection remains transient until creation; created event snapshots and local details are persistent.
 - No live Ticketmaster request has been executed because the workspace intentionally contains no provider key.
 - Repeated catalog searches are not cached; each explicit submission consumes one provider request.
 - Cross-table rules such as "tickets only from approved reservations" cannot be expressed by simple row constraints and will be enforced transactionally by services.
@@ -74,4 +80,4 @@
 
 ## Next Commit
 
-`feat(events): implement organizer event management`
+`feat(discovery): implement published event discovery`
