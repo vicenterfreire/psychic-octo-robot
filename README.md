@@ -6,16 +6,17 @@ The mandatory product flow will allow an organizer to create a local event from 
 
 ## Current Status
 
-The runnable project and persistence foundations are complete:
+The runnable project, persistence, and authentication foundations are complete:
 
 - `frontend/` contains a React, Vite, and TypeScript single-page application.
 - `backend/` contains a Python 3.14 and FastAPI application.
 - PostgreSQL runs through the checked-in Compose definition and has a versioned Alembic schema.
 - The seed creates the four required accounts and one stable published event.
 - The frontend calls the backend through a credentialed JSON client.
-- Both applications expose a minimal status interface used to validate local integration.
+- Users authenticate through fixed seven-day opaque sessions stored in PostgreSQL and restored through an HTTP-only cookie.
+- Organizer, customer, and gate routes are separated in both frontend navigation and reusable backend authorization dependencies.
 
-The next planned increment is `feat(auth): implement persistent opaque-session authentication`.
+The next planned increment is `feat(catalog): integrate the Ticketmaster event catalog`.
 
 ## Prerequisites
 
@@ -78,6 +79,14 @@ The Compose credentials `elite` / `elite` are deliberately public local-developm
 
 The seed also creates the published `Aurora Live 2030` event with capacity 100 and a BRL 150.00 price stored as `15000` minor units. Passwords are persisted only as Argon2id hashes.
 
+## Authentication and Sessions
+
+Open `http://localhost:5173/login` and use any seeded account. The backend exposes `POST /api/auth/login`, `GET /api/auth/me`, and `POST /api/auth/logout`.
+
+Passwords use Argon2id through `pwdlib` with the current recommended parameters `m=65536,t=3,p=4`. Login creates a cryptographically random opaque credential, sends it only as an HTTP-only `SameSite=Lax` cookie, and stores only its SHA-256 digest in PostgreSQL. The fixed seven-day session survives browser restarts, does not renew on activity, and is revoked server-side on logout.
+
+Local HTTP development sets `SESSION_COOKIE_SECURE=false`. Non-development configuration defaults it to `true`, which requires HTTPS. The backend remains authoritative for roles and resource ownership; frontend route guards provide navigation and user experience, not a security boundary.
+
 ## Run Locally
 
 Start each application in a separate terminal from the repository root:
@@ -107,6 +116,14 @@ npm run build
 ```
 
 Prepare PostgreSQL before `npm test`; the backend suite intentionally exercises the real database. Use `npm run format` to apply Prettier and Ruff formatting.
+
+For machine-readable results, run:
+
+```powershell
+npm run test:report
+```
+
+This writes ignored local artifacts to `.artifacts/test-results/`: Vitest JSON, pytest JUnit XML, and `summary.json` with suite exit codes and test counts. The hook runs both suites even when one fails, making it suitable for automated inspection.
 
 ## Accepted Technology Direction
 
@@ -145,4 +162,4 @@ No remote push is performed by the AI collaborator. Publication remains under th
 
 ## Current Limitations
 
-The database schema exists, but there are no authentication or business APIs yet. Role checks, session lifecycle, catalog access, event management, reservation locking, payment, ticket issuance, HMAC signatures, and gate validation remain scheduled as later commits.
+Authentication is complete, but catalog access and all event, reservation, payment, ticket, and gate business APIs remain scheduled as later commits. Ownership checks exist as reusable backend primitives and will become enforceable at the HTTP boundary when their resource routes are introduced. Rate limiting, session rotation/device management, automatic expired-session cleanup, and production-topology CSRF hardening are intentionally deferred.

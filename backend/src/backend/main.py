@@ -11,6 +11,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         title=resolved_settings.app_name,
         version="0.1.0",
     )
+    application.state.settings = resolved_settings
     application.add_middleware(
         CORSMiddleware,
         allow_origins=[resolved_settings.frontend_origin],

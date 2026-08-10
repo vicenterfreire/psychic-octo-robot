@@ -10,6 +10,7 @@ The frontend is a React single-page application built by Vite. It presents role-
 - `src/app/router.tsx` defines navigation.
 - `src/app/query-client.ts` configures TanStack Query for remote state.
 - `src/lib/api-client.ts` is the credentialed JSON transport boundary.
+- `src/features/auth/` contains session requests, login/logout interactions, and route guards.
 - `src/features/` groups screens, requests, and tests by product feature.
 - `src/test/setup.ts` configures browser-like assertions for Vitest.
 
@@ -25,6 +26,12 @@ The client reads `VITE_API_URL`, defaults to `http://localhost:8000/api`, reques
 
 Failed non-JSON or JSON responses are normalized at this boundary so feature components do not duplicate transport parsing.
 
+## Session Flow
+
+TanStack Query calls `GET /auth/me` when a session-aware route renders. A `401` means there is no active session; transport or server errors remain distinguishable and do not silently redirect the user. An unexpired cookie therefore restores the user after a refresh or browser restart without exposing the credential to JavaScript.
+
+Login writes the returned user into the shared session query and redirects to the role workspace. Logout revokes the backend session first, then clears that query. `RequireSession` handles authentication and `RequireRole` prevents cross-role navigation, but both are user-experience boundaries only: the backend must authorize every protected operation.
+
 ## Quality Boundary
 
-Prettier owns formatting, Oxlint owns static linting, TypeScript runs with strict project settings, and Vitest with Testing Library protects meaningful interaction and integration boundaries. The initial test verifies both visible health feedback and credentialed transport behavior.
+Prettier owns formatting, Oxlint owns static linting, TypeScript runs with strict project settings, and Vitest with Testing Library protects meaningful interaction and integration boundaries. Tests cover health transport, login, session restoration into a protected route, and cross-role redirection. The root test-report hook also writes a Vitest JSON result for automated inspection.

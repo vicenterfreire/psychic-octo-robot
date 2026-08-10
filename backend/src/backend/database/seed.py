@@ -2,9 +2,9 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from uuid import UUID
 
-from pwdlib import PasswordHash
 from sqlalchemy.orm import Session
 
+from backend.auth.passwords import hash_password
 from backend.database.engine import get_engine
 from backend.database.models import (
     CatalogProvider,
@@ -41,7 +41,6 @@ SEED_USERS = (
 
 def seed_database() -> dict[str, int]:
     inserted = {"users": 0, "catalog_snapshots": 0, "events": 0}
-    password_hash = PasswordHash.recommended()
 
     with Session(get_engine()) as session, session.begin():
         for seed_user in SEED_USERS:
@@ -50,7 +49,7 @@ def seed_database() -> dict[str, int]:
                     User(
                         id=seed_user.id,
                         email=seed_user.email,
-                        password_hash=password_hash.hash(seed_user.password),
+                        password_hash=hash_password(seed_user.password),
                         role=seed_user.role,
                     )
                 )

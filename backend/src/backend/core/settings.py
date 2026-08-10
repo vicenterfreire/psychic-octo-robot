@@ -15,6 +15,9 @@ class Settings:
     api_prefix: str = "/api"
     frontend_origin: str = "http://localhost:5173"
     database_url: str = "postgresql+psycopg://elite:elite@localhost:5432/elite_dev"
+    session_cookie_name: str = "gather_session"
+    session_lifetime_seconds: int = 7 * 24 * 60 * 60
+    session_cookie_secure: bool = False
 
 
 @lru_cache
@@ -22,11 +25,18 @@ def get_settings() -> Settings:
     load_dotenv(BACKEND_ROOT / ".env", override=False)
     load_dotenv(BACKEND_ROOT / ".env.podman", override=False)
 
+    environment = os.getenv("APP_ENV", "development")
+    secure_cookie_default = environment != "development"
+
     return Settings(
-        environment=os.getenv("APP_ENV", "development"),
+        environment=environment,
         frontend_origin=os.getenv("FRONTEND_ORIGIN", "http://localhost:5173"),
         database_url=os.getenv(
             "DATABASE_URL",
             "postgresql+psycopg://elite:elite@localhost:5432/elite_dev",
         ),
+        session_cookie_name=os.getenv("SESSION_COOKIE_NAME", "gather_session"),
+        session_lifetime_seconds=int(os.getenv("SESSION_LIFETIME_SECONDS", str(7 * 24 * 60 * 60))),
+        session_cookie_secure=os.getenv("SESSION_COOKIE_SECURE", str(secure_cookie_default)).lower()
+        == "true",
     )

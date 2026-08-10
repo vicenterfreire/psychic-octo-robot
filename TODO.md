@@ -2,7 +2,7 @@
 
 ## Current Status
 
-The requirements, architecture decisions, runnable full-stack foundation, and PostgreSQL persistence layer are complete. Authentication and business workflows have not been implemented yet. No later planned task is considered done until its changes are validated, staged, and committed locally.
+The requirements, architecture decisions, runnable full-stack foundation, PostgreSQL persistence layer, and persistent opaque-session authentication are complete. Catalog and business workflows have not been implemented yet. No later planned task is considered done until its changes are validated, staged, and committed locally.
 
 The local `main` branch is based on published commit `14d5d9c`. Local project commits remain unpushed until the candidate chooses to publish them.
 
@@ -160,35 +160,40 @@ Implement login, restoration, logout, persistent opaque sessions, and role bound
 
 ---
 
-## feat(auth): implement persistent opaque-session authentication
+## Done - feat(auth): implement persistent opaque-session authentication
 
 ### Goal
 
 Authenticate the three required roles without requiring users to log in again every time they reopen the site.
 
-### Planned
+### Implemented
 
-- Implement password hashing and verification using the accepted algorithm and documented parameters.
-- Generate cryptographically random opaque session identifiers.
-- Store only a derived session-token representation in PostgreSQL.
-- Add persistent session expiration, renewal, revocation, and logout behavior.
-- Set HTTP-only cookie attributes appropriate for local development and production.
-- Add login, current-session, and logout endpoints.
-- Enforce organizer, customer, and gate role boundaries.
-- Restrict organizers to their own events and customers to their own reservations and tickets.
-- Build the login, session restoration, protected-route, and logout frontend flows.
+- Centralized Argon2id password hashing and verification with the effective `m=65536,t=3,p=4` parameters and dummy verification for unknown identities.
+- Generated 256-bit opaque session credentials and stored only their SHA-256 digests in PostgreSQL.
+- Added fixed seven-day expiration, database-time validation, immediate current-session revocation, and no sliding renewal.
+- Set persistent HTTP-only, `SameSite=Lax` cookies with environment-controlled `Secure` behavior and no-store authentication responses.
+- Added login, current-session, and logout endpoints backed by synchronous database dependencies.
+- Added reusable backend role and ownership authorization checks for future resource endpoints.
+- Built login, session restoration, role-protected routes, and logout flows with TanStack Query.
+- Added a local test-report hook that emits Vitest JSON, pytest JUnit XML, and a summary JSON under ignored `.artifacts/`.
 
 ### Validation
 
-- Test valid and invalid credentials.
-- Confirm that refreshing or reopening the frontend restores an unexpired session.
-- Confirm that logout and expiry revoke access.
-- Confirm that each role is denied access to the other roles' protected actions.
-- Inspect cookies to verify that session identifiers are not exposed to frontend JavaScript.
+- Passed frontend formatting, linting, strict TypeScript, three interaction tests, and the Vite production build.
+- Passed backend Ruff formatting/linting, strict mypy, and 11 tests against PostgreSQL with 93% coverage.
+- Confirmed valid login, equal invalid-credential responses, persistent restoration, expiration, logout revocation, and production `Secure` cookie behavior.
+- Confirmed the response never exposes the raw credential and PostgreSQL contains only its digest.
+- Confirmed role and ownership denial behavior and frontend cross-role redirection.
+- Parsed the generated JSON/XML reports and confirmed both test suites report no failures.
+- Exercised the live HTTP server: login as Gate, HTTP-only cookie restoration, `204` logout, and subsequent `401` access denial.
 
 ### Expected Result
 
 Each seeded user can remain authenticated for the accepted lifetime and access only the functionality allowed for its role.
+
+### Next
+
+Integrate organizer-only Ticketmaster catalog search without exposing the provider credential.
 
 ---
 

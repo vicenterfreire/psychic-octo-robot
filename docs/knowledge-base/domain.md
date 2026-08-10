@@ -6,6 +6,10 @@
 
 An authenticated account with exactly one role in the mandatory scope: Organizer, Customer, or Gate.
 
+### Session
+
+A fixed-lifetime opaque browser credential. Only its digest, user, timestamps, and optional revocation time are persisted; the raw credential exists only in the HTTP-only cookie.
+
 ### Catalog Item
 
 Normalized Ticketmaster data shown temporarily to an organizer. It is not itself a sellable event.
@@ -33,6 +37,7 @@ Additional states require a demonstrated current requirement before being introd
 ## Business Invariants
 
 - Only published events are customer-visible and reservable.
+- Authentication accepts only an unrevoked session whose expiration is later than PostgreSQL's current time.
 - Organizer ownership is enforced for event management.
 - Customer ownership is enforced for reservations and private ticket lists.
 - Sold quantity plus active pending holds never exceeds event capacity.

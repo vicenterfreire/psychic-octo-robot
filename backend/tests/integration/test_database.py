@@ -1,11 +1,11 @@
 from uuid import uuid4
 
 import pytest
-from pwdlib import PasswordHash
 from sqlalchemy import select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from backend.auth.passwords import verify_password
 from backend.database.engine import get_engine
 from backend.database.models import Event, EventStatus, User, UserRole
 from backend.database.seed import CUSTOMER_ONE_ID, EVENT_ID, ORGANIZER_ID, seed_database
@@ -26,7 +26,7 @@ def test_seeded_evaluation_data_is_ready() -> None:
         UserRole.ORGANIZER,
     ]
     assert organizer is not None
-    assert PasswordHash.recommended().verify("Organizer123!", organizer.password_hash)
+    assert verify_password("Organizer123!", organizer.password_hash)
     assert event is not None
     assert event.status is EventStatus.PUBLISHED
     assert event.capacity == 100
