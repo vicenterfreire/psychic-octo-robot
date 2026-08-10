@@ -24,10 +24,10 @@ flowchart LR
 
 ## Repository Organization
 
-- `frontend/` will contain the React application and its npm lockfile.
-- `backend/` will contain the FastAPI application, `pyproject.toml`, `uv.lock`, and generated `requirements.txt`.
+- `frontend/` contains the React application and its npm lockfile.
+- `backend/` contains the FastAPI application, `pyproject.toml`, `uv.lock`, and generated `requirements.txt`.
 - `docs/` is persistent project knowledge and architecture history.
-- `compose.yaml` will define local PostgreSQL for Podman Compose.
+- `compose.yaml` will be introduced with the database schema and will define local PostgreSQL for Podman Compose.
 - `TODO.md` defines the ordered local commit plan.
 
 No Git worktree is needed because there is no experiment or parallel implementation to isolate.

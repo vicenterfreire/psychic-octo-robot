@@ -2,9 +2,9 @@
 
 ## Current Status
 
-The requirements and architecture foundation is complete. Application code and dependency manifests have not been initialized yet. No later planned task is considered done until its changes are validated, staged, and committed locally.
+The requirements, architecture decisions, and runnable full-stack foundation are complete. PostgreSQL and business functionality have not been initialized yet. No later planned task is considered done until its changes are validated, staged, and committed locally.
 
-The local `main` branch is currently unborn, while `origin/main` contains the published `Initial commit`. Before the first project commit, local history must be aligned with `origin/main` without rewriting published history.
+The local `main` branch is based on published commit `14d5d9c`. Local project commits remain unpushed until the candidate chooses to publish them.
 
 ## Accepted Architecture Direction
 
@@ -83,33 +83,41 @@ Initialize the React/Vite/TypeScript frontend and Python/FastAPI backend workspa
 
 ---
 
-## chore(project): initialize the full-stack workspace
+## Done - chore(project): initialize the full-stack workspace
 
 ### Goal
 
 Create the smallest runnable foundation for the frontend and backend.
 
-### Planned
+### Implemented
 
-- Configure the root workspace and shared development commands.
-- Initialize the React, Vite, and TypeScript frontend under `frontend/`.
-- Initialize the Python and FastAPI backend under `backend/`.
-- Configure the accepted Python dependency-management workflow.
-- Generate `requirements.txt` from `uv.lock` as a committed compatibility artifact.
-- Add formatting, linting, type-checking, test, build, and development commands.
-- Add environment examples without committing secrets.
-- Establish feature-oriented module boundaries without introducing unnecessary abstraction layers.
-- Configure local frontend-to-backend communication with credentialed requests.
+- Configured the root workspace and shared development commands.
+- Initialized the React, Vite, and TypeScript frontend under `frontend/`.
+- Initialized the Python and FastAPI backend under `backend/`.
+- Configured the accepted Python dependency-management workflow.
+- Generated `requirements.txt` from `uv.lock` as a committed compatibility artifact.
+- Added formatting, linting, type-checking, test, build, and development commands.
+- Added environment examples without committing secrets.
+- Established feature-oriented module boundaries without introducing unnecessary abstraction layers.
+- Configured local frontend-to-backend communication with credentialed requests.
+- Added a minimal health contract and frontend status interface to prove the integration boundary.
 
 ### Validation
 
-- Start both applications locally.
-- Run formatting, linting, type-checking, test, and build commands available at this stage.
-- Confirm that no secret or machine-specific configuration is tracked.
+- Started both applications together and confirmed their expected HTTP responses.
+- Confirmed the backend health payload and explicit credentialed CORS headers.
+- Passed frontend Prettier, Oxlint, TypeScript, Vitest, and Vite production build checks.
+- Passed backend lock verification, Ruff formatting and linting, strict mypy, pytest with branch coverage, and package build checks.
+- Confirmed that a fresh `uv.lock` export has the same dependency content as the committed `requirements.txt`.
+- Confirmed that environment examples contain no secrets and local artifacts are ignored.
 
 ### Expected Result
 
 Both applications start locally and expose minimal health or placeholder interfaces.
+
+### Next
+
+Model PostgreSQL persistence and add reproducible evaluation seed data.
 
 ---
 

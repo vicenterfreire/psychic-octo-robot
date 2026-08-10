@@ -1,0 +1,14 @@
+{
+  "name": "elite-dev-challenge-2026",
+  "private": true,
+  "scripts": {
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "uv --directory backend run uvicorn backend.main:app --reload",
+    "format": "npm --prefix frontend run format && uv --directory backend run ruff format .",
+    "format:check": "npm --prefix frontend run format:check && uv --directory backend run ruff format --check .",
+    "lint": "npm --prefix frontend run lint && uv --directory backend run ruff check .",
+    "typecheck": "npm --prefix frontend run typecheck && uv --directory backend run mypy",
+    "test": "npm --prefix frontend run test && uv --directory backend run pytest --cov=backend --cov-report=term-missing",
+    "build": "npm --prefix frontend run build && uv --directory backend build"
+  }
+}
