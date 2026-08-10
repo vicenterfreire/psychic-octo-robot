@@ -12,7 +12,7 @@ A fixed-lifetime opaque browser credential. Only its digest, user, timestamps, a
 
 ### Catalog Item
 
-Normalized Ticketmaster data shown temporarily to an organizer. It is not itself a sellable event.
+Normalized Ticketmaster source data shown temporarily to an organizer. Its contract contains only provider identity, external identifier, name, description, image, and public source URL. It has no capacity or price and is not itself a sellable event.
 
 ### Event
 
@@ -71,6 +71,7 @@ Database constraints protect row-local invariants. Role compatibility and cross-
 - Gate users may validate any published event in the mandatory scope.
 - Cancellation, refunds, ticket transfer, and resale are excluded.
 - Ticketmaster is used only as source material; local events do not synchronize continuously.
+- Catalog search is global and explicit; locale, country, category, and provider pagination controls are not exposed in the mandatory interface.
 
 ## Validation Outcomes
 

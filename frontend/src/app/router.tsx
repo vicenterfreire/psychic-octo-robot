@@ -4,6 +4,7 @@ import { RequireRole } from '../features/auth/RequireRole'
 import { RequireSession } from '../features/auth/RequireSession'
 import { RoleHomePage } from '../features/auth/RoleHomePage'
 import { SessionRedirect } from '../features/auth/SessionRedirect'
+import { OrganizerCatalogPage } from '../features/catalog/OrganizerCatalogPage'
 import { HomePage } from '../features/home/HomePage'
 import { NotFoundPage } from '../features/navigation/NotFoundPage'
 
@@ -24,7 +25,7 @@ export const router = createBrowserRouter([
         path: '/organizer',
         element: (
           <RequireRole role="organizer">
-            <RoleHomePage role="organizer" />
+            <OrganizerCatalogPage />
           </RequireRole>
         ),
       },

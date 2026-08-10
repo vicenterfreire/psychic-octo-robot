@@ -18,6 +18,8 @@ class Settings:
     session_cookie_name: str = "gather_session"
     session_lifetime_seconds: int = 7 * 24 * 60 * 60
     session_cookie_secure: bool = False
+    ticketmaster_api_key: str | None = None
+    ticketmaster_timeout_seconds: float = 5.0
 
 
 @lru_cache
@@ -39,4 +41,6 @@ def get_settings() -> Settings:
         session_lifetime_seconds=int(os.getenv("SESSION_LIFETIME_SECONDS", str(7 * 24 * 60 * 60))),
         session_cookie_secure=os.getenv("SESSION_COOKIE_SECURE", str(secure_cookie_default)).lower()
         == "true",
+        ticketmaster_api_key=os.getenv("TICKETMASTER_API_KEY") or None,
+        ticketmaster_timeout_seconds=float(os.getenv("TICKETMASTER_TIMEOUT_SECONDS", "5")),
     )

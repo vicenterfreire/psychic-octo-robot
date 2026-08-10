@@ -2,7 +2,9 @@
 
 ## Current Status
 
-The requirements, architecture decisions, runnable full-stack foundation, PostgreSQL persistence layer, and persistent opaque-session authentication are complete. Catalog and business workflows have not been implemented yet. No later planned task is considered done until its changes are validated, staged, and committed locally.
+The requirements, architecture decisions, runnable full-stack foundation, PostgreSQL persistence layer, opaque-session authentication, and organizer Ticketmaster search are complete. Local event management and later business workflows have not been implemented yet. No later planned task is considered done until its changes are validated, staged, and committed locally.
+
+Commit progress: 5 of 15 planned increments complete; 10 remain.
 
 The local `main` branch is based on published commit `14d5d9c`. Local project commits remain unpushed until the candidate chooses to publish them.
 
@@ -197,30 +199,39 @@ Integrate organizer-only Ticketmaster catalog search without exposing the provid
 
 ---
 
-## feat(catalog): integrate the Ticketmaster event catalog
+## Done - feat(catalog): integrate the Ticketmaster event catalog
 
 ### Goal
 
 Allow organizers to search external source material while keeping provider credentials on the backend.
 
-### Planned
+### Implemented
 
-- Implement a server-side Ticketmaster Discovery client.
-- Keep the Ticketmaster API key out of browser code and tracked files.
-- Add organizer-only catalog search.
-- Normalize Ticketmaster responses into a small internal DTO.
-- Handle missing credentials, timeouts, quota responses, empty results, and provider unavailability.
-- Build the organizer catalog search and selection interface.
+- Added a synchronous server-side Ticketmaster Discovery client with a five-second default timeout and a fixed 12-result limit.
+- Promoted `httpx` to a locked runtime dependency and regenerated the derived `requirements.txt`.
+- Kept `TICKETMASTER_API_KEY` in backend-only environment configuration and out of all browser requests and responses.
+- Added an organizer-only `GET /api/catalog/events` endpoint with normalized and trimmed search input.
+- Reduced upstream data to provider, external identifier, name, description, one safe image URL, and source URL.
+- Mapped missing/rejected credentials, quota, timeout, transport, invalid JSON, empty results, and upstream failure into stable outcomes.
+- Built an intentional Organizer catalog interface with explicit search, responsive result cards, empty/error states, external source links, and transient selection.
 
 ### Validation
 
-- Exercise successful and unsuccessful provider responses.
-- Confirm that the provider credential never appears in browser requests or application responses.
-- Confirm that normalized results contain only the fields needed to create a local event.
+- Reviewed the official Ticketmaster Discovery v2 event-search, authentication, response, and rate-limit contracts.
+- Passed 17 focused backend catalog cases using `httpx.MockTransport`, including success, normalization, safe URLs, input validation, empty, configuration, credentials, quota, timeout, unavailable, malformed, and authorization paths.
+- Passed all 28 backend tests against PostgreSQL with 95% coverage.
+- Passed all six frontend tests, including search, selection, empty, stable error, and browser-request credential checks.
+- Passed frontend/backend formatting, linting, strict type checking, builds, lock verification, and Alembic drift detection.
+- Confirmed through a live local HTTP server that an authenticated Organizer receives a stable `503` when no Ticketmaster key is configured.
+- Did not execute a live Ticketmaster success request because no provider credential is stored in the workspace.
 
 ### Expected Result
 
 An organizer can search Ticketmaster and select an external catalog item without exposing the API credential.
+
+### Next
+
+Persist the selected source snapshot and implement organizer-owned local event creation, editing, listing, and publication.
 
 ---
 

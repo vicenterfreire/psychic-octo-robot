@@ -4,12 +4,13 @@
 
 - Date: 2026-08-10.
 - Branch: local `main`, based on published commit `14d5d9c` and developed through small local commits.
-- Phase: authenticated full-stack and persistence foundation.
+- Phase: authenticated full-stack with external catalog search.
 - Frontend: React, Vite, and TypeScript application initialized.
 - Backend: Python 3.14 and FastAPI application initialized.
 - Database: PostgreSQL 17 schema migrated and seeded through Podman.
 - Authentication: persistent opaque PostgreSQL sessions with role-aware frontend and backend boundaries.
-- Automated tests: three frontend tests and 11 backend tests, including PostgreSQL authentication integration.
+- External catalog: organizer-only Ticketmaster search normalized entirely by the backend.
+- Automated tests: six frontend tests and 28 backend tests, including PostgreSQL authentication integration.
 - Deployment: not selected.
 
 ## Implemented Foundation
@@ -29,6 +30,8 @@
 - Reusable backend role and ownership checks establish the authorization boundary for later resource routes.
 - The frontend restores sessions through TanStack Query and separates organizer, customer, and gate navigation.
 - The test-report hook emits ignored machine-readable JSON/XML results for both suites.
+- The Ticketmaster client keeps `apikey` server-side, enforces a timeout and bounded result size, validates upstream JSON, and returns a small provider-normalized HTTP contract.
+- The Organizer interface supports explicit search, result selection, empty/error recovery, and provider source links.
 
 ## Validated Environment
 
@@ -50,8 +53,9 @@
 - Login was verified for valid, unknown, and wrong-password credentials.
 - Session restoration, expiration, logout revocation, cookie attributes, role denial, and ownership denial are covered.
 - A live HTTP smoke test confirmed Gate login, HTTP-only cookie restoration, `204` logout, and subsequent `401` denial.
-- All 11 backend tests pass with 93% coverage of the current backend.
-- All three frontend tests pass, and frontend formatting, linting, type checking, and production build succeed.
+- Ticketmaster success, empty, missing-key, rejected-key, quota, timeout, unavailable, malformed, and role-denial paths are covered without a live credential.
+- All 28 backend tests pass with 95% coverage of the current backend.
+- All six frontend tests pass, and frontend formatting, linting, type checking, and production build succeed.
 - Generated Vitest JSON, pytest JUnit XML, and summary JSON parse successfully and report no failures.
 
 ## Known Limitations
@@ -60,6 +64,9 @@
 - Frontend route guards improve navigation but are not security controls; every later protected backend route must use the authorization dependencies.
 - Expired and revoked session rows are not cleaned automatically.
 - Login rate limiting, session rotation/device management, and topology-specific CSRF hardening remain deferred.
+- Ticketmaster selection is component state until local event creation persists a trusted snapshot.
+- No live Ticketmaster request has been executed because the workspace intentionally contains no provider key.
+- Repeated catalog searches are not cached; each explicit submission consumes one provider request.
 - Cross-table rules such as "tickets only from approved reservations" cannot be expressed by simple row constraints and will be enforced transactionally by services.
 - The Podman hook is Windows-specific; other systems can use the standard `compose.yaml` with their installed Compose provider.
 - The backend test client still emits an upstream FastAPI/Starlette deprecation warning.
@@ -67,4 +74,4 @@
 
 ## Next Commit
 
-`feat(catalog): integrate the Ticketmaster event catalog`
+`feat(events): implement organizer event management`

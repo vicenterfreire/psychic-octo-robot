@@ -6,7 +6,7 @@ The mandatory product flow will allow an organizer to create a local event from 
 
 ## Current Status
 
-The runnable project, persistence, and authentication foundations are complete:
+The runnable project, persistence, authentication, and Ticketmaster catalog foundations are complete:
 
 - `frontend/` contains a React, Vite, and TypeScript single-page application.
 - `backend/` contains a Python 3.14 and FastAPI application.
@@ -15,8 +15,9 @@ The runnable project, persistence, and authentication foundations are complete:
 - The frontend calls the backend through a credentialed JSON client.
 - Users authenticate through fixed seven-day opaque sessions stored in PostgreSQL and restored through an HTTP-only cookie.
 - Organizer, customer, and gate routes are separated in both frontend navigation and reusable backend authorization dependencies.
+- Organizers can search and select normalized Ticketmaster events without exposing the provider credential to the browser.
 
-The next planned increment is `feat(catalog): integrate the Ticketmaster event catalog`.
+The next planned increment is `feat(events): implement organizer event management`.
 
 ## Prerequisites
 
@@ -87,6 +88,19 @@ Passwords use Argon2id through `pwdlib` with the current recommended parameters 
 
 Local HTTP development sets `SESSION_COOKIE_SECURE=false`. Non-development configuration defaults it to `true`, which requires HTTPS. The backend remains authoritative for roles and resource ownership; frontend route guards provide navigation and user experience, not a security boundary.
 
+## Ticketmaster Configuration
+
+Create a Ticketmaster developer key and place it only in the untracked `backend/.env` file:
+
+```dotenv
+TICKETMASTER_API_KEY=your-key-here
+TICKETMASTER_TIMEOUT_SECONDS=5
+```
+
+The official [Discovery API v2 documentation](https://developer.ticketmaster.com/products-and-docs/apis/discovery-api/v2/) describes account setup and the event-search contract. The browser calls only `GET /api/catalog/events?q=...`; the backend adds the `apikey` parameter when it contacts Ticketmaster.
+
+Search runs only when an Organizer submits the form and returns at most 12 normalized items. Missing or rejected credentials, quota exhaustion, timeout, invalid data, and provider unavailability produce stable messages without returning upstream payloads or secrets.
+
 ## Run Locally
 
 Start each application in a separate terminal from the repository root:
@@ -133,6 +147,7 @@ This writes ignored local artifacts to `.artifacts/test-results/`: Vitest JSON, 
 - Compatibility export: `requirements.txt` generated from `uv.lock`; it is not maintained manually.
 - Persistence: PostgreSQL, SQLAlchemy 2, Alembic, and Psycopg 3.
 - Local database: Podman with a Compose-compatible `compose.yaml`.
+- External catalog: backend-only Ticketmaster Discovery API access through `httpx`.
 - Authentication: seven-day opaque database sessions stored in an HTTP-only cookie.
 - Password hashing: Argon2id through `pwdlib`.
 - Ticket authenticity: versioned HMAC-signed ticket tokens.
@@ -162,4 +177,4 @@ No remote push is performed by the AI collaborator. Publication remains under th
 
 ## Current Limitations
 
-Authentication is complete, but catalog access and all event, reservation, payment, ticket, and gate business APIs remain scheduled as later commits. Ownership checks exist as reusable backend primitives and will become enforceable at the HTTP boundary when their resource routes are introduced. Rate limiting, session rotation/device management, automatic expired-session cleanup, and production-topology CSRF hardening are intentionally deferred.
+Authentication and catalog search are complete, but local event creation and all reservation, payment, ticket, and gate business APIs remain scheduled as later commits. Catalog selection is currently transient and becomes persistable in the event-management increment. The provider contract was validated with deterministic HTTP transports; a live Ticketmaster request was not executed because no developer key is stored in the workspace. Server-side catalog caching, login rate limiting, session rotation/device management, automatic expired-session cleanup, and production-topology CSRF hardening are intentionally deferred.

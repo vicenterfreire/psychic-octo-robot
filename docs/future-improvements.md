@@ -16,6 +16,13 @@ These improvements are deliberately deferred until the mandatory end-to-end flow
 - **Possible improvement:** indexed filters, sorting, and pagination.
 - **Worthwhile when:** the catalog is large enough that text search is insufficient.
 
+## External Catalog Caching
+
+- **Current approach:** each explicit Organizer search calls Ticketmaster once and returns at most 12 normalized events.
+- **Limitation:** repeated identical searches consume the finite provider quota and repeat network latency.
+- **Possible improvement:** add a short-lived server-side cache keyed by normalized query while preserving stable error behavior.
+- **Worthwhile when:** measured usage or quota pressure justifies cache invalidation and operational complexity.
+
 ## Cancellation and Refunds
 
 - **Current approach:** approved reservations and tickets are final.

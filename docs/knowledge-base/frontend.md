@@ -11,6 +11,7 @@ The frontend is a React single-page application built by Vite. It presents role-
 - `src/app/query-client.ts` configures TanStack Query for remote state.
 - `src/lib/api-client.ts` is the credentialed JSON transport boundary.
 - `src/features/auth/` contains session requests, login/logout interactions, and route guards.
+- `src/features/catalog/` contains the Organizer search, normalized result cards, and transient selection.
 - `src/features/` groups screens, requests, and tests by product feature.
 - `src/test/setup.ts` configures browser-like assertions for Vitest.
 
@@ -32,6 +33,14 @@ TanStack Query calls `GET /auth/me` when a session-aware route renders. A `401` 
 
 Login writes the returned user into the shared session query and redirects to the role workspace. Logout revokes the backend session first, then clears that query. `RequireSession` handles authentication and `RequireRole` prevents cross-role navigation, but both are user-experience boundaries only: the backend must authorize every protected operation.
 
+## Organizer Catalog Flow
+
+The Organizer submits a complete query before the frontend calls `/catalog/events`; typing does not consume provider quota. The browser receives only the small internal event contract and never receives or knows the Ticketmaster API key.
+
+Search is a TanStack Query mutation because it is an explicit user action rather than continuously loaded server state. The selected source item remains local component state for now. The next increment will connect it to a validated local-event form and backend persistence; refreshing the page currently clears the selection.
+
+The interface provides loading, empty, provider-error, missing-image, external-source, and selected states. External links are opened with a separate browsing context and no referrer relationship.
+
 ## Quality Boundary
 
-Prettier owns formatting, Oxlint owns static linting, TypeScript runs with strict project settings, and Vitest with Testing Library protects meaningful interaction and integration boundaries. Tests cover health transport, login, session restoration into a protected route, and cross-role redirection. The root test-report hook also writes a Vitest JSON result for automated inspection.
+Prettier owns formatting, Oxlint owns static linting, TypeScript runs with strict project settings, and Vitest with Testing Library protects meaningful interaction and integration boundaries. Tests cover health transport, login, session restoration, cross-role redirection, catalog search/selection, empty results, stable errors, and the absence of provider credentials in browser requests. The root test-report hook also writes a Vitest JSON result for automated inspection.

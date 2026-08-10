@@ -2,7 +2,7 @@
 
 ## Current Responsibility
 
-The backend is a FastAPI modular monolith. It owns API behavior, authentication, authorization, and persistence, and will later own Ticketmaster access, reservation concurrency, payments, and ticket validation.
+The backend is a FastAPI modular monolith. It owns API behavior, authentication, authorization, Ticketmaster access, and persistence, and will later own reservation concurrency, payments, and ticket validation.
 
 ## Current Structure
 
@@ -10,6 +10,7 @@ The backend is a FastAPI modular monolith. It owns API behavior, authentication,
 - `src/backend/api/router.py` is the composition point for HTTP feature routers.
 - `src/backend/api/routes/health.py` provides the initial health contract.
 - `src/backend/auth/` owns password verification, opaque-session lifecycle, authentication routes, and reusable authorization checks.
+- `src/backend/catalog/` owns Ticketmaster transport, response validation, normalization, and organizer-only search.
 - `src/backend/core/settings.py` reads process configuration into an immutable settings object.
 - `src/backend/database/dependencies.py` supplies one synchronous SQLAlchemy session per request.
 - `src/backend/database/models.py` defines the complete relational mapping and database constraints.
@@ -42,6 +43,8 @@ Credentialed CORS uses one explicit `FRONTEND_ORIGIN`. A wildcard origin cannot 
 
 SQLAlchemy 2 maps persistence, Psycopg 3 connects to PostgreSQL, Alembic owns schema changes, and `pwdlib` creates and verifies the accepted Argon2id hashes. `PasswordHash.recommended()` currently resolves to Argon2id version 19 with `m=65536,t=3,p=4`; the encoded hashes remain self-describing. Database-backed FastAPI routes remain synchronous so FastAPI can run blocking database and password work in its thread pool.
 
+`httpx` is the synchronous Ticketmaster transport. It is a runtime dependency because the application, not only its tests, performs the provider request. The mock transport used by tests exercises the same request and parsing code without consuming a real quota.
+
 ## Authentication and Authorization Boundary
 
 `POST /api/auth/login` normalizes the email and returns the same `401` response for an unknown identity or a wrong password. Unknown identities still run a dummy Argon2id verification to reduce timing differences. A successful login creates 32 random bytes, sends their URL-safe representation only in the cookie, and persists the 32-byte SHA-256 digest.
@@ -51,6 +54,16 @@ SQLAlchemy 2 maps persistence, Psycopg 3 connects to PostgreSQL, Alembic owns sc
 The cookie is HTTP-only, `SameSite=Lax`, scoped to `/`, and conditionally `Secure`; authentication responses are marked `Cache-Control: no-store`. SHA-256 is appropriate here because the input is a high-entropy random credential. It is not used for passwords, which require the deliberately expensive Argon2id function.
 
 Backend dependencies provide the authoritative current user and role checks. The ownership helper compares a resource owner identifier to that user. Actual event, reservation, and ticket routes must invoke these checks when those resources are implemented; frontend route guards alone never authorize a request.
+
+## External Catalog Boundary
+
+`GET /api/catalog/events?q=...` requires an Organizer session. The backend sends `apikey`, the normalized keyword, `source=ticketmaster`, `locale=*`, a relevance sort, and a fixed limit of 12 to the official [Discovery API v2 event search](https://developer.ticketmaster.com/products-and-docs/apis/discovery-api/v2/).
+
+The provider response is validated and reduced to provider name, provider event identifier, name, description, one safe public image URL, and the public source URL. Dates, venues, arbitrary embedded data, rate-limit metadata, and credentials do not cross the API boundary. Local date, venue, capacity, and price remain organizer-owned event fields.
+
+Requests have a configurable five-second default timeout. Missing/rejected credentials and exhausted quota map to `503`, timeouts to `504`, and transport or invalid-response failures to `502`. Upstream bodies and exception URLs are never returned because either may contain provider details or the query-string credential.
+
+Search is explicit rather than keystroke-driven and has no automatic retry. This protects the provider's finite quota and avoids duplicate calls during outages. A new synchronous client is opened per search; connection pooling, caching, and retry policy remain unnecessary at the current challenge scale.
 
 ## Persistence Boundary
 
