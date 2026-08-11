@@ -1,7 +1,8 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { type FormEvent, useState } from 'react'
+import { type FormEvent, useRef, useState } from 'react'
 import { DiscoveryHeader } from '../discovery/DiscoveryHeader'
 import { formatEventDate } from '../discovery/event-display'
+import { GateCameraScanner } from './GateCameraScanner'
 import {
   gateEventsQueryKey,
   getGateEvents,
@@ -55,6 +56,7 @@ function ValidationFeedback({ result }: { result: GateValidationResult }) {
 export function GateValidationPage() {
   const [eventId, setEventId] = useState('')
   const [token, setToken] = useState('')
+  const validationLockedRef = useRef(false)
   const eventsQuery = useQuery({
     queryKey: gateEventsQueryKey,
     queryFn: getGateEvents,
@@ -62,6 +64,9 @@ export function GateValidationPage() {
   const validationMutation = useMutation({
     mutationFn: validateGateTicket,
     onSuccess: () => setToken(''),
+    onSettled: () => {
+      validationLockedRef.current = false
+    },
   })
   const selectedEventId = eventId || eventsQuery.data?.[0]?.id || ''
   const selectedEvent = eventsQuery.data?.find((event) => event.id === selectedEventId)
@@ -78,11 +83,23 @@ export function GateValidationPage() {
 
   function submitValidation(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const normalizedToken = token.trim()
-    if (!selectedEventId || !normalizedToken) {
+    requestValidation(token)
+  }
+
+  function requestValidation(nextToken: string) {
+    const normalizedToken = nextToken.trim()
+    if (!selectedEventId || !normalizedToken || validationLockedRef.current) {
       return
     }
+
+    validationLockedRef.current = true
     validationMutation.mutate({ event_id: selectedEventId, token: normalizedToken })
+  }
+
+  function scanToken(scannedToken: string) {
+    setToken(scannedToken.trim())
+    validationMutation.reset()
+    requestValidation(scannedToken)
   }
 
   return (
@@ -95,7 +112,7 @@ export function GateValidationPage() {
             <h1>Fast checks. Clear decisions.</h1>
           </div>
           <p>
-            Select the event, paste or type the ticket code, and trust only the result returned by
+            Select the event, scan or enter the ticket code, and trust only the result returned by
             the server.
           </p>
         </section>
@@ -131,6 +148,7 @@ export function GateValidationPage() {
                 <select
                   id="gate-event"
                   value={selectedEventId}
+                  disabled={validationMutation.isPending}
                   onChange={(event) => changeEvent(event.target.value)}
                 >
                   {eventsQuery.data.map((event) => (
@@ -150,6 +168,12 @@ export function GateValidationPage() {
                 </div>
               )}
 
+              <GateCameraScanner
+                key={selectedEventId}
+                disabled={validationMutation.isPending}
+                onScan={scanToken}
+              />
+
               <div>
                 <label htmlFor="ticket-code">Ticket code</label>
                 <textarea
@@ -160,6 +184,7 @@ export function GateValidationPage() {
                   spellCheck={false}
                   placeholder="v1.ticket-identifier.signature"
                   required
+                  disabled={validationMutation.isPending}
                   onChange={(event) => changeToken(event.target.value)}
                 />
                 <small>

@@ -125,10 +125,10 @@ export function ReservationHoldPage() {
                 {eventName}.
               </p>
               <p className="reservation-note">
-                Persistent QR presentation will be added in the next increment.
+                Open My Tickets to present, share, or scan the issued QR credentials.
               </p>
-              <Link className="primary-button" to="/customer">
-                Browse more events
+              <Link className="primary-button" to="/customer/tickets">
+                Open my tickets
               </Link>
             </>
           ) : reservation.status === 'declined' ? (

@@ -13,7 +13,7 @@ The frontend is a React single-page application built by Vite. It presents role-
 - `src/features/auth/` contains session requests, login/logout interactions, and route guards.
 - `src/features/catalog/` contains the Organizer search, normalized result cards, and transient selection.
 - `src/features/events/` contains event transport types, local-detail forms, owned-event listing, editing, and publication interactions.
-- `src/features/gate/` contains Gate event selection, manual validation transport, and authoritative result presentation.
+- `src/features/gate/` contains Gate event selection, camera/manual input, validation transport, and authoritative result presentation.
 - `src/features/discovery/` contains public/customer event queries, search, result cards, detail presentation, and session-aware navigation.
 - `src/features/reservations/` contains hold transport, quantity submission, server-offset countdown, simulated checkout, and reload/terminal-state recovery.
 - `src/features/tickets/` contains private/public ticket queries, Customer presentation, bearer sharing, and SVG QR rendering.
@@ -82,12 +82,16 @@ The copy action uses the generated absolute sharing URL and handles unavailable 
 
 ## Gate Validation Flow
 
-The protected `/gate` route loads the Gate-specific published event collection rather than public upcoming discovery. Its native event selector and adjacent date/location context make the current validation scope explicit. The code textarea supports paste or manual typing, trims surrounding whitespace at submission, disables duplicate clicks while pending, and clears only after an authoritative result is received.
+The protected `/gate` route loads the Gate-specific published event collection rather than public upcoming discovery. Its native event selector and adjacent date/location context make the current validation scope explicit. The code textarea supports paste or manual typing, trims surrounding whitespace at submission, disables changes while pending, and clears only after an authoritative result is received.
+
+`GateCameraScanner` is a second input adapter for that same mutation. It does not request permission on render: an explicit button dynamically imports `@zxing/browser`, prefers an environment-facing camera, and begins QR-only decoding. The first result locks the scanner and stops its media controls before the token reaches the parent. Event changes remount the component, while cancellation, pending validation, and unmount cleanup stop active controls.
+
+Unsupported APIs and camera startup exceptions are mapped to denied, missing, busy, or general recovery guidance. Manual input stays in the same form throughout. A scanned token is also copied into that field before submission; if the server response is lost, the operator can retry the identical credential instead of rescanning.
 
 The backend outcome controls one of four large, color-distinct panels: entry approved, invalid, already used, or wrong event. Color is reinforced by headings and explanatory text. A transport failure never claims acceptance or rejection because the server may have committed even when its response was lost; the operator is told not to admit yet and to retry the same credential.
 
-The form does not decode or trust the token locally. Camera support will be a second input mechanism for the same mutation, while manual entry remains immediately available as required.
+QR decoding extracts transport text but does not validate authenticity, event ownership, revocation, or usage locally. The backend remains the only admission authority, and manual entry remains immediately available as required.
 
 ## Quality Boundary
 
-Prettier owns formatting, Oxlint owns static linting, TypeScript runs with strict project settings, and Vitest with Testing Library protects meaningful interaction and integration boundaries. Tests cover health transport, login, session restoration, cross-role redirection, catalog search/selection, stable errors, provider-secret absence, event management, published discovery, quantity submission, server-clock correction, payment approval, issued quantity, expired-hold recovery, private QR presentation, unauthenticated bearer sharing, and all four manual Gate outcomes. The root test-report hook also writes a Vitest JSON result for automated inspection.
+Prettier owns formatting, Oxlint owns static linting, TypeScript runs with strict project settings, and Vitest with Testing Library protects meaningful interaction and integration boundaries. Tests cover health transport, login, session restoration, cross-role redirection, catalog search/selection, stable errors, provider-secret absence, event management, published discovery, quantity submission, server-clock correction, payment approval, issued quantity, expired-hold recovery, private QR presentation, unauthenticated bearer sharing, camera opt-in and fallback states, duplicate scan suppression, and all four Gate outcomes through manual and scanned input. The root test-report hook also writes a Vitest JSON result for automated inspection.

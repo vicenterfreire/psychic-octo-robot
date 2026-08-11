@@ -445,30 +445,41 @@ Add camera-based QR reading while preserving this manual validation path unchang
 
 ---
 
-## feat(gate): add camera-based QR reading
+## Done - feat(gate): add camera-based QR reading
 
 ### Goal
 
 Complete the required gate interface while preserving manual validation as a reliable fallback.
 
-### Planned
+### Implemented
 
-- Evaluate and document the QR-scanning dependency before adding it.
-- Request camera permission only from the gate screen.
-- Read QR tokens and submit them through the existing validation flow.
-- Prevent repeated scans while a validation request is in progress.
-- Handle unsupported browsers, denied permissions, missing cameras, and scan errors.
-- Keep manual code entry immediately accessible.
+- Evaluated current browser-scanning alternatives and recorded the candidate-approved `@zxing/browser` decision in ADR-007.
+- Locked the Node.js 22-compatible 0.1.x scanner line after the current peer dependency proved to require Node.js 24.
+- Kept the camera off until an explicit Gate action and lazy-loaded the decoder only after that action.
+- Preferred an environment-facing camera and stopped scanner controls after the first decoded QR.
+- Submitted camera and manual tokens through the same authoritative validation mutation.
+- Prevented duplicate scan callbacks and form changes while a validation is in progress.
+- Released camera controls on cancellation, event changes, pending validation, and route cleanup.
+- Mapped unsupported browsers, denied permission, missing cameras, busy hardware, and generic startup failures to manual-fallback guidance.
+- Kept the scanned token available for an exact retry when no authoritative network response arrives.
+- Updated the approved-checkout recovery link so the complete customer-to-camera demonstration leads directly to My Tickets.
 
 ### Validation
 
-- Exercise scanning on at least one supported desktop or mobile browser.
-- Exercise permission denial and unavailable-camera fallbacks.
-- Confirm that camera scanning produces the same four authoritative outcomes as manual entry.
+- Passed 29 frontend tests, including explicit camera opt-in, duplicate callback suppression, denied permission, missing camera, unsupported API, and all four outcomes through scanned input.
+- Passed all 46 backend tests against PostgreSQL with 95% coverage and successful JSON/XML report parsing.
+- Passed frontend formatting, linting, strict TypeScript, and production build; the build keeps the scanner in a separate lazy chunk.
+- Confirmed through a live browser that the camera starts only after a click, a pending permission request can be cancelled safely, and manual entry remains immediately available.
+- The available browser had no physical camera, so optical capture remains a short device-level evaluator check; automated decoding callbacks cover the complete application flow.
+- Confirmed that the temporary browser walkthrough data was removed without resetting or changing other local records.
 
 ### Expected Result
 
 Gate staff can validate through the camera or fall back to manual entry without losing functionality.
+
+### Next
+
+Consolidate the risk-focused critical suite and add the planned cross-role browser happy path.
 
 ---
 

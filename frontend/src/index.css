@@ -1283,6 +1283,12 @@ h1 {
   box-shadow: 0 0 0 3px rgb(140 124 255 / 15%);
 }
 
+.gate-form select:disabled,
+.gate-form textarea:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 .gate-form small,
 .gate-event-context span {
   color: var(--text-muted);
@@ -1295,6 +1301,102 @@ h1 {
   padding: 15px;
   border-left: 3px solid var(--violet);
   background: #15181e;
+}
+
+.gate-camera {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #11141a;
+}
+
+.gate-camera__heading {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.gate-camera__heading .eyebrow {
+  margin: 0 0 5px;
+}
+
+.gate-camera__heading h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.gate-camera__heading > span {
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.gate-camera__viewport {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #07090d;
+  aspect-ratio: 4 / 3;
+}
+
+.gate-camera__viewport video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gate-camera__placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  background:
+    linear-gradient(135deg, rgb(140 124 255 / 9%), transparent 55%),
+    repeating-linear-gradient(0deg, transparent 0 26px, rgb(255 255 255 / 2%) 27px);
+  place-items: center;
+}
+
+.gate-camera__placeholder span {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.gate-camera__target {
+  position: absolute;
+  inset: 17%;
+  border: 2px solid var(--gate-valid);
+  border-radius: 18px;
+  box-shadow: 0 0 0 999px rgb(0 0 0 / 28%);
+}
+
+.gate-camera__status {
+  min-height: 42px;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.gate-camera__status.is-error {
+  color: var(--gate-invalid);
+}
+
+.gate-camera .secondary-button {
+  width: 100%;
+  min-height: 46px;
 }
 
 .gate-submit {

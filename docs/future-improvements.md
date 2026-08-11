@@ -37,6 +37,13 @@ These improvements are deliberately deferred until the mandatory end-to-end flow
 - **Possible improvement:** assign gate users to organizers, venues, or events.
 - **Worthwhile when:** multiple unrelated organizers share the platform.
 
+## Advanced Camera Controls
+
+- **Current approach:** request an environment-facing camera and keep manual entry visible.
+- **Limitation:** the operator cannot select among multiple cameras or control a supported torch from the interface.
+- **Possible improvement:** list devices after permission, persist a local preference, and expose torch controls only when the active track reports support.
+- **Worthwhile when:** testing on actual gate hardware shows that automatic camera selection or low-light scanning is unreliable.
+
 ## Scheduled Reservation Cleanup
 
 - **Current approach:** expired holds are ignored or marked lazily during relevant operations.

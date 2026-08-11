@@ -6,7 +6,7 @@ The mandatory product flow will allow an organizer to create a local event from 
 
 ## Current Status
 
-The runnable project, persistence, authentication, Ticketmaster catalog, organizer management, published-event discovery, temporary inventory holds, simulated checkout, signed ticket presentation, and manual gate validation are complete:
+The runnable project, persistence, authentication, Ticketmaster catalog, organizer management, published-event discovery, temporary inventory holds, simulated checkout, signed ticket presentation, and complete gate validation are implemented:
 
 - `frontend/` contains a React, Vite, and TypeScript single-page application.
 - `backend/` contains a Python 3.14 and FastAPI application.
@@ -21,9 +21,9 @@ The runnable project, persistence, authentication, Ticketmaster catalog, organiz
 - Customers can hold a selected quantity for a PostgreSQL-timed payment window without overselling under concurrent requests.
 - Customers can deterministically approve or decline the simulation; approval finalizes the reservation and issues exactly one persistent ticket row per unit.
 - Customers can reopen a private ticket collection, render HMAC-signed QR credentials, and share minimized bearer views without exposing personal data.
-- Gate staff can select a published event, enter a ticket token manually, and receive an atomic valid, invalid, already-used, or wrong-event result.
+- Gate staff can select a published event, scan its QR through a browser camera or enter the token manually, and receive an atomic valid, invalid, already-used, or wrong-event result.
 
-The next planned increment is `feat(gate): add camera-based QR reading`.
+The next planned increment is `test(core): cover critical business and end-to-end risks`.
 
 ## Prerequisites
 
@@ -174,7 +174,11 @@ Manual submission calls `POST /api/gate/validations` with the selected event ide
 
 The row lock serializes concurrent attempts. Exactly one request can change an unused ticket to used; a competing request waits and then observes `already_used`. All business results use a stable `200` response contract, while authentication, configuration, and missing-event failures remain HTTP errors. Responses are non-cacheable.
 
-The Gate interface clears a successfully submitted code, displays large color-distinct feedback, and retains manual entry as the authoritative fallback. Camera reading is intentionally deferred to the next increment and will submit through this same endpoint.
+The camera remains off until the Gate user selects `Start camera`. That action lazily loads the QR-only `@zxing/browser` decoder, requests an environment-facing camera, and stops capture on the first decoded value before calling the same validation endpoint. A validation already in progress cannot trigger a second request. Changing the selected event, stopping the camera, or leaving the screen also releases the active scanner.
+
+Denied permission, missing or busy cameras, unsupported browser APIs, and startup failures produce recovery guidance without hiding the manual field. The decoded QR text has no client-side authority: only the four backend outcomes control admission. If a network failure occurs after a scan, the captured text remains in the manual field so the operator can retry the exact credential.
+
+Browser camera access requires a secure context. `http://localhost:5173` is accepted for same-computer development by modern browsers; testing from a phone or another computer must serve the frontend over HTTPS. The 0.1.x scanner line is deliberately locked because it supports the project's Node.js 22 runtime; the current 0.2.x peer dependency requires Node.js 24.
 
 ## Run Locally
 
@@ -216,7 +220,7 @@ This writes ignored local artifacts to `.artifacts/test-results/`: Vitest JSON, 
 
 ## Accepted Technology Direction
 
-- Frontend: React, Vite, TypeScript, React Router, TanStack Query, and localized SVG QR rendering through `qrcode.react`.
+- Frontend: React, Vite, TypeScript, React Router, TanStack Query, localized SVG QR rendering through `qrcode.react`, and lazily loaded camera decoding through `@zxing/browser`.
 - Backend: Python 3.14 and FastAPI.
 - Dependency management: `uv`, `pyproject.toml`, and a committed `uv.lock`.
 - Compatibility export: `requirements.txt` generated from `uv.lock`; it is not maintained manually.
@@ -252,4 +256,4 @@ No remote push is performed by the AI collaborator. Publication remains under th
 
 ## Current Limitations
 
-Authentication, catalog search, organizer event management, published discovery, temporary holds, simulated checkout, ticket presentation/sharing, and manual gate validation are complete. Camera-based QR reading remains scheduled for the next commit; manual entry already provides the complete authoritative validation fallback. Displayed availability can still change before a hold is created; only a successful reservation response guarantees the temporary quantity. HMAC key rotation and a ticket-revocation command are not implemented; the schema and responses already retain revocation state for later workflows. Server-side catalog caching, advanced discovery filters, pagination, background stale-row cleanup, login rate limiting, session rotation/device management, automatic expired-session cleanup, and production-topology CSRF hardening are intentionally deferred.
+The mandatory organizer, Customer, ticket, and camera/manual Gate flows are implemented. Camera scanning still depends on a secure browser context, user permission, and usable hardware, so manual entry remains permanently available. Displayed availability can change before a hold is created; only a successful reservation response guarantees a temporary quantity. HMAC key rotation and a ticket-revocation command are not implemented; the schema and responses already retain revocation state for later workflows. Server-side catalog caching, advanced discovery filters, pagination, background stale-row cleanup, login rate limiting, session rotation/device management, automatic expired-session cleanup, and production-topology CSRF hardening are intentionally deferred.

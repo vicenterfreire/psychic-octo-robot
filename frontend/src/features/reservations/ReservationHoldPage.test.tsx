@@ -122,6 +122,10 @@ describe('reservation hold recovery', () => {
       await screen.findByRole('heading', { name: 'Your tickets are issued.' }),
     ).toBeInTheDocument()
     expect(screen.getByText(/2 tickets were created for Aurora Live 2032/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Open my tickets' })).toHaveAttribute(
+      'href',
+      '/customer/tickets',
+    )
     const paymentCall = fetchMock.mock.calls.find(
       ([url, init]) => String(url).endsWith('/payment') && init?.method === 'POST',
     )
