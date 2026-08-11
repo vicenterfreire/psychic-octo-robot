@@ -48,6 +48,12 @@ It can provide useful fault-detection evidence but is expensive and unsuitable b
 - A machine must install the Playwright-managed Chromium once before its first browser run.
 - Mutation results supplement tests; they do not become a delivery gate unless later accepted.
 
+## Initial Mutation Experiment Outcome
+
+The 2026-08-11 bounded experiment was deferred before dependency installation because both `uv` and `pip` exhausted their retries against an unavailable local PyPI proxy. No current release metadata could be verified, so the project did not guess a version, add an unresolved dependency, or write untested configuration.
+
+The accepted strategy remains unchanged: `mutmut` may be reconsidered only within the documented critical-module scope and timebox. A project-specific replacement was rejected because maintaining a mutation engine would cost more than the evidence is worth for this challenge. See `docs/development/mutation-testing.md` for the resume plan.
+
 ## Revisit When
 
 - Critical behavior is complete ahead of schedule.

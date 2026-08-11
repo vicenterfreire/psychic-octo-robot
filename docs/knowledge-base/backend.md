@@ -138,3 +138,5 @@ The local Podman hook writes an ignored `backend/.env.podman` only when it resol
 ## Quality Boundary
 
 Ruff owns formatting and linting, mypy runs in strict mode, and pytest with branch coverage protects behavior. Coverage is evidence for the tested foundation, not a project-wide target or a substitute for risk-focused tests. The root `npm test` hook recreates, migrates, seeds, and drops a dedicated PostgreSQL database, so concurrency tests use the production database engine without consuming development records. The machine-readable hook also writes pytest JUnit XML alongside the frontend and browser reports.
+
+`mutmut` is the accepted optional mutation tool, but it is not a declared dependency because its current release could not be resolved through the unavailable PyPI proxy. The planned experiment is limited to authorization, reservation/payment, signing, and Gate service modules, with matching focused tests and a separate disposable database. Mutation testing remains diagnostic evidence rather than a quality gate.

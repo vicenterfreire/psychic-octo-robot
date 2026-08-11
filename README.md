@@ -24,7 +24,7 @@ The runnable project, persistence, authentication, Ticketmaster catalog, organiz
 - Gate staff can select a published event, scan its QR through a browser camera or enter the token manually, and receive an atomic valid, invalid, already-used, or wrong-event result.
 - Risk-focused backend, frontend, PostgreSQL integration, and cross-role browser tests run against disposable databases without changing development data.
 
-The next planned increment is `test(quality): evaluate focused mutation testing`.
+The next planned increment is `docs(delivery): finalize evaluator documentation`.
 
 ## Prerequisites
 
@@ -229,6 +229,8 @@ npm run test:report
 
 This runs both isolated database lifecycles and writes ignored local artifacts to `.artifacts/test-results/`: Vitest JSON, pytest JUnit XML, Playwright JSON, and `summary.json` with all three suite results and test counts. Failure screenshots and traces, when present, stay under ignored `.artifacts/playwright/`.
 
+Automated mutation testing is not part of the required setup or validation commands. The bounded `mutmut` experiment was evaluated and deferred because both `uv` and `pip` could not reach PyPI through the current local proxy. No unavailable dependency or unverified configuration was committed. The exact scope, exclusions, 20-minute timebox, and resume conditions are recorded in [the mutation-testing evaluation](docs/development/mutation-testing.md).
+
 ## Accepted Technology Direction
 
 - Frontend: React, Vite, TypeScript, React Router, TanStack Query, localized SVG QR rendering through `qrcode.react`, and lazily loaded camera decoding through `@zxing/browser`.
@@ -255,6 +257,7 @@ This runs both isolated database lifecycles and writes ignored local artifacts t
 - [Frontend knowledge](docs/knowledge-base/frontend.md)
 - [Development workflow](docs/development/workflow.md)
 - [Database workflow](docs/development/database.md)
+- [Mutation-testing evaluation](docs/development/mutation-testing.md)
 - [Current state](docs/development/current-state.md)
 - [Future improvements](docs/future-improvements.md)
 - [Original challenge](docs/challenge/Desafio-Elite-Dev-2026.pdf)

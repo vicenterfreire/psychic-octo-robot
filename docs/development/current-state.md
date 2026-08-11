@@ -4,7 +4,7 @@
 
 - Date: 2026-08-11.
 - Branch: local `main`, based on published commit `14d5d9c` and developed through small local commits.
-- Phase: the mandatory end-to-end product flow and critical suite are complete; bounded mutation evaluation is next.
+- Phase: the mandatory end-to-end product flow and critical suite are complete; evaluator delivery documentation is next.
 - Frontend: React, Vite, and TypeScript application initialized.
 - Backend: Python 3.14 and FastAPI application initialized.
 - Database: PostgreSQL 17 schema migrated and seeded through Podman.
@@ -66,6 +66,7 @@
 - Permission, hardware, browser-support, and startup failures keep manual entry visible with specific recovery guidance.
 - The Gate interface presents all four outcomes with large, distinct feedback and keeps manual entry independent of camera support.
 - The Playwright flow updates the seeded event as Organizer, purchases one ticket as Customer, and proves first-use/duplicate-use Gate outcomes without contacting Ticketmaster.
+- The optional `mutmut` experiment is documented but deferred because the available `uv` and `pip` routes could not reach PyPI; no unresolved dependency was added.
 
 ## Validated Environment
 
@@ -106,6 +107,7 @@
 - `npm test` leaves `elite_dev` untouched and drops `elite_dev_test`; `npm run test:e2e` drops `elite_dev_e2e` after completion.
 - Removing HMAC signature comparison temporarily makes the focused tampering test fail; restoring it returns all three signing tests to passing.
 - Generated Vitest JSON, pytest JUnit XML, Playwright JSON, and summary JSON parse successfully and report no failures.
+- Mutation scope, exclusions, survivor policy, disposable-database requirement, 20-minute total limit, and 30-second per-mutant limit are recorded for a later network-enabled run.
 - Live browser review confirmed Gate login, event loading, camera-off-by-default behavior, explicit permission request, safe cancellation, and immediately available manual fallback.
 - The browser environment had no physical camera, so optical capture remains a short device-level evaluator check; automated interaction tests exercise decoded QR submission, duplicate callback suppression, and all four authoritative outcomes.
 
@@ -131,4 +133,4 @@
 
 ## Next Commit
 
-`test(quality): evaluate focused mutation testing`
+`docs(delivery): finalize evaluator documentation`

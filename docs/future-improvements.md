@@ -88,7 +88,7 @@ These improvements are deliberately deferred until the mandatory end-to-end flow
 
 ## Broader Test and Mutation Coverage
 
-- **Current approach:** risk-focused tests plus a deliberate manual mutation that proved the HMAC tampering test fails when signature comparison is removed.
-- **Limitation:** low-risk presentation and framework glue may remain lightly tested.
-- **Possible improvement:** run the next bounded automated mutation experiment, then expand component, accessibility, contract, or performance suites only where a meaningful risk remains.
-- **Worthwhile when:** critical behavior is complete and the remaining deadline is safe.
+- **Current approach:** risk-focused tests plus a deliberate manual mutation that proved the HMAC tampering test fails when signature comparison is removed. The first automated `mutmut` attempt was deferred without changing dependencies because the available PyPI proxy was unreachable.
+- **Limitation:** automated mutation scores are unavailable, and low-risk presentation or framework glue may remain lightly tested.
+- **Possible improvement:** follow the documented four-module, disposable-database, 20-minute experiment when the current tool version can be verified and installed; then expand component, accessibility, contract, or performance suites only where a meaningful risk remains.
+- **Worthwhile when:** PyPI access is restored and the remaining delivery time can absorb the bounded run and survivor review.

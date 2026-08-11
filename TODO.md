@@ -522,7 +522,7 @@ Evaluate bounded mutation testing without threatening delivery.
 
 ---
 
-## test(quality): evaluate focused mutation testing
+## Done - test(quality): evaluate focused mutation testing
 
 ### Goal
 
@@ -535,17 +535,30 @@ Measure whether critical tests detect meaningful defects without threatening del
 - Documentation is current.
 - The remaining deadline is sufficient for a bounded experiment.
 
-### Planned
+### Evaluated
 
-- Select and document a Python mutation-testing tool.
-- Restrict the first run to reservation, payment, authorization, and ticket-validation modules.
-- Review surviving mutants and add tests only when they reveal a meaningful behavioral gap.
-- Record excluded files and timeout limits.
-- Stop the experiment if runtime or maintenance cost threatens the deadline.
+- Retained the candidate-approved `mutmut` selection from ADR-008.
+- Confirmed that the mandatory flow and critical suite satisfy the experiment entry conditions.
+- Attempted dependency resolution through both `uv` and the installed Python's `pip`.
+- Deferred installation after both routes exhausted retries against the unavailable local PyPI proxy.
+- Left `pyproject.toml`, `uv.lock`, and the virtual environment unchanged rather than committing an unavailable dependency.
+- Defined the four critical modules, matching focused tests, excluded areas, survivor-review policy, disposable-database requirement, and resume procedure.
+- Limited a future first run to 20 minutes total and 30 seconds per mutant where supported.
+- Rejected a project-specific mutation runner because its implementation and validation cost would threaten delivery.
+
+### Validation
+
+- Confirmed the two failed package-resolution attempts made no tracked or environment dependency changes.
+- Re-ran the complete critical suite and release checks after documenting the deferral.
+- Preserved the previous manual evidence that the HMAC tampering test detects removal of signature comparison without presenting it as an automated mutation result.
 
 ### Expected Result
 
 Either critical backend tests gain evidence of fault-detection quality, or mutation testing is explicitly deferred with a documented reason.
+
+### Next
+
+Finalize evaluator-facing setup, walkthrough, architecture, and limitation documentation.
 
 ---
 
