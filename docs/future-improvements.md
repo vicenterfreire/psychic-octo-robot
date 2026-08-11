@@ -1,6 +1,7 @@
 # Future Improvements
 
-These improvements are deliberately deferred until the mandatory end-to-end flow, critical tests, and evaluator documentation are complete.
+The mandatory end-to-end flow, critical tests, and evaluator documentation are complete. The items
+below remain deliberate post-challenge improvements rather than unfinished mandatory behavior.
 
 ## Numbered Seat Maps
 

@@ -24,7 +24,21 @@ The runnable project, persistence, authentication, Ticketmaster catalog, organiz
 - Gate staff can select a published event, scan its QR through a browser camera or enter the token manually, and receive an atomic valid, invalid, already-used, or wrong-event result.
 - Risk-focused backend, frontend, PostgreSQL integration, and cross-role browser tests run against disposable databases without changing development data.
 
-The next planned increment is `docs(delivery): finalize evaluator documentation`.
+The 15 planned increments are complete. The application is ready for local evaluation; public
+GitHub publication and challenge submission remain under the candidate's control.
+
+## Challenge Coverage
+
+| Challenge area | Implemented evidence |
+| --- | --- |
+| Published-event discovery | Public and Customer views expose local date, location, price, availability, and basic text search. |
+| Organizer management | Ticketmaster search, trusted local snapshot, draft creation, owned editing, listing, and explicit publication. |
+| Reservation | Quantity-based general admission with a temporary PostgreSQL-timed inventory hold. |
+| Simulated payment | Deterministic approval or refusal; approval atomically issues one ticket per unit. |
+| Tickets and sharing | Persistent HMAC-signed credentials, SVG QR codes, private “My Tickets,” and minimized bearer links. |
+| Gate operation | Event selection, camera or manual input, and valid, invalid, already-used, or wrong-event outcomes. |
+| Roles and persistence | Organizer, two Customers, and Gate accounts backed by PostgreSQL and opaque persistent sessions. |
+| Integrity requirements | Row-locked capacity decisions, idempotent checkout, constant-time signature checks, and atomic one-time admission. |
 
 ## Prerequisites
 
@@ -58,7 +72,26 @@ uv --directory backend sync --locked --managed-python
 
 `backend/requirements.txt` is a runtime-only compatibility export generated from `uv.lock`. It is committed for evaluators that require `pip`, but it must never be edited manually.
 
-The checked-in `.env.example` files document optional local configuration. Vite automatically reads an untracked `frontend/.env` file. The backend loads untracked `backend/.env` and `backend/.env.podman` files without overriding variables already defined by the process.
+Create the local environment files from the checked-in examples:
+
+```powershell
+Copy-Item backend/.env.example backend/.env
+Copy-Item frontend/.env.example frontend/.env
+```
+
+Vite automatically reads the untracked `frontend/.env` file. The backend loads the untracked
+`backend/.env` and generated `backend/.env.podman` files without overriding variables already
+defined by the process.
+
+Most values have local defaults. Two backend values need deliberate attention:
+
+| Variable | When it is required | Purpose |
+| --- | --- | --- |
+| `TICKET_HMAC_SECRET` | Before ticket or Gate flows | Stable secret of at least 32 bytes used to sign and verify ticket credentials. |
+| `TICKETMASTER_API_KEY` | For live Organizer catalog search and event creation | Backend-only Ticketmaster Discovery API credential. The seeded event and automated browser flow do not require it. |
+
+`DATABASE_URL`, `FRONTEND_ORIGIN`, `VITE_API_URL`, session settings, reservation lifetime, and
+Ticketmaster timeout can keep their example values for the standard local topology.
 
 ## Prepare PostgreSQL
 
@@ -204,6 +237,57 @@ Open `http://localhost:5173`. The backend health endpoint is available at `http:
 
 The frontend API base URL defaults to `http://localhost:8000/api`. Set `VITE_API_URL` in `frontend/.env` only when the backend uses another address. The backend accepts credentialed browser requests only from the configured `FRONTEND_ORIGIN`, which defaults to `http://localhost:5173`.
 
+## Evaluator Walkthrough
+
+This path exercises the mandatory product flow without private setup knowledge:
+
+1. Run `npm run db:prepare`, start the backend and frontend in separate terminals, and open
+   `http://localhost:5173`.
+2. Browse `/events` without signing in. Confirm that `Aurora Live 2030` exposes its date,
+   location, BRL price, and available quantity.
+3. Sign in as the Organizer. With `TICKETMASTER_API_KEY` configured, search the catalog, choose a
+   result, define future local details, create the draft, and publish it. The seeded Aurora event
+   remains available when a live provider call is undesirable.
+4. Sign out, sign in as either Customer, open Aurora, reserve a quantity, and choose the approved
+   simulation. Reopen the page if desired to confirm that the opaque session and reservation state
+   survive reloads. The declined path can be exercised with a separate hold.
+5. Open **My Tickets**, inspect the QR, open the public sharing view, and copy its bearer URL. The
+   ticket token is the value after `/tickets/share/` in that URL.
+6. Sign out, sign in as Gate, select Aurora, and paste that token into manual validation. The first
+   attempt returns `valid`; repeating the same token returns `already_used`. Changing one token
+   character returns `invalid`. Selecting another published event with the authentic token returns
+   `wrong_event`.
+7. For the device-level camera check, create another approved ticket, select **Start camera**, and
+   present its QR from a second screen. If the browser or hardware cannot scan, the manual field
+   remains the supported fallback.
+
+The automated equivalent is `npm run test:e2e`. It uses a disposable database and covers the
+Organizer edit, Customer approval, ticket retrieval, first Gate acceptance, and duplicate Gate
+rejection without consuming Ticketmaster quota or development data.
+
+## Troubleshooting
+
+- **Podman is unavailable or PostgreSQL never becomes healthy:** open Podman Desktop, start its
+  machine, then run `npm run db:status` and `npm run db:logs`. The hook also searches the standard
+  Podman Desktop installation directory when the current terminal has a stale `PATH`.
+- **Port 5432 is already occupied:** stop the conflicting local database, or set a matching
+  `POSTGRES_PORT` for Compose and port in `backend/.env`'s `DATABASE_URL`, then rerun
+  `npm run db:prepare`.
+- **The schema or seed is missing:** rerun `npm run db:prepare`; migration and seed are idempotent.
+  `npm run db:reset` is the recovery option, but it deliberately deletes this project's local
+  PostgreSQL volume before rebuilding it.
+- **Ticket pages or Gate validation return `503`:** set a stable `TICKET_HMAC_SECRET` of at least
+  32 bytes in `backend/.env` and restart the backend.
+- **Ticketmaster search fails:** confirm `TICKETMASTER_API_KEY`, network access, and provider quota.
+  The UI reports stable configuration, credential, rate-limit, timeout, and availability errors.
+- **The browser cannot keep a session or call the API:** use the same frontend URL as
+  `FRONTEND_ORIGIN`, keep `VITE_API_URL` aligned with the backend, and restart both applications
+  after environment changes.
+- **Camera access fails:** use `localhost` or HTTPS, allow camera permission, close other software
+  using the device, and retry. Manual validation is always available.
+- **A dependency command is missing:** reopen the terminal after installing Node.js, `uv`, Python,
+  or Podman. The recorded versions above are the validated baseline.
+
 ## Quality Commands
 
 The root scripts delegate to the appropriate frontend and backend tools:
@@ -258,6 +342,7 @@ Automated mutation testing is not part of the required setup or validation comma
 - [Development workflow](docs/development/workflow.md)
 - [Database workflow](docs/development/database.md)
 - [Mutation-testing evaluation](docs/development/mutation-testing.md)
+- [AI collaboration disclosure](docs/development/ai-collaboration.md)
 - [Current state](docs/development/current-state.md)
 - [Future improvements](docs/future-improvements.md)
 - [Original challenge](docs/challenge/Desafio-Elite-Dev-2026.pdf)
@@ -267,6 +352,23 @@ Automated mutation testing is not part of the required setup or validation comma
 Work is delivered in small local commits following `TODO.md`. Architecture, security, domain, and major dependency decisions require candidate approval and are recorded as ADRs before implementation.
 
 No remote push is performed by the AI collaborator. Publication remains under the candidate's control.
+
+## AI Collaboration Disclosure
+
+OpenAI Codex was used as a pair programmer for repository inspection, requirements extraction,
+implementation acceleration, tests, documentation, and local validation. The candidate retained
+ownership of every RED decision, supplied local credentials and runtime setup, reviewed the
+incremental changes, and explicitly authorized each commit. The exact division of work, tools, and
+versioned intermediate artifacts is recorded in the
+[AI collaboration disclosure](docs/development/ai-collaboration.md).
+
+## Delivery Status
+
+The required local application and documentation are complete. Production deployment is an
+optional challenge differential and was deliberately not implemented, so there is no hosted URL.
+The candidate must review the final repository, publish it to a public GitHub repository, and submit
+that URL through the challenge form. Those remote actions are intentionally outside the AI
+collaborator's authority.
 
 ## Current Limitations
 

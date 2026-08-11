@@ -2,9 +2,11 @@
 
 ## Current Status
 
-The requirements, architecture decisions, runnable full-stack foundation, persistence, authentication, organizer/catalog flows, discovery, temporary reservations, checkout, and signed ticket presentation are complete. Authoritative gate validation and later delivery-quality increments remain. No planned task is considered done until its changes are validated, staged, and committed locally.
+The requirements, architecture decisions, complete application flow, risk-focused tests, and
+evaluator documentation are complete. The local project is ready for candidate review and remote
+publication.
 
-Commit progress: 11 of 15 planned increments complete; 4 remain.
+Commit progress: 15 of 15 planned increments complete; 0 remain.
 
 The local `main` branch is based on published commit `14d5d9c`. Local project commits remain unpushed until the candidate chooses to publish them.
 
@@ -562,31 +564,52 @@ Finalize evaluator-facing setup, walkthrough, architecture, and limitation docum
 
 ---
 
-## docs(delivery): finalize evaluator documentation
+## Done - docs(delivery): finalize evaluator documentation
 
 ### Goal
 
 Make the completed project easy to configure, exercise, understand, and defend.
 
-### Planned
+### Implemented
 
-- Finalize installation, Podman Compose, migration, seed, environment, and execution instructions.
-- Document seeded credentials and a concise evaluator walkthrough.
-- Document known limitations and troubleshooting steps.
-- Explain architecture, reservation expiry, concurrency control, session security, and HMAC ticket validation.
-- Describe AI tools, AI-assisted work, candidate-owned decisions, and versioned artifacts.
-- Update current state, future improvements, and every relevant ADR.
-- Validate the repository from a clean local setup.
+- Finalized installation, environment, Podman Compose, migration, seed, execution, and quality
+  instructions in the README.
+- Added a challenge-coverage matrix, seeded credentials, and a step-by-step evaluator walkthrough.
+- Added practical troubleshooting for Podman, ports, schema/seed, signing configuration,
+  Ticketmaster, browser/API configuration, camera access, and missing tools.
+- Kept architecture, reservation expiry and concurrency, session security, HMAC signing, and
+  one-time Gate validation explanations beside the evaluator flow.
+- Added a dedicated disclosure of the AI tool, AI-assisted work, candidate-owned decisions and
+  actions, shared review boundary, and versioned intermediate artifacts.
+- Made the deliberately missing hosted deployment and candidate-owned remote publication explicit.
+- Updated the architecture overview, current state, future-improvement boundary, and this plan.
+- Reviewed all eight accepted ADRs against the finished implementation; no decision changed or
+  required supersession.
+- Extracted, rendered, and visually reviewed all five challenge pages before the final requirements
+  cross-check.
 
 ### Validation
 
-- Follow the README from a clean environment as closely as practical.
-- Run all release checks and the complete mandatory walkthrough.
-- Confirm that documented limitations match actual behavior.
+- Validated a frontend clean install from `package-lock.json` with an offline `npm ci` dry run.
+- Synchronized the backend from `uv.lock` in locked offline mode and changed no dependency files.
+- Reused healthy PostgreSQL, confirmed the schema at head, and confirmed the seed inserts no
+  duplicate records.
+- Passed formatting, linting, strict frontend/backend type checks, frontend production build, and
+  backend source/wheel builds.
+- Passed 29 Vitest tests, 46 pytest tests with 95% backend coverage, and one Playwright cross-role
+  flow; the machine-readable aggregate reported success and both isolated databases were dropped.
+- Confirmed Alembic detects no model/migration drift and all local Markdown links resolve.
+- Cross-checked the documented limitations against the challenge, repository, automated flow, and
+  known physical-camera boundary.
 
 ### Expected Result
 
 An evaluator can run and understand the complete application without private guidance.
+
+### Next
+
+The 15-increment development plan is complete. Final repository review, public GitHub publication,
+and challenge submission remain candidate-controlled actions.
 
 ---
 

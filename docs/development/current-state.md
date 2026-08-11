@@ -4,7 +4,7 @@
 
 - Date: 2026-08-11.
 - Branch: local `main`, based on published commit `14d5d9c` and developed through small local commits.
-- Phase: the mandatory end-to-end product flow and critical suite are complete; evaluator delivery documentation is next.
+- Phase: all 15 planned increments are complete and the local application is ready for evaluation.
 - Frontend: React, Vite, and TypeScript application initialized.
 - Backend: Python 3.14 and FastAPI application initialized.
 - Database: PostgreSQL 17 schema migrated and seeded through Podman.
@@ -67,6 +67,8 @@
 - The Gate interface presents all four outcomes with large, distinct feedback and keeps manual entry independent of camera support.
 - The Playwright flow updates the seeded event as Organizer, purchases one ticket as Customer, and proves first-use/duplicate-use Gate outcomes without contacting Ticketmaster.
 - The optional `mutmut` experiment is documented but deferred because the available `uv` and `pip` routes could not reach PyPI; no unresolved dependency was added.
+- The README now provides environment setup, seeded credentials, an evaluator walkthrough, troubleshooting, requirement coverage, and explicit delivery status.
+- The AI collaboration disclosure separates AI-assisted work, candidate-owned decisions and actions, shared review, and versioned intermediate artifacts.
 
 ## Validated Environment
 
@@ -110,6 +112,14 @@
 - Mutation scope, exclusions, survivor policy, disposable-database requirement, 20-minute total limit, and 30-second per-mutant limit are recorded for a later network-enabled run.
 - Live browser review confirmed Gate login, event loading, camera-off-by-default behavior, explicit permission request, safe cancellation, and immediately available manual fallback.
 - The browser environment had no physical camera, so optical capture remains a short device-level evaluator check; automated interaction tests exercise decoded QR submission, duplicate callback suppression, and all four authoritative outcomes.
+- Final dependency setup verification passed from both lockfiles without network access or tracked
+  dependency changes.
+- Final `db:prepare` reused healthy PostgreSQL, found the migration at head, and inserted no
+  duplicate seed records.
+- Final formatting, linting, strict type checking, frontend/backend builds, Alembic drift check, and
+  machine-readable 29-frontend/46-backend/1-browser test report all passed.
+- All local Markdown links resolve, and all five challenge pages were extracted, rendered, visually
+  reviewed, and cross-checked against the evaluator documentation.
 
 ## Known Limitations
 
@@ -131,6 +141,8 @@
 - The backend test client still emits an upstream FastAPI/Starlette deprecation warning.
 - Deployment topology and production secrets remain deferred.
 
-## Next Commit
+## Delivery Status
 
-`docs(delivery): finalize evaluator documentation`
+No development commits remain in the 15-increment plan. The candidate retains responsibility for
+the final review, public GitHub publication, and challenge-form submission. Production deployment
+remains an optional, deliberately deferred improvement, so no hosted URL is provided.

@@ -88,4 +88,7 @@ sequenceDiagram
 
 ## Deployment Boundary
 
-Provider selection is deferred until the mandatory local application works end to end. Production deployment must preserve HTTPS cookies, PostgreSQL connectivity, secrets, and same-site or CSRF protections.
+The mandatory application is complete for local evaluation, and production deployment remains an
+optional, deliberately deferred challenge differential. Any later topology must preserve HTTPS
+cookies, PostgreSQL connectivity, externalized secrets, and appropriate same-site or CSRF
+protections.
