@@ -2,11 +2,11 @@ import { createBrowserRouter } from 'react-router-dom'
 import { LoginPage } from '../features/auth/LoginPage'
 import { RequireRole } from '../features/auth/RequireRole'
 import { RequireSession } from '../features/auth/RequireSession'
-import { RoleHomePage } from '../features/auth/RoleHomePage'
 import { SessionRedirect } from '../features/auth/SessionRedirect'
 import { OrganizerCatalogPage } from '../features/catalog/OrganizerCatalogPage'
 import { EventDetailPage } from '../features/discovery/EventDetailPage'
 import { EventDiscoveryPage } from '../features/discovery/EventDiscoveryPage'
+import { GateValidationPage } from '../features/gate/GateValidationPage'
 import { HomePage } from '../features/home/HomePage'
 import { NotFoundPage } from '../features/navigation/NotFoundPage'
 import { ReservationHoldPage } from '../features/reservations/ReservationHoldPage'
@@ -82,7 +82,7 @@ export const router = createBrowserRouter([
         path: '/gate',
         element: (
           <RequireRole role="gate">
-            <RoleHomePage role="gate" />
+            <GateValidationPage />
           </RequireRole>
         ),
       },

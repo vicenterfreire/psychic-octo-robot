@@ -13,6 +13,7 @@ The frontend is a React single-page application built by Vite. It presents role-
 - `src/features/auth/` contains session requests, login/logout interactions, and route guards.
 - `src/features/catalog/` contains the Organizer search, normalized result cards, and transient selection.
 - `src/features/events/` contains event transport types, local-detail forms, owned-event listing, editing, and publication interactions.
+- `src/features/gate/` contains Gate event selection, manual validation transport, and authoritative result presentation.
 - `src/features/discovery/` contains public/customer event queries, search, result cards, detail presentation, and session-aware navigation.
 - `src/features/reservations/` contains hold transport, quantity submission, server-offset countdown, simulated checkout, and reload/terminal-state recovery.
 - `src/features/tickets/` contains private/public ticket queries, Customer presentation, bearer sharing, and SVG QR rendering.
@@ -79,6 +80,14 @@ The protected `/customer/tickets` route loads only the authenticated Customer's 
 
 The copy action uses the generated absolute sharing URL and handles unavailable or rejected clipboard access. The public `/tickets/share/:token` route deliberately avoids session restoration, loads the minimized bearer response, and renders the same token from the URL as the QR payload. Both views warn that possession grants presentation ability. Neither view treats frontend state or QR decoding as authorization.
 
+## Gate Validation Flow
+
+The protected `/gate` route loads the Gate-specific published event collection rather than public upcoming discovery. Its native event selector and adjacent date/location context make the current validation scope explicit. The code textarea supports paste or manual typing, trims surrounding whitespace at submission, disables duplicate clicks while pending, and clears only after an authoritative result is received.
+
+The backend outcome controls one of four large, color-distinct panels: entry approved, invalid, already used, or wrong event. Color is reinforced by headings and explanatory text. A transport failure never claims acceptance or rejection because the server may have committed even when its response was lost; the operator is told not to admit yet and to retry the same credential.
+
+The form does not decode or trust the token locally. Camera support will be a second input mechanism for the same mutation, while manual entry remains immediately available as required.
+
 ## Quality Boundary
 
-Prettier owns formatting, Oxlint owns static linting, TypeScript runs with strict project settings, and Vitest with Testing Library protects meaningful interaction and integration boundaries. Tests cover health transport, login, session restoration, cross-role redirection, catalog search/selection, stable errors, provider-secret absence, event management, published discovery, quantity submission, server-clock correction, payment approval, issued quantity, expired-hold recovery, private QR presentation, and unauthenticated bearer sharing. The root test-report hook also writes a Vitest JSON result for automated inspection.
+Prettier owns formatting, Oxlint owns static linting, TypeScript runs with strict project settings, and Vitest with Testing Library protects meaningful interaction and integration boundaries. Tests cover health transport, login, session restoration, cross-role redirection, catalog search/selection, stable errors, provider-secret absence, event management, published discovery, quantity submission, server-clock correction, payment approval, issued quantity, expired-hold recovery, private QR presentation, unauthenticated bearer sharing, and all four manual Gate outcomes. The root test-report hook also writes a Vitest JSON result for automated inspection.

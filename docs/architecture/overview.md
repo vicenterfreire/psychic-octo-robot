@@ -39,7 +39,7 @@ No Git worktree is needed because there is no experiment or parallel implementat
 - **Events:** local event lifecycle, price, capacity, and publication.
 - **Reservations:** temporary holds, expiration, inventory, and simulated payment.
 - **Tickets:** issuance, HMAC credentials, sharing, and customer presentation.
-- **Gate:** event-context validation and one-time consumption.
+- **Gate:** published-event selection, event-context validation, and atomic one-time consumption.
 
 Pydantic models validate API boundaries. SQLAlchemy models represent persistence. Business decisions should not depend on browser state or external Ticketmaster response shapes.
 

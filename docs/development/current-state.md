@@ -4,7 +4,7 @@
 
 - Date: 2026-08-11.
 - Branch: local `main`, based on published commit `14d5d9c` and developed through small local commits.
-- Phase: signed ticket presentation and sharing complete; authoritative gate validation is next.
+- Phase: authoritative manual gate validation complete; camera-based QR reading is next.
 - Frontend: React, Vite, and TypeScript application initialized.
 - Backend: Python 3.14 and FastAPI application initialized.
 - Database: PostgreSQL 17 schema migrated and seeded through Podman.
@@ -15,7 +15,8 @@
 - Reservations: ten-minute configurable holds protected by PostgreSQL time and event-row locks.
 - Checkout: deterministic approval/decline with atomic, idempotent ticket-row issuance.
 - Tickets: versioned HMAC credentials, private QR collection, and minimized bearer sharing views.
-- Automated tests: 17 frontend tests and 43 backend tests, including PostgreSQL ticket ownership and tamper integration.
+- Gate: published-event selection and atomic valid, invalid, already-used, or wrong-event decisions.
+- Automated tests: 21 frontend tests and 46 backend tests, including PostgreSQL concurrent check-in integration.
 - Deployment: not selected.
 
 ## Implemented Foundation
@@ -57,6 +58,9 @@
 - A dedicated ticket signer emits deterministic `v1` HMAC-SHA-256 credentials without personal data and verifies signatures with a constant-time comparison.
 - Customer ticket reads are owner-scoped, approved-reservation-only, and non-cacheable; invalid, tampered, unknown, and foreign credentials reveal no ticket.
 - The private “My Tickets” screen renders SVG QR credentials, while public bearer links expose only presentation state and event context.
+- Gate-only routes list published events and validate manually entered credentials without exposing ticket state before HMAC verification.
+- Ticket validation locks the exact ticket row, classifies revoked/event/usage state, and commits the Gate user with the PostgreSQL timestamp.
+- The Gate interface presents all four outcomes with large, distinct feedback and keeps manual entry independent of camera support.
 
 ## Validated Environment
 
@@ -86,11 +90,14 @@
 - Approved, declined, expired, repeated, contradictory, foreign-owner, invalid-outcome, and concurrent payment paths are covered.
 - Two simultaneous approvals of one three-unit hold both return the approved result while PostgreSQL contains exactly ticket numbers 1, 2, and 3.
 - Ticket tests cover deterministic signing, malformed and unsupported versions, identifier/signature tampering, unknown signed identifiers, missing secrets, role and ownership boundaries, response minimization, and stored revocation state.
+- Gate tests cover role denial, missing signing configuration, post-start event selection, malformed/tampered/unknown/revoked credentials, wrong event, repeated usage, and PostgreSQL concurrency.
+- Two simultaneous validations of one unused ticket consistently produce exactly one `valid` and one `already_used` result.
 - A live Ticketmaster search returned 12 normalized results, and a live detail fetch confirmed identifier matching and credential absence from the snapshot body.
 - A live local HTTP query returned only the seeded published event with the expected availability and no management fields.
-- All 43 backend tests pass with 94% coverage of the current backend.
-- All 17 frontend tests pass, and frontend formatting, linting, type checking, and production build succeed.
+- All 46 backend tests pass with 95% coverage of the current backend.
+- All 21 frontend tests pass, and frontend formatting, linting, type checking, and production build succeed.
 - Generated Vitest JSON, pytest JUnit XML, and summary JSON parse successfully and report no failures.
+- Live browser review confirmed Gate login, event loading, manual invalid-token feedback, no console errors, and no horizontal overflow at desktop or 390-pixel mobile width.
 
 ## Known Limitations
 
@@ -104,7 +111,7 @@
 - Displayed availability is a read snapshot; only a successful reservation transaction guarantees a temporary quantity.
 - Expiration is lazy: stale pending rows can retain that stored status until a relevant operation observes them, but stop consuming inventory at the deadline.
 - Payment is an explicit deterministic simulation; it has no provider, card input, webhook, reconciliation, refund, or fraud behavior.
-- Gate validation and atomic one-time use are not implemented yet; ticket use state is currently read-only presentation data.
+- Camera-based QR reading is not implemented yet; the complete manual validation path remains available.
 - Ticket revocation state is persisted and presented, but no cancellation or administrative revocation command exists yet.
 - The initial signing format has no key identifier or verification key ring, so changing `TICKET_HMAC_SECRET` invalidates existing tokens.
 - Approved reservations and issued tickets are final; cancellation and refunds remain deferred.
@@ -114,4 +121,4 @@
 
 ## Next Commit
 
-`feat(gate): validate ticket codes exactly once`
+`feat(gate): add camera-based QR reading`

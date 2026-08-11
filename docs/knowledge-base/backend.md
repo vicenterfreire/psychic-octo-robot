@@ -2,7 +2,7 @@
 
 ## Current Responsibility
 
-The backend is a FastAPI modular monolith. It owns API behavior, authentication, authorization, Ticketmaster access, persistence, reservation concurrency, simulated checkout, and ticket authenticity/presentation state, and will later own gate validation.
+The backend is a FastAPI modular monolith. It owns API behavior, authentication, authorization, Ticketmaster access, persistence, reservation concurrency, simulated checkout, ticket authenticity/presentation state, and authoritative Gate validation.
 
 ## Current Structure
 
@@ -12,6 +12,7 @@ The backend is a FastAPI modular monolith. It owns API behavior, authentication,
 - `src/backend/auth/` owns password verification, opaque-session lifecycle, authentication routes, and reusable authorization checks.
 - `src/backend/catalog/` owns Ticketmaster transport, response validation, normalization, and organizer-only search.
 - `src/backend/events/` owns organizer-scoped event commands, responses, lifecycle rules, and persistence transactions.
+- `src/backend/gate/` owns Gate event selection, validation outcomes, and one-time ticket consumption.
 - `src/backend/reservations/` owns Customer-scoped holds, database deadlines, inventory locking, lazy expiration, payment simulation, and ticket-row issuance.
 - `src/backend/tickets/` owns signing configuration, token verification, Customer ticket reads, and minimized bearer sharing responses.
 - `src/backend/core/settings.py` reads process configuration into an immutable settings object.
@@ -112,7 +113,17 @@ The token is `v1.<32-lowercase-hex-UUID>.<unpadded-base64url-HMAC-SHA-256>`. The
 
 `GET /api/tickets/shared/{token}` is public because the token is an intentional bearer capability. The service verifies the signature before querying, then still requires a ticket backed by an approved reservation. Malformed, tampered, unsupported, unknown-but-validly-signed, and absent tickets all return the same `404`. The response omits ticket UUID, token, share URL, reservation, and Customer identity, but includes the event presentation fields and current use/revocation state.
 
-HMAC proves origin, not current validity. PostgreSQL remains authoritative for approval, use, and revocation, which lets the next gate increment enforce one-time admission atomically.
+HMAC proves origin, not current validity. PostgreSQL remains authoritative for approval, use, and revocation, and the Gate module uses that state to enforce one-time admission atomically.
+
+## Gate Validation Boundary
+
+`GET /api/gate/events` requires the Gate role and lists at most 100 published events. It deliberately does not apply the public discovery future-date filter: a published event remains selectable while entry continues after its scheduled start. Gate-to-event assignment is outside the mandatory scope.
+
+`POST /api/gate/validations` accepts one selected event UUID and a stripped, bounded token. All four ticket decisions return a stable response with `outcome`, optional ticket number, and optional usage time. Authorization failures, missing signing configuration, invalid request shape, and an unknown/unpublished selected event remain HTTP errors rather than ticket outcomes.
+
+After the event context is accepted, the HMAC is verified before any ticket row is trusted. Malformed, tampered, unsupported, or unknown identifiers return `invalid`. An authentic identifier selects its approved-reservation ticket with `SELECT FOR UPDATE`; a revoked ticket is invalid, an event mismatch is `wrong_event`, and an existing usage timestamp is `already_used`. Event mismatch has priority over prior-use disclosure for another event.
+
+For a valid ticket, PostgreSQL time, `used_at`, and `used_by_user_id` are committed together. Concurrent requests block on the same ticket row. The first transition commits `valid`; the waiter reads the updated row and returns `already_used`. No external call runs in this transaction.
 
 ## Persistence Boundary
 

@@ -4,7 +4,7 @@
 
 The requirements, architecture decisions, runnable full-stack foundation, persistence, authentication, organizer/catalog flows, discovery, temporary reservations, checkout, and signed ticket presentation are complete. Authoritative gate validation and later delivery-quality increments remain. No planned task is considered done until its changes are validated, staged, and committed locally.
 
-Commit progress: 10 of 15 planned increments complete; 5 remain.
+Commit progress: 11 of 15 planned increments complete; 4 remain.
 
 The local `main` branch is based on published commit `14d5d9c`. Local project commits remain unpushed until the candidate chooses to publish them.
 
@@ -411,13 +411,13 @@ Add authoritative manual gate validation with atomic one-time use.
 
 ---
 
-## feat(gate): validate ticket codes exactly once
+## Done - feat(gate): validate ticket codes exactly once
 
 ### Goal
 
 Implement the authoritative gate-validation workflow before adding camera integration.
 
-### Planned
+### Implemented
 
 - Let gate users select the published event being validated.
 - Add manual ticket-code entry.
@@ -431,10 +431,17 @@ Implement the authoritative gate-validation workflow before adding camera integr
 - Test valid, malformed, tampered, already-used, and wrong-event codes.
 - Test concurrent validation attempts for the same ticket.
 - Confirm that exactly one concurrent request can accept the ticket.
+- Passed 21 frontend tests and 46 backend tests with successful JSON/XML reports and 95% backend coverage.
+- Passed frontend formatting, linting, strict TypeScript, and production build plus backend Ruff, strict mypy, and package build checks.
+- Exercised the live Gate route in desktop and 390-pixel mobile layouts with no console errors or horizontal overflow.
 
 ### Expected Result
 
 Gate staff can validate manually entered tickets, and the same ticket cannot be accepted twice.
+
+### Next
+
+Add camera-based QR reading while preserving this manual validation path unchanged.
 
 ---
 

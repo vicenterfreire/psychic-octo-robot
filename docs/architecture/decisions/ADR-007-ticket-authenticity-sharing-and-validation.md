@@ -19,8 +19,10 @@ Tickets must be represented as QR codes, shared by link, resistant to fabricatio
 - Use the same token for the QR payload and bearer sharing link.
 - Load ticket event and usage state from PostgreSQL after signature verification.
 - Render the QR locally in the React application as SVG through the focused `qrcode.react` dependency.
-- Atomically set the usage timestamp only when the ticket is unused and belongs to the selected event.
+- Lock the authentic ticket row with `SELECT FOR UPDATE` during Gate validation.
+- Atomically set the usage timestamp and Gate user only when the ticket is unused, unrevoked, approved, and belongs to the selected event.
 - Keep validation outcomes explicit: valid, invalid, already used, and wrong event.
+- Treat revoked or non-approved credentials as invalid, and check event mismatch before exposing prior usage state.
 
 ## Alternatives Considered
 
@@ -46,6 +48,7 @@ It cannot reliably enforce one-time use across multiple gate devices without lat
 - Stability depends on retaining the same signing secret; the first version has no key identifier or verification key ring.
 - A copied valid link can be used by its bearer; that is the intended sharing model and must be explained to users.
 - Database state still controls revocation and one-time usage.
+- Concurrent validation attempts serialize on one ticket row, so at most one can return valid.
 - The browser necessarily receives the bearer token to render and share it, while the signing secret remains backend-only.
 - HMAC key rotation requires versioned verification support for already issued tickets.
 

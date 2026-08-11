@@ -6,7 +6,7 @@ The mandatory product flow will allow an organizer to create a local event from 
 
 ## Current Status
 
-The runnable project, persistence, authentication, Ticketmaster catalog, organizer management, published-event discovery, temporary inventory holds, simulated checkout, and signed ticket presentation are complete:
+The runnable project, persistence, authentication, Ticketmaster catalog, organizer management, published-event discovery, temporary inventory holds, simulated checkout, signed ticket presentation, and manual gate validation are complete:
 
 - `frontend/` contains a React, Vite, and TypeScript single-page application.
 - `backend/` contains a Python 3.14 and FastAPI application.
@@ -21,8 +21,9 @@ The runnable project, persistence, authentication, Ticketmaster catalog, organiz
 - Customers can hold a selected quantity for a PostgreSQL-timed payment window without overselling under concurrent requests.
 - Customers can deterministically approve or decline the simulation; approval finalizes the reservation and issues exactly one persistent ticket row per unit.
 - Customers can reopen a private ticket collection, render HMAC-signed QR credentials, and share minimized bearer views without exposing personal data.
+- Gate staff can select a published event, enter a ticket token manually, and receive an atomic valid, invalid, already-used, or wrong-event result.
 
-The next planned increment is `feat(gate): validate ticket codes exactly once`.
+The next planned increment is `feat(gate): add camera-based QR reading`.
 
 ## Prerequisites
 
@@ -160,6 +161,21 @@ Each approved ticket is represented by `v1.<32-lowercase-hex-UUID>.<base64url-HM
 
 An authenticated Customer opens the private collection at `/customer/tickets`. The frontend renders the signed token as an SVG QR through `qrcode.react`. The same token appears in `/tickets/share/{token}` as an intentionally bearer-style link: anyone who receives it can present the ticket, so the interface warns the Customer to share it only with someone trusted. The public response is non-cacheable and limited to presentation state plus the event details needed by the recipient.
 
+## Gate Validation
+
+Sign in as the seeded Gate user and open `/gate`. `GET /api/gate/events` lists up to 100 published events, including events whose start time has passed so admission can continue after the scheduled start. Gate assignment is deliberately broad in the challenge scope: any Gate user may validate any published event.
+
+Manual submission calls `POST /api/gate/validations` with the selected event identifier and ticket token. The backend verifies the HMAC before trusting ticket state, locks the ticket row with `SELECT FOR UPDATE`, and then applies a deterministic result:
+
+- `valid`: the authentic, approved, unused, unrevoked ticket belongs to the selected event; `used_at` and the Gate user are committed together.
+- `invalid`: the token is malformed, tampered, unknown, revoked, or not backed by an approved reservation.
+- `wrong_event`: the authentic ticket belongs to a different event.
+- `already_used`: the authentic ticket for the selected event has a previous usage timestamp.
+
+The row lock serializes concurrent attempts. Exactly one request can change an unused ticket to used; a competing request waits and then observes `already_used`. All business results use a stable `200` response contract, while authentication, configuration, and missing-event failures remain HTTP errors. Responses are non-cacheable.
+
+The Gate interface clears a successfully submitted code, displays large color-distinct feedback, and retains manual entry as the authoritative fallback. Camera reading is intentionally deferred to the next increment and will submit through this same endpoint.
+
 ## Run Locally
 
 Start each application in a separate terminal from the repository root:
@@ -236,4 +252,4 @@ No remote push is performed by the AI collaborator. Publication remains under th
 
 ## Current Limitations
 
-Authentication, catalog search, organizer event management, published discovery, temporary holds, simulated checkout, and ticket presentation/sharing are complete, but gate validation remains scheduled as the next commit. Displayed availability can still change before a hold is created; only a successful reservation response guarantees the temporary quantity. HMAC key rotation and a ticket-revocation command are not implemented; the schema and responses already retain revocation state for later workflows. Server-side catalog caching, advanced discovery filters, pagination, background stale-row cleanup, login rate limiting, session rotation/device management, automatic expired-session cleanup, and production-topology CSRF hardening are intentionally deferred.
+Authentication, catalog search, organizer event management, published discovery, temporary holds, simulated checkout, ticket presentation/sharing, and manual gate validation are complete. Camera-based QR reading remains scheduled for the next commit; manual entry already provides the complete authoritative validation fallback. Displayed availability can still change before a hold is created; only a successful reservation response guarantees the temporary quantity. HMAC key rotation and a ticket-revocation command are not implemented; the schema and responses already retain revocation state for later workflows. Server-side catalog caching, advanced discovery filters, pagination, background stale-row cleanup, login rate limiting, session rotation/device management, automatic expired-session cleanup, and production-topology CSRF hardening are intentionally deferred.
