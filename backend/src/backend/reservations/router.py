@@ -9,13 +9,14 @@ from backend.core.dependencies import get_application_settings
 from backend.core.settings import Settings
 from backend.database.dependencies import get_database_session
 from backend.database.models import User, UserRole
-from backend.reservations.schemas import ReservationCreate, ReservationResponse
+from backend.reservations.schemas import PaymentCommand, ReservationCreate, ReservationResponse
 from backend.reservations.service import (
     InsufficientAvailabilityError,
     ReservableEventNotFoundError,
     ReservationNotFoundError,
     create_reservation,
     get_customer_reservation,
+    process_payment,
 )
 
 router = APIRouter(prefix="/reservations", tags=["reservations"])
@@ -62,6 +63,21 @@ def get_reservation(
     response.headers["Cache-Control"] = "no-store"
     try:
         return get_customer_reservation(database, customer.id, reservation_id)
+    except ReservationNotFoundError as error:
+        raise _not_found("Reservation was not found.") from error
+
+
+@router.post("/{reservation_id}/payment", response_model=ReservationResponse)
+def post_payment(
+    reservation_id: UUID,
+    command: PaymentCommand,
+    response: Response,
+    customer: Customer,
+    database: Database,
+) -> ReservationResponse:
+    response.headers["Cache-Control"] = "no-store"
+    try:
+        return process_payment(database, customer.id, reservation_id, command.outcome)
     except ReservationNotFoundError as error:
         raise _not_found("Reservation was not found.") from error
 

@@ -2,7 +2,7 @@
 
 ## Current Responsibility
 
-The backend is a FastAPI modular monolith. It owns API behavior, authentication, authorization, Ticketmaster access, persistence, and reservation concurrency, and will later own payments and ticket validation.
+The backend is a FastAPI modular monolith. It owns API behavior, authentication, authorization, Ticketmaster access, persistence, reservation concurrency, and simulated checkout, and will later own ticket presentation and validation.
 
 ## Current Structure
 
@@ -12,7 +12,7 @@ The backend is a FastAPI modular monolith. It owns API behavior, authentication,
 - `src/backend/auth/` owns password verification, opaque-session lifecycle, authentication routes, and reusable authorization checks.
 - `src/backend/catalog/` owns Ticketmaster transport, response validation, normalization, and organizer-only search.
 - `src/backend/events/` owns organizer-scoped event commands, responses, lifecycle rules, and persistence transactions.
-- `src/backend/reservations/` owns Customer-scoped holds, database deadlines, inventory locking, and lazy expiration.
+- `src/backend/reservations/` owns Customer-scoped holds, database deadlines, inventory locking, lazy expiration, payment simulation, and ticket-row issuance.
 - `src/backend/core/settings.py` reads process configuration into an immutable settings object.
 - `src/backend/database/dependencies.py` supplies one synchronous SQLAlchemy session per request.
 - `src/backend/database/models.py` defines the complete relational mapping and database constraints.
@@ -55,7 +55,7 @@ SQLAlchemy 2 maps persistence, Psycopg 3 connects to PostgreSQL, Alembic owns sc
 
 The cookie is HTTP-only, `SameSite=Lax`, scoped to `/`, and conditionally `Secure`; authentication responses are marked `Cache-Control: no-store`. SHA-256 is appropriate here because the input is a high-entropy random credential. It is not used for passwords, which require the deliberately expensive Argon2id function.
 
-Backend dependencies provide the authoritative current user and role checks. The ownership helper compares a resource owner identifier to that user. Actual event, reservation, and ticket routes must invoke these checks when those resources are implemented; frontend route guards alone never authorize a request.
+Backend dependencies provide the authoritative current user and role checks. Event and reservation queries include the authenticated owner where required; future private ticket routes must do the same. Frontend route guards alone never authorize a request.
 
 ## External Catalog Boundary
 
@@ -73,7 +73,7 @@ Search is explicit rather than keystroke-driven and has no automatic retry. This
 
 `GET /api/events/organizer` scopes the collection by the authenticated Organizer. Creation produces a draft; full replacement updates local editable fields; publication is a separate idempotent state transition. Updates and publication select the event by both identifier and owner and lock that row, so a foreign identifier is indistinguishable from an unknown one.
 
-Dates must carry a timezone and remain in the future. Capacity and price have bounded API validation in addition to database constraints. Before a capacity reduction, the service sums approved reservations and unexpired pending holds using PostgreSQL time. The new capacity must cover that committed quantity. This rule is already future-compatible with the reservation transaction, which will acquire the same event-row lock before allocating inventory.
+Dates must carry a timezone and remain in the future. Capacity and price have bounded API validation in addition to database constraints. Before a capacity reduction, the service sums approved reservations and unexpired pending holds using PostgreSQL time. The new capacity must cover that committed quantity. Event editing, reservation creation, and payment use the same event-first lock order.
 
 ## Published Discovery Boundary
 
@@ -81,7 +81,7 @@ Dates must carry a timezone and remain in the future. Capacity and price have bo
 
 The optional `q` parameter is trimmed and matched case-insensitively against event name, venue, and city. SQLAlchemy's auto-escaped containment treats `%` and `_` as user text rather than SQL wildcard controls. Results are ordered by start time and bounded to 50 while pagination remains deferred.
 
-A correlated aggregate calculates committed quantity for each event from approved reservations and pending reservations whose expiry is still in the future according to PostgreSQL. `available_quantity` is clamped at zero for defensive presentation. This read does not lock inventory: it is a useful snapshot, while the reservation command will recalculate under an event-row lock before creating a hold.
+A correlated aggregate calculates committed quantity for each event from approved reservations and pending reservations whose expiry is still in the future according to PostgreSQL. `available_quantity` is clamped at zero for defensive presentation. This read does not lock inventory: it is a useful snapshot, while the reservation command recalculates under an event-row lock before creating a hold.
 
 ## Temporary Reservation Boundary
 
@@ -92,6 +92,16 @@ The event row is the inventory mutex. Reservation creation and Organizer capacit
 `GET /api/reservations/{id}` finds a reservation by both identifier and authenticated Customer, returning the same `404` for an unknown or foreign resource. It marks that specific pending row expired when its database deadline has passed. Both private responses use `Cache-Control: no-store` and include `expires_at` and the sampled `server_time` used by the UI.
 
 Discovery can ignore an expired pending row without first changing its status because the timestamp predicate is the inventory rule. Creating or restoring a hold also persists the observed expired state. This lazy approach needs no worker for correctness; a scheduled cleanup becomes worthwhile only if stale-row volume creates operational cost.
+
+## Simulated Checkout Boundary
+
+`POST /api/reservations/{id}/payment` requires the Customer role, ownership, and an explicit `approved` or `declined` simulation outcome. This contract is intentionally transparent and collects no fake card data. Private responses remain non-cacheable.
+
+The service first resolves the owned reservation's event, locks that event, and then reloads and locks the reservation. This event-then-reservation order matches inventory operations and serializes concurrent payment requests. PostgreSQL time is sampled only after both locks are held.
+
+For a pending hold, expiration has priority over the requested outcome. A valid decline marks the reservation declined and releases quantity. A valid approval marks it approved and inserts ticket numbers `1..quantity` inside the same commit. The database unique constraint on reservation and ticket number provides a second defense against duplicate issuance.
+
+Approved, declined, and expired are terminal. A repeated request returns the stored status and current ticket count, even when its requested outcome conflicts with the first result. A declined or expired Customer retries by creating a new hold because the previous quantity has already returned to availability.
 
 ## Persistence Boundary
 

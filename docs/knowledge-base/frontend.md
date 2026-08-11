@@ -14,7 +14,7 @@ The frontend is a React single-page application built by Vite. It presents role-
 - `src/features/catalog/` contains the Organizer search, normalized result cards, and transient selection.
 - `src/features/events/` contains event transport types, local-detail forms, owned-event listing, editing, and publication interactions.
 - `src/features/discovery/` contains public/customer event queries, search, result cards, detail presentation, and session-aware navigation.
-- `src/features/reservations/` contains hold transport, quantity submission, server-offset countdown, and reload/expiry recovery.
+- `src/features/reservations/` contains hold transport, quantity submission, server-offset countdown, simulated checkout, and reload/terminal-state recovery.
 - `src/features/` groups screens, requests, and tests by product feature.
 - `src/test/setup.ts` configures browser-like assertions for Vitest.
 
@@ -48,7 +48,7 @@ The interface provides loading, empty, provider-error, missing-image, external-s
 
 The event collection is a TanStack Query resource enabled after the Organizer session resolves. Creation, full-detail editing, and explicit publication are mutations that invalidate that collection. This keeps server responses authoritative without introducing a client-side global event store.
 
-The form converts the displayed BRL decimal into integer minor units and the browser's local date-time into an ISO timestamp with an offset before submission. Backend validation remains authoritative. Drafts remain visible to their Organizer, while the public/customer query introduced in the next increment will select only published events.
+The form converts the displayed BRL decimal into integer minor units and the browser's local date-time into an ISO timestamp with an offset before submission. Backend validation remains authoritative. Drafts remain visible only to their Organizer, while public/Customer discovery selects published upcoming events.
 
 ## Published Discovery Flow
 
@@ -66,6 +66,12 @@ The hold route fetches its private reservation by identifier and separately reus
 
 The API returns `server_time` beside `expires_at`. The countdown records the browser receipt time, derives the offset between browser and server clocks, and advances that estimated server time for display. When it reaches zero, the screen refetches the reservation; the browser never changes status or authorizes payment. Network delay may make the display slightly optimistic, but the next backend command remains authoritative.
 
+## Simulated Checkout Flow
+
+The pending-hold screen exposes explicit approval and decline buttons and states that no real charge occurs. Both call the same payment endpoint with a deterministic outcome. On success, the mutation replaces the reservation query with the returned terminal state and invalidates published-event availability.
+
+Approval shows the persisted ticket count. Decline and expiration explain that inventory was released and link back to a new hold. Reload uses the same reservation GET, so confirmation and failure states do not depend on in-memory mutation state. QR presentation is deliberately absent until the signed-ticket increment.
+
 ## Quality Boundary
 
-Prettier owns formatting, Oxlint owns static linting, TypeScript runs with strict project settings, and Vitest with Testing Library protects meaningful interaction and integration boundaries. Tests cover health transport, login, session restoration, cross-role redirection, catalog search/selection, stable errors, provider-secret absence, event management, published discovery, quantity submission, server-clock correction, and expired-hold recovery. The root test-report hook also writes a Vitest JSON result for automated inspection.
+Prettier owns formatting, Oxlint owns static linting, TypeScript runs with strict project settings, and Vitest with Testing Library protects meaningful interaction and integration boundaries. Tests cover health transport, login, session restoration, cross-role redirection, catalog search/selection, stable errors, provider-secret absence, event management, published discovery, quantity submission, server-clock correction, payment approval, issued quantity, and expired-hold recovery. The root test-report hook also writes a Vitest JSON result for automated inspection.

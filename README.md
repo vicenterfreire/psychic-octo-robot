@@ -6,7 +6,7 @@ The mandatory product flow will allow an organizer to create a local event from 
 
 ## Current Status
 
-The runnable project, persistence, authentication, Ticketmaster catalog, organizer management, published-event discovery, and temporary inventory holds are complete:
+The runnable project, persistence, authentication, Ticketmaster catalog, organizer management, published-event discovery, temporary inventory holds, and simulated checkout are complete:
 
 - `frontend/` contains a React, Vite, and TypeScript single-page application.
 - `backend/` contains a Python 3.14 and FastAPI application.
@@ -19,8 +19,9 @@ The runnable project, persistence, authentication, Ticketmaster catalog, organiz
 - Organizers can create a local draft from a trusted provider snapshot, edit only their own events, and publish explicitly.
 - Visitors and Customers can search upcoming published events and inspect date, location, price, and current availability.
 - Customers can hold a selected quantity for a PostgreSQL-timed payment window without overselling under concurrent requests.
+- Customers can deterministically approve or decline the simulation; approval finalizes the reservation and issues exactly one persistent ticket row per unit.
 
-The next planned increment is `feat(checkout): simulate payment and finalize reservations`.
+The next planned increment is `feat(tickets): issue HMAC-signed QR tickets and sharing links`.
 
 ## Prerequisites
 
@@ -112,7 +113,7 @@ The configured credential was exercised against both the live Ticketmaster searc
 
 The Organizer workspace lists only events owned by the current account. `POST /api/events` creates a draft, `PUT /api/events/{id}` replaces its editable local details, and `POST /api/events/{id}/publish` makes publication explicit. Unknown or foreign event identifiers return the same not-found outcome, avoiding cross-account disclosure.
 
-Capacity cannot be reduced below approved reservations or pending reservations whose hold has not expired according to PostgreSQL time. The event row is locked while that quantity is checked, matching the lock that the reservation flow will use in its later increment. Dates must be timezone-aware and in the future; money crosses the API and is stored as integer minor units.
+Capacity cannot be reduced below approved reservations or pending reservations whose hold has not expired according to PostgreSQL time. Event editing, reservation creation, and checkout use the same event-row lock order before their inventory decisions. Dates must be timezone-aware and in the future; money crosses the API and is stored as integer minor units.
 
 ## Published Event Discovery
 
@@ -129,6 +130,14 @@ An authenticated Customer submits quantity through `POST /api/reservations`. The
 Holds last ten minutes by default. Set `RESERVATION_LIFETIME_SECONDS` in `backend/.env` only when a different local demonstration window is useful. Discovery immediately ignores a hold after its database deadline even if its stored status has not yet been updated by a later operation.
 
 The Customer is redirected to `/customer/reservations/{id}`, which restores the private hold with `GET /api/reservations/{id}` after reload. The API returns both `expires_at` and `server_time`; the browser corrects its display for local clock skew, but only the backend may decide whether the hold is valid. An expired screen links back to the event so the Customer can select quantity again.
+
+## Simulated Checkout
+
+`POST /api/reservations/{id}/payment` accepts an explicit deterministic `approved` or `declined` simulation outcome. No card or financial data is collected and no real charge occurs. The first terminal result wins: repeated or contradictory submissions return the stored result instead of changing it.
+
+Checkout locks the event and the Customer-owned reservation in that order, then samples PostgreSQL time. An expired hold becomes `expired`; a declined hold releases inventory immediately; an approved hold becomes `approved` and creates one persistent ticket row for each reserved unit in the same transaction. Concurrent approval requests therefore cannot duplicate tickets, and the unique reservation/ticket-number constraint remains a second integrity barrier.
+
+The hold screen presents approval, refusal, expiration, and retry guidance and restores terminal results after reload. Ticket rows are intentionally not yet exposed as QR credentials: HMAC signing, the private “My Tickets” collection, QR rendering, and bearer sharing are the next increment.
 
 ## Run Locally
 
@@ -206,4 +215,4 @@ No remote push is performed by the AI collaborator. Publication remains under th
 
 ## Current Limitations
 
-Authentication, catalog search, organizer event management, published discovery, and temporary holds are complete, but payment, ticket, and gate business APIs remain scheduled as later commits. Displayed availability can still change before a hold is created; only a successful reservation response guarantees the temporary quantity. Server-side catalog caching, advanced discovery filters, pagination, background stale-row cleanup, login rate limiting, session rotation/device management, automatic expired-session cleanup, and production-topology CSRF hardening are intentionally deferred.
+Authentication, catalog search, organizer event management, published discovery, temporary holds, and simulated checkout are complete, but ticket presentation/sharing and gate business APIs remain scheduled as later commits. Displayed availability can still change before a hold is created; only a successful reservation response guarantees the temporary quantity. Issued ticket rows do not yet have HMAC credentials or QR presentation. Server-side catalog caching, advanced discovery filters, pagination, background stale-row cleanup, login rate limiting, session rotation/device management, automatic expired-session cleanup, and production-topology CSRF hardening are intentionally deferred.

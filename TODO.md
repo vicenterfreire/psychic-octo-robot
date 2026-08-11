@@ -341,13 +341,13 @@ Simulate deterministic payment and atomically finalize, decline, or expire the p
 
 ---
 
-## feat(checkout): simulate payment and finalize reservations
+## Done - feat(checkout): simulate payment and finalize reservations
 
 ### Goal
 
 Convert a valid temporary hold into tickets or release it after a declined or expired payment.
 
-### Planned
+### Implemented
 
 - Add deterministic approved and declined payment scenarios.
 - Verify that the pending reservation still belongs to the customer and has not expired.
@@ -359,13 +359,18 @@ Convert a valid temporary hold into tickets or release it after a declined or ex
 
 ### Validation
 
-- Exercise approved, declined, expired, repeated, and concurrent payment attempts.
-- Confirm that tickets are generated only once for an approved reservation.
-- Confirm that declined and expired reservations restore availability.
+- Exercised approved, declined, expired, repeated, contradictory, foreign-owner, invalid-outcome, and concurrent payment attempts.
+- Confirmed that repeated and simultaneous approvals return one stable terminal result and create each ticket number once.
+- Confirmed that declined and expired reservations issue no tickets and restore availability immediately.
+- Passed 15 frontend tests and 38 backend tests with successful JSON/XML reports and 94% backend coverage.
 
 ### Expected Result
 
 The payment simulation completes the reservation safely while preserving the temporary-hold customer experience.
+
+### Next
+
+Sign issued ticket identifiers, present QR credentials, and add private and shareable ticket views.
 
 ---
 

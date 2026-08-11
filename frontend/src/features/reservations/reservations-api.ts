@@ -10,6 +10,7 @@ export interface Reservation {
   created_at: string
   expires_at: string
   server_time: string
+  ticket_count: number
 }
 
 export interface ReservationCreate {
@@ -31,4 +32,17 @@ export function createReservation(command: ReservationCreate): Promise<Reservati
 
 export function getReservation(reservationId: string): Promise<Reservation> {
   return apiRequest<Reservation>(`/reservations/${reservationId}`)
+}
+
+export type PaymentOutcome = 'approved' | 'declined'
+
+export function processPayment(
+  reservationId: string,
+  outcome: PaymentOutcome,
+): Promise<Reservation> {
+  return apiRequest<Reservation>(`/reservations/${reservationId}/payment`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ outcome }),
+  })
 }

@@ -1,13 +1,20 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { ApiError } from '../../lib/api-client'
 import { DiscoveryHeader } from '../discovery/DiscoveryHeader'
 import { getPublishedEvent, publishedEventQueryKey } from '../discovery/discovery-api'
 import { ReservationCountdown } from './ReservationCountdown'
-import { getReservation, reservationQueryKey } from './reservations-api'
+import {
+  getReservation,
+  type PaymentOutcome,
+  processPayment,
+  reservationQueryKey,
+} from './reservations-api'
 
 export function ReservationHoldPage() {
   const { reservationId = '' } = useParams()
+  const queryClient = useQueryClient()
   const reservationQuery = useQuery({
     queryKey: reservationQueryKey(reservationId),
     queryFn: () => getReservation(reservationId),
@@ -24,6 +31,13 @@ export function ReservationHoldPage() {
   const refreshAfterCountdown = useCallback(() => {
     void refetchReservation()
   }, [refetchReservation])
+  const paymentMutation = useMutation({
+    mutationFn: (outcome: PaymentOutcome) => processPayment(reservationId, outcome),
+    onSuccess: (reservation) => {
+      queryClient.setQueryData(reservationQueryKey(reservationId), reservation)
+      void queryClient.invalidateQueries({ queryKey: ['events', 'published'] })
+    },
+  })
 
   if (reservationQuery.isPending) {
     return <main className="centered-page">Restoring your reservation...</main>
@@ -71,7 +85,63 @@ export function ReservationHoldPage() {
                 PostgreSQL decides whether this hold is still valid. This countdown is a display of
                 the server deadline.
               </p>
-              <p className="reservation-note">Payment simulation will be added next.</p>
+              <div className="payment-simulator">
+                <strong>Payment simulator</strong>
+                <p>No real charge occurs. Choose a deterministic result for this demonstration.</p>
+                <div className="payment-simulator__actions">
+                  <button
+                    className="primary-button"
+                    type="button"
+                    disabled={paymentMutation.isPending}
+                    onClick={() => paymentMutation.mutate('approved')}
+                  >
+                    {paymentMutation.isPending ? 'Processing...' : 'Simulate approval'}
+                  </button>
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    disabled={paymentMutation.isPending}
+                    onClick={() => paymentMutation.mutate('declined')}
+                  >
+                    Simulate decline
+                  </button>
+                </div>
+                {paymentMutation.isError && (
+                  <p className="form-error" role="alert">
+                    {paymentMutation.error instanceof ApiError
+                      ? paymentMutation.error.message
+                      : 'We could not process this simulation. Please try again.'}
+                  </p>
+                )}
+              </div>
+            </>
+          ) : reservation.status === 'approved' ? (
+            <>
+              <p className="eyebrow">Payment approved</p>
+              <h1>Your tickets are issued.</h1>
+              <p>
+                {reservation.ticket_count}{' '}
+                {reservation.ticket_count === 1 ? 'ticket was' : 'tickets were'} created for{' '}
+                {eventName}.
+              </p>
+              <p className="reservation-note">
+                Persistent QR presentation will be added in the next increment.
+              </p>
+              <Link className="primary-button" to="/customer">
+                Browse more events
+              </Link>
+            </>
+          ) : reservation.status === 'declined' ? (
+            <>
+              <p className="eyebrow">Payment declined</p>
+              <h1>The hold was released.</h1>
+              <p>
+                No charge occurred. Create a new hold to retry because this inventory is available
+                again.
+              </p>
+              <Link className="primary-button" to={eventPath}>
+                Try again
+              </Link>
             </>
           ) : reservation.status === 'expired' ? (
             <>

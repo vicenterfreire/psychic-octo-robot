@@ -4,7 +4,7 @@
 
 - Date: 2026-08-11.
 - Branch: local `main`, based on published commit `14d5d9c` and developed through small local commits.
-- Phase: temporary inventory holds complete; simulated checkout is next.
+- Phase: simulated checkout complete; signed ticket presentation and sharing are next.
 - Frontend: React, Vite, and TypeScript application initialized.
 - Backend: Python 3.14 and FastAPI application initialized.
 - Database: PostgreSQL 17 schema migrated and seeded through Podman.
@@ -13,7 +13,8 @@
 - Event management: trusted provider snapshots with organizer-owned draft, edit, list, and publication flows.
 - Discovery: public and Customer-facing upcoming event search, details, and calculated availability.
 - Reservations: ten-minute configurable holds protected by PostgreSQL time and event-row locks.
-- Automated tests: 14 frontend tests and 35 backend tests, including PostgreSQL concurrency integration.
+- Checkout: deterministic approval/decline with atomic, idempotent ticket-row issuance.
+- Automated tests: 15 frontend tests and 38 backend tests, including PostgreSQL payment concurrency integration.
 - Deployment: not selected.
 
 ## Implemented Foundation
@@ -47,6 +48,11 @@
 - Reservation creation locks the upcoming published event, expires observed stale rows, recalculates committed quantity, and rejects insufficient inventory atomically.
 - Private reservation responses are non-cacheable and expose the database deadline plus server time.
 - The Customer quantity form redirects to a reload-safe hold screen with a server-offset countdown and expired-hold recovery.
+- Checkout accepts explicit approved/declined simulation outcomes without collecting financial data.
+- Payment takes locks in event-then-reservation order, rechecks PostgreSQL expiry, and makes the first terminal state immutable.
+- Approval changes the reservation and inserts one uniquely numbered ticket per unit in the same transaction.
+- Decline and expiry issue no tickets and make held inventory immediately available.
+- The Customer screen presents confirmation, refusal, expiration, retry, and restored terminal states.
 
 ## Validated Environment
 
@@ -73,10 +79,12 @@
 - Discovery integration covers draft/past exclusion, case-insensitive search, wildcard escaping, response minimization, event details, and active/expired availability.
 - Reservation integration confirms active-hold availability, lazy expiration, ownership, role denial, insufficient inventory, and exact ten-minute database deadlines.
 - Two simultaneous four-ticket holds against capacity five consistently produce one success and one conflict, leaving four active units.
+- Approved, declined, expired, repeated, contradictory, foreign-owner, invalid-outcome, and concurrent payment paths are covered.
+- Two simultaneous approvals of one three-unit hold both return the approved result while PostgreSQL contains exactly ticket numbers 1, 2, and 3.
 - A live Ticketmaster search returned 12 normalized results, and a live detail fetch confirmed identifier matching and credential absence from the snapshot body.
 - A live local HTTP query returned only the seeded published event with the expected availability and no management fields.
-- All 35 backend tests pass with 94% coverage of the current backend.
-- All 14 frontend tests pass, and frontend formatting, linting, type checking, and production build succeed.
+- All 38 backend tests pass with 94% coverage of the current backend.
+- All 15 frontend tests pass, and frontend formatting, linting, type checking, and production build succeed.
 - Generated Vitest JSON, pytest JUnit XML, and summary JSON parse successfully and report no failures.
 
 ## Known Limitations
@@ -90,12 +98,13 @@
 - Discovery returns at most 50 upcoming events without pagination or advanced filters.
 - Displayed availability is a read snapshot; only a successful reservation transaction guarantees a temporary quantity.
 - Expiration is lazy: stale pending rows can retain that stored status until a relevant operation observes them, but stop consuming inventory at the deadline.
-- Checkout is not implemented yet, so the current hold screen cannot approve or decline payment.
-- Cross-table rules such as "tickets only from approved reservations" cannot be expressed by simple row constraints and will be enforced transactionally by services.
+- Payment is an explicit deterministic simulation; it has no provider, card input, webhook, reconciliation, refund, or fraud behavior.
+- Ticket rows are issued, but HMAC credentials, QR images, customer ticket lists, and sharing links are not implemented yet.
+- Approved reservations and issued tickets are final; cancellation and refunds remain deferred.
 - The Podman hook is Windows-specific; other systems can use the standard `compose.yaml` with their installed Compose provider.
 - The backend test client still emits an upstream FastAPI/Starlette deprecation warning.
 - Deployment topology and production secrets remain deferred.
 
 ## Next Commit
 
-`feat(checkout): simulate payment and finalize reservations`
+`feat(tickets): issue HMAC-signed QR tickets and sharing links`

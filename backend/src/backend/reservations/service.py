@@ -5,8 +5,8 @@ from uuid import UUID
 from sqlalchemy import and_, func, or_, select, update
 from sqlalchemy.orm import Session
 
-from backend.database.models import Event, EventStatus, Reservation, ReservationStatus
-from backend.reservations.schemas import ReservationResponse
+from backend.database.models import Event, EventStatus, Reservation, ReservationStatus, Ticket
+from backend.reservations.schemas import PaymentOutcome, ReservationResponse
 
 
 class ReservableEventNotFoundError(Exception):
@@ -85,7 +85,66 @@ def get_customer_reservation(
         database.commit()
         database.refresh(reservation)
 
-    return ReservationResponse.from_model(reservation, database_time)
+    return ReservationResponse.from_model(
+        reservation,
+        database_time,
+        _ticket_count(database, reservation.id),
+    )
+
+
+def process_payment(
+    database: Session,
+    customer_id: UUID,
+    reservation_id: UUID,
+    outcome: PaymentOutcome,
+) -> ReservationResponse:
+    event_id = database.scalar(
+        select(Reservation.event_id).where(
+            Reservation.id == reservation_id,
+            Reservation.customer_id == customer_id,
+        )
+    )
+    if event_id is None:
+        raise ReservationNotFoundError
+
+    locked_event_id = database.scalar(
+        select(Event.id).where(Event.id == event_id).with_for_update()
+    )
+    if locked_event_id is None:  # Protected by the reservation foreign key.
+        raise RuntimeError("Reservation event is missing.")
+
+    reservation = database.scalar(
+        select(Reservation)
+        .where(
+            Reservation.id == reservation_id,
+            Reservation.customer_id == customer_id,
+            Reservation.event_id == locked_event_id,
+        )
+        .with_for_update()
+    )
+    if reservation is None:
+        raise ReservationNotFoundError
+
+    database_time = _database_time(database)
+    if reservation.status == ReservationStatus.PENDING:
+        if reservation.expires_at <= database_time:
+            reservation.status = ReservationStatus.EXPIRED
+        elif outcome == PaymentOutcome.DECLINED:
+            reservation.status = ReservationStatus.DECLINED
+        else:
+            reservation.status = ReservationStatus.APPROVED
+            database.add_all(
+                Ticket(reservation_id=reservation.id, ticket_number=ticket_number)
+                for ticket_number in range(1, reservation.quantity + 1)
+            )
+        database.commit()
+        database.refresh(reservation)
+
+    return ReservationResponse.from_model(
+        reservation,
+        database_time,
+        _ticket_count(database, reservation.id),
+    )
 
 
 def _database_time(database: Session) -> datetime:
@@ -124,5 +183,12 @@ def _committed_quantity(
                 ),
             ),
         )
+    )
+    return int(quantity or 0)
+
+
+def _ticket_count(database: Session, reservation_id: UUID) -> int:
+    quantity = database.scalar(
+        select(func.count(Ticket.id)).where(Ticket.reservation_id == reservation_id)
     )
     return int(quantity or 0)
