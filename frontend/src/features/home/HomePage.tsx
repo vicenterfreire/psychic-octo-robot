@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ApiStatus } from '../health/ApiStatus'
+import { ApiStatus } from '../health/components/ApiStatus'
 
 export function HomePage() {
   return (

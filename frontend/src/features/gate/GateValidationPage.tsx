@@ -1,8 +1,8 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { type FormEvent, useRef, useState } from 'react'
-import { DiscoveryHeader } from '../discovery/DiscoveryHeader'
-import { formatEventDate } from '../discovery/event-display'
-import { GateCameraScanner } from './GateCameraScanner'
+import { formatEventDate } from '../../lib/event-display'
+import { SiteHeader } from '../navigation/components/SiteHeader'
+import { GateCameraScanner } from './components/GateCameraScanner'
 import {
   gateEventsQueryKey,
   getGateEvents,
@@ -104,7 +104,7 @@ export function GateValidationPage() {
 
   return (
     <div className="page-shell gate-shell">
-      <DiscoveryHeader authenticated />
+      <SiteHeader authenticated />
       <main className="gate-workspace">
         <section className="gate-heading">
           <div>

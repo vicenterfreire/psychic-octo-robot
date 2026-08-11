@@ -2,9 +2,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ApiError } from '../../lib/api-client'
-import { DiscoveryHeader } from '../discovery/DiscoveryHeader'
+import { SiteHeader } from '../navigation/components/SiteHeader'
 import { getPublishedEvent, publishedEventQueryKey } from '../discovery/discovery-api'
-import { ReservationCountdown } from './ReservationCountdown'
+import { ReservationCountdown } from './components/ReservationCountdown'
 import {
   getReservation,
   type PaymentOutcome,
@@ -61,7 +61,7 @@ export function ReservationHoldPage() {
 
   return (
     <div className="page-shell">
-      <DiscoveryHeader authenticated />
+      <SiteHeader authenticated />
       <main className="reservation-page">
         <section className="reservation-panel">
           {reservation.status === 'pending' ? (

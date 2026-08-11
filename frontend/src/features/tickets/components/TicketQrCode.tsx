@@ -5,10 +5,12 @@ interface TicketQrCodeProps {
   label: string
 }
 
+const TICKET_QR_SIZE = 184
+
 export function TicketQrCode({ token, label }: TicketQrCodeProps) {
   return (
     <div className="ticket-qr" aria-label={label}>
-      <QRCodeSVG value={token} size={184} level="M" title={label} />
+      <QRCodeSVG value={token} size={TICKET_QR_SIZE} level="M" title={label} />
     </div>
   )
 }

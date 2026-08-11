@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ApiError } from '../../lib/api-client'
-import { createReservation } from './reservations-api'
+import { ApiError } from '../../../lib/api-client'
+import { createReservation } from '../reservations-api'
 
 interface ReservationFormProps {
   eventId: string

@@ -25,6 +25,12 @@ The backend is a FastAPI modular monolith. It owns API behavior, authentication,
 
 The application factory keeps construction explicit and allows tests or future entry points to build an application with the same wiring. It is not a generic dependency-injection framework.
 
+`get_settings()` and `get_engine()` are zero-argument process factories cached with
+`lru_cache(maxsize=1)`. The bound does not fix an observed accumulation problem—each function has
+only one possible cache key—but makes the intended one-instance-per-process lifecycle explicit.
+Environment changes require a process restart, and tests that replace environment values in the
+same process must clear the relevant cache.
+
 ## Local HTTP Boundary
 
 All business endpoints will be mounted below `/api`. The initial `GET /api/health` endpoint returns:

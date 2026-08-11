@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Navigate } from 'react-router-dom'
-import { roleHomePath, type UserRole } from './auth-api'
-import { useSession } from './use-session'
+import { roleHomePath, type UserRole } from '../auth-api'
+import { useSession } from '../hooks/use-session'
 
 interface RequireRoleProps {
   role: UserRole

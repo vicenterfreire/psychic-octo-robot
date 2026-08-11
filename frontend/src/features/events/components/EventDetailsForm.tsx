@@ -1,5 +1,5 @@
 import { type FormEvent, useId, useState } from 'react'
-import { eventErrorMessage, type EventDetailsInput, type OrganizerEvent } from './events-api'
+import { eventErrorMessage, type EventDetailsInput, type OrganizerEvent } from '../events-api'
 
 interface EventDetailsFormProps {
   initialEvent?: OrganizerEvent

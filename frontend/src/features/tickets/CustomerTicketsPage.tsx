@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { DiscoveryHeader } from '../discovery/DiscoveryHeader'
-import { formatEventDate } from '../discovery/event-display'
-import { TicketQrCode } from './TicketQrCode'
+import { formatEventDate } from '../../lib/event-display'
+import { SiteHeader } from '../navigation/components/SiteHeader'
+import { TicketQrCode } from './components/TicketQrCode'
 import { customerTicketsQueryKey, getCustomerTickets } from './tickets-api'
 
 interface CopyFeedback {
@@ -49,7 +49,7 @@ export function CustomerTicketsPage() {
 
   return (
     <div className="page-shell">
-      <DiscoveryHeader authenticated />
+      <SiteHeader authenticated />
       <main className="tickets-workspace">
         <div className="tickets-heading">
           <div>

@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { ApiError } from '../../lib/api-client'
-import { ReservationForm } from '../reservations/ReservationForm'
-import { DiscoveryHeader } from './DiscoveryHeader'
+import { SiteHeader } from '../navigation/components/SiteHeader'
+import { ReservationForm } from '../reservations/components/ReservationForm'
 import { getPublishedEvent, publishedEventQueryKey } from './discovery-api'
-import { availabilityLabel, formatEventDate, formatEventPrice } from './event-display'
+import { availabilityLabel, formatEventDate, formatEventPrice } from '../../lib/event-display'
 
 interface EventDetailPageProps {
   authenticated?: boolean
@@ -39,7 +39,7 @@ export function EventDetailPage({ authenticated = false }: EventDetailPageProps)
   const event = eventQuery.data
   return (
     <div className="page-shell">
-      <DiscoveryHeader authenticated={authenticated} />
+      <SiteHeader authenticated={authenticated} />
       <main className="event-detail">
         <Link className="event-detail__back" to={listPath}>
           ← All published events
@@ -72,7 +72,7 @@ export function EventDetailPage({ authenticated = false }: EventDetailPageProps)
               </div>
               <div>
                 <dt>Price</dt>
-                <dd>{formatEventPrice(event)}</dd>
+                <dd>{formatEventPrice(event.price_minor, event.currency)}</dd>
               </div>
               <div>
                 <dt>Availability</dt>

@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
-import { logout, roleHomePath, sessionQueryKey } from '../auth/auth-api'
-import { useSession } from '../auth/use-session'
+import { logout, roleHomePath, sessionQueryKey } from '../../auth/auth-api'
+import { useSession } from '../../auth/hooks/use-session'
 
-interface DiscoveryHeaderProps {
+interface SiteHeaderProps {
   authenticated: boolean
 }
 
@@ -16,7 +16,7 @@ function Brand() {
   )
 }
 
-function PublicDiscoveryHeader() {
+function PublicSiteHeader() {
   return (
     <header className="site-header">
       <Brand />
@@ -27,7 +27,7 @@ function PublicDiscoveryHeader() {
   )
 }
 
-function AuthenticatedDiscoveryHeader() {
+function AuthenticatedSiteHeader() {
   const session = useSession()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -66,6 +66,6 @@ function AuthenticatedDiscoveryHeader() {
   )
 }
 
-export function DiscoveryHeader({ authenticated }: DiscoveryHeaderProps) {
-  return authenticated ? <AuthenticatedDiscoveryHeader /> : <PublicDiscoveryHeader />
+export function SiteHeader({ authenticated }: SiteHeaderProps) {
+  return authenticated ? <AuthenticatedSiteHeader /> : <PublicSiteHeader />
 }

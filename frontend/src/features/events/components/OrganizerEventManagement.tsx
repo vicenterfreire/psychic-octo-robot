@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import type { CatalogEvent } from '../catalog/catalog-api'
+import type { CatalogEvent } from '../../catalog/catalog-api'
 import { EventDetailsForm } from './EventDetailsForm'
 import {
   createEvent,
@@ -11,7 +11,7 @@ import {
   type OrganizerEvent,
   publishEvent,
   updateEvent,
-} from './events-api'
+} from '../events-api'
 
 interface OrganizerEventCreatorProps {
   selectedEvent: CatalogEvent

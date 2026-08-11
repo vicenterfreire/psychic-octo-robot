@@ -1,5 +1,3 @@
-import type { PublishedEvent } from './discovery-api'
-
 export function formatEventDate(value: string): string {
   return new Intl.DateTimeFormat('en', {
     dateStyle: 'long',
@@ -7,11 +5,11 @@ export function formatEventDate(value: string): string {
   }).format(new Date(value))
 }
 
-export function formatEventPrice(event: PublishedEvent): string {
+export function formatEventPrice(priceMinor: number, currency: string): string {
   return new Intl.NumberFormat('en', {
     style: 'currency',
-    currency: event.currency,
-  }).format(event.price_minor / 100)
+    currency,
+  }).format(priceMinor / 100)
 }
 
 export function availabilityLabel(quantity: number): string {

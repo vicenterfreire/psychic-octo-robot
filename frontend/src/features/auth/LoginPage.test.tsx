@@ -4,8 +4,8 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { LoginPage } from './LoginPage'
-import { RequireRole } from './RequireRole'
-import { RequireSession } from './RequireSession'
+import { RequireRole } from './components/RequireRole'
+import { RequireSession } from './components/RequireSession'
 
 function apiResponse(status: number, payload?: unknown): Response {
   return {

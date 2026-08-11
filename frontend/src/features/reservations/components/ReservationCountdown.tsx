@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { formatReservationCountdown, reservationRemainingMilliseconds } from './reservation-time'
+import { formatReservationCountdown, reservationRemainingMilliseconds } from '../reservation-time'
 
 interface ReservationCountdownProps {
   expiresAt: string

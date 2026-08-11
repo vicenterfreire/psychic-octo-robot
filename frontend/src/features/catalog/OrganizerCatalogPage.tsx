@@ -2,9 +2,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { type FormEvent, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { logout, sessionQueryKey } from '../auth/auth-api'
-import { useSession } from '../auth/use-session'
+import { useSession } from '../auth/hooks/use-session'
 import { ApiError } from '../../lib/api-client'
-import { OrganizerEventCreator, OrganizerEventList } from '../events/OrganizerEventManagement'
+import {
+  OrganizerEventCreator,
+  OrganizerEventList,
+} from '../events/components/OrganizerEventManagement'
 import { type CatalogEvent, searchCatalogEvents } from './catalog-api'
 
 function providerErrorMessage(error: unknown): string {

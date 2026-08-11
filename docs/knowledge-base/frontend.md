@@ -9,18 +9,29 @@ The frontend is a React single-page application built by Vite. It presents role-
 - `src/App.tsx` composes application-wide providers.
 - `src/app/router.tsx` defines navigation.
 - `src/app/query-client.ts` configures TanStack Query for remote state.
-- `src/lib/api-client.ts` is the credentialed JSON transport boundary.
-- `src/features/auth/` contains session requests, login/logout interactions, and route guards.
+- `src/lib/` contains credentialed JSON transport and generic display-formatting boundaries.
+- `src/features/auth/` contains session requests and login/logout interactions; local `hooks/` and
+  `components/` contain session state and route guards.
 - `src/features/catalog/` contains the Organizer search, normalized result cards, and transient selection.
-- `src/features/events/` contains event transport types, local-detail forms, owned-event listing, editing, and publication interactions.
-- `src/features/gate/` contains Gate event selection, camera/manual input, validation transport, and authoritative result presentation.
+- `src/features/events/` contains event transport types, local-detail forms, owned-event listing,
+  editing, and publication interactions, with supporting forms under `components/`.
+- `src/features/gate/` contains Gate event selection, camera/manual input, validation transport, and
+  authoritative result presentation, with the camera adapter under `components/`.
 - `src/features/discovery/` contains public/customer event queries, search, result cards, detail presentation, and session-aware navigation.
-- `src/features/reservations/` contains hold transport, quantity submission, server-offset countdown, simulated checkout, and reload/terminal-state recovery.
-- `src/features/tickets/` contains private/public ticket queries, Customer presentation, bearer sharing, and SVG QR rendering.
+- `src/features/navigation/` owns cross-flow navigation UI and the shared site header.
+- `src/features/reservations/` contains hold transport, quantity submission, server-offset
+  countdown, simulated checkout, and reload/terminal-state recovery; form and countdown UI live in
+  `components/`.
+- `src/features/tickets/` contains private/public ticket queries, Customer presentation, bearer
+  sharing, and SVG QR rendering, with QR presentation under `components/`.
 - `src/features/` groups screens, requests, and tests by product feature.
 - `src/test/setup.ts` configures browser-like assertions for Vitest.
 
-This boundary is intentionally light: shared abstractions should appear only after multiple features need them.
+This boundary is intentionally light. Pages, API contracts, utilities, and tests remain at the
+feature root; only supporting UI and hooks gain local subdirectories. Shared abstractions appear
+only after multiple features need them or a cross-cutting owner is clear. Transport types stay with
+their API boundary and one-component props stay with that component rather than being extracted
+mechanically.
 
 ## State Ownership
 

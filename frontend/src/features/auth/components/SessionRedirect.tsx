@@ -1,6 +1,6 @@
 import { Navigate } from 'react-router-dom'
-import { roleHomePath } from './auth-api'
-import { useSession } from './use-session'
+import { roleHomePath } from '../auth-api'
+import { useSession } from '../hooks/use-session'
 
 export function SessionRedirect() {
   const session = useSession()

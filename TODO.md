@@ -2,11 +2,11 @@
 
 ## Current Status
 
-The requirements, architecture decisions, complete application flow, risk-focused tests, and
-evaluator documentation are complete. The local project is ready for candidate review and remote
-publication.
+The mandatory application, risk-focused tests, evaluator documentation, and first candidate review
+refactor are complete. Three approved post-delivery maintainability and local-execution increments
+remain before the candidate's final publication review.
 
-Commit progress: 15 of 15 planned increments complete; 0 remain.
+Commit progress: 16 of 19 planned increments complete; 3 remain.
 
 The local `main` branch is based on published commit `14d5d9c`. Local project commits remain unpushed until the candidate chooses to publish them.
 
@@ -35,6 +35,8 @@ Additional accepted implementation direction:
 - Reservation lifetime: configurable ten-minute default using PostgreSQL time and lazy expiration; no background worker initially.
 - Ticket QR rendering: localized SVG generation through `qrcode.react`; authenticity remains a backend responsibility.
 - Test tools: pytest/pytest-cov, Vitest/Testing Library, Playwright, and conditional focused `mutmut` use.
+- Frontend modules: feature-first, with local `components/` and `hooks/` directories only when
+  needed; types remain with their owning contract or component.
 
 ## Resolved Decision Gate
 
@@ -48,6 +50,7 @@ The initial RED decisions were accepted by the candidate and are recorded in `do
 - ADR-006: temporary reservation lifecycle.
 - ADR-007: ticket authenticity, sharing, and validation.
 - ADR-008: testing strategy.
+- ADR-009: frontend module organization.
 
 ---
 
@@ -608,8 +611,128 @@ An evaluator can run and understand the complete application without private gui
 
 ### Next
 
-The 15-increment development plan is complete. Final repository review, public GitHub publication,
-and challenge submission remain candidate-controlled actions.
+The original 15-increment mandatory plan is complete. Candidate review may add explicitly planned
+post-delivery increments before public GitHub publication and challenge submission.
+
+---
+
+## Done - refactor(project): clarify module and process boundaries
+
+### Goal
+
+Address the candidate's architecture review without introducing new framework dependencies or
+changing application behavior.
+
+### Implemented
+
+- Kept frontend features as the primary boundary while moving supporting UI into local
+  `components/` directories and the session hook into `auth/hooks/`.
+- Kept route pages, API contracts, utilities, and focused page tests at feature roots.
+- Moved the cross-flow header to the navigation feature and generic primitive-value event
+  formatters to `src/lib/`.
+- Removed the obsolete `RoleHomePage`, which had no route or consumer after the real role flows
+  replaced its initial placeholders.
+- Kept TypeScript interfaces with their owner instead of creating one file per declaration.
+- Retained the existing custom CSS and avoided a post-delivery Tailwind dependency and visual
+  rewrite.
+- Made the zero-argument settings and engine caches explicitly one-entry process singletons.
+- Added ADR-009 and updated the architecture/frontend/backend knowledge base with the accepted
+  boundaries and trade-offs.
+
+### Validation
+
+- Passed frontend Prettier, Oxlint, strict TypeScript, all 29 Vitest tests, and the Vite production
+  build.
+- Passed backend Ruff formatting/linting, strict mypy, and source/wheel builds.
+- Passed the project core-test hook against an isolated PostgreSQL database: 29 frontend tests and
+  46 backend tests with 95% backend coverage; the allowlisted test database was dropped afterward.
+- Confirmed no stale import points to the pre-refactor file locations.
+
+### Expected Result
+
+Each frontend business feature remains cohesive while larger features expose predictable local
+locations for hooks and supporting components; process-scoped backend factories communicate their
+actual cache lifecycle.
+
+### Next
+
+Document only critical public contracts and non-obvious invariants with native Python and
+TypeScript documentation formats.
+
+---
+
+## docs(code): document critical contracts and invariants
+
+### Goal
+
+Improve interview and maintenance guidance without duplicating self-explanatory signatures.
+
+### Planned
+
+- Use Python docstrings and TSDoc/JSDoc rather than C/C++-oriented Doxygen syntax.
+- Document security, concurrency, transaction, time-authority, external-integration, and lifecycle
+  behavior where it is not obvious from the signature.
+- Cover exported or reusable contracts that benefit from an explicit guarantee.
+- Leave trivial wrappers, obvious private helpers, and purely presentational components free of
+  boilerplate comments.
+- Record the documentation policy in the knowledge base.
+
+### Expected Result
+
+Important behavior is easier to defend and maintain, while comments remain trustworthy and useful.
+
+### Next
+
+Document and streamline the workflow for an existing PostgreSQL installation.
+
+---
+
+## chore(database): support externally managed PostgreSQL
+
+### Goal
+
+Make the existing `DATABASE_URL` boundary obvious and convenient when PostgreSQL runs outside
+Podman.
+
+### Planned
+
+- Document database/user creation and configuration for a locally installed PostgreSQL server.
+- Add a preparation command that migrates and seeds an already-running PostgreSQL instance without
+  starting Podman.
+- Keep destructive test database operations restricted to explicit allowlisted names.
+- Clarify that the PostgreSQL location is configurable while the database vendor remains an
+  intentional architecture decision.
+
+### Expected Result
+
+An evaluator can use either the reproducible Podman service or an existing PostgreSQL installation
+without application-code changes.
+
+### Next
+
+Containerize the frontend and backend and extend Compose to run the complete local application.
+
+---
+
+## chore(containers): run the full application with Compose
+
+### Goal
+
+Provide one reproducible local path for PostgreSQL, FastAPI, and the built React application.
+
+### Planned
+
+- Add production-oriented Dockerfiles for the frontend and backend.
+- Extend `compose.yaml` with explicit service dependencies, health checks, environment boundaries,
+  and named volumes where appropriate.
+- Preserve the existing direct host-development workflow.
+- Document build, startup, shutdown, configuration, migration, seed, and troubleshooting commands.
+- Validate the complete role flow through the composed services.
+
+### Expected Result
+
+The evaluator can start and exercise the full stack through one Compose-compatible workflow while
+developers can still run either application directly on the host.
 
 ---
 

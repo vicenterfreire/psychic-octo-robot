@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { ApiStatus } from './ApiStatus'
+import { ApiStatus } from './components/ApiStatus'
 
 afterEach(() => {
   vi.unstubAllGlobals()

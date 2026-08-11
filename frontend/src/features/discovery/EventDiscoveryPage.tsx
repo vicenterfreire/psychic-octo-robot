@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { type FormEvent, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { DiscoveryHeader } from './DiscoveryHeader'
+import { SiteHeader } from '../navigation/components/SiteHeader'
 import { getPublishedEvents, publishedEventsQueryKey, type PublishedEvent } from './discovery-api'
-import { availabilityLabel, formatEventDate, formatEventPrice } from './event-display'
+import { availabilityLabel, formatEventDate, formatEventPrice } from '../../lib/event-display'
 
 interface EventDiscoveryPageProps {
   authenticated?: boolean
@@ -31,7 +31,7 @@ function EventCard({ event, detailPath }: EventCardProps) {
         </p>
         <div className="discovery-card__footer">
           <div>
-            <strong>{formatEventPrice(event)}</strong>
+            <strong>{formatEventPrice(event.price_minor, event.currency)}</strong>
             <span className={event.available_quantity === 0 ? 'availability--empty' : ''}>
               {availabilityLabel(event.available_quantity)}
             </span>
@@ -68,7 +68,7 @@ export function EventDiscoveryPage({ authenticated = false }: EventDiscoveryPage
 
   return (
     <div className="page-shell">
-      <DiscoveryHeader authenticated={authenticated} />
+      <SiteHeader authenticated={authenticated} />
       <main className="discovery-workspace">
         <section className="discovery-intro">
           <p className="eyebrow">Published events</p>

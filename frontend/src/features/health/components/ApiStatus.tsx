@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { getHealth } from './get-health'
+import { getHealth } from '../get-health'
 
 export function ApiStatus() {
   const healthQuery = useQuery({

@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
-import { DiscoveryHeader } from '../discovery/DiscoveryHeader'
-import { formatEventDate } from '../discovery/event-display'
-import { TicketQrCode } from './TicketQrCode'
+import { formatEventDate } from '../../lib/event-display'
+import { SiteHeader } from '../navigation/components/SiteHeader'
+import { TicketQrCode } from './components/TicketQrCode'
 import { getSharedTicket, sharedTicketQueryKey } from './tickets-api'
 
 export function SharedTicketPage() {
@@ -33,7 +33,7 @@ export function SharedTicketPage() {
   const ticket = ticketQuery.data
   return (
     <div className="page-shell">
-      <DiscoveryHeader authenticated={false} />
+      <SiteHeader authenticated={false} />
       <main className="shared-ticket-page">
         <article className="shared-ticket">
           <div>

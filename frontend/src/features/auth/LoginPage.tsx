@@ -9,7 +9,7 @@ import {
   type CurrentUser,
   type LoginCredentials,
 } from './auth-api'
-import { useSession } from './use-session'
+import { useSession } from './hooks/use-session'
 
 const demoAccounts: Array<LoginCredentials & { label: string }> = [
   { label: 'Organizer', email: 'organizer@example.com', password: 'Organizer123!' },

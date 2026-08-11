@@ -60,6 +60,12 @@ Foreign keys establish ownership structure, while service-level authorization an
 - Authentication is restored from the backend session endpoint.
 - Redux or another general global state store is not introduced in the mandatory scope.
 
+Frontend modules remain feature-first. Route pages, API contracts, and feature utilities stay at a
+feature root; supporting UI and hooks use local `components/` and `hooks/` directories only when
+they exist. Cross-flow navigation belongs to the navigation feature, while generic primitive-value
+formatters belong to `src/lib/`. This keeps a business change inside one subtree without returning
+to an unstructured flat feature directory.
+
 ## Time and Concurrency
 
 PostgreSQL time is authoritative for reservation expiration. The browser countdown is informational. Inventory and ticket-use decisions occur inside short database transactions; external network requests never run inside those transactions.

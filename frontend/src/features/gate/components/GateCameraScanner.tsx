@@ -1,7 +1,7 @@
 import type { IScannerControls } from '@zxing/browser'
 import { useEffect, useRef, useState } from 'react'
 
-type CameraState = 'idle' | 'starting' | 'scanning' | 'captured' | 'error'
+type GateCameraState = 'idle' | 'starting' | 'scanning' | 'captured' | 'error'
 
 interface GateCameraScannerProps {
   disabled: boolean
@@ -34,7 +34,7 @@ export function GateCameraScanner({ disabled, onScan }: GateCameraScannerProps) 
   const controlsRef = useRef<IScannerControls | null>(null)
   const requestIdRef = useRef(0)
   const capturedRef = useRef(false)
-  const [cameraState, setCameraState] = useState<CameraState>('idle')
+  const [cameraState, setCameraState] = useState<GateCameraState>('idle')
   const [cameraError, setCameraError] = useState<string | null>(null)
 
   function stopActiveScanner() {

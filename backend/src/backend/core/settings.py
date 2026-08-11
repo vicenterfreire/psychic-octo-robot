@@ -24,7 +24,7 @@ class Settings:
     ticketmaster_timeout_seconds: float = 5.0
 
 
-@lru_cache
+@lru_cache(maxsize=1)
 def get_settings() -> Settings:
     load_dotenv(BACKEND_ROOT / ".env", override=False)
     load_dotenv(BACKEND_ROOT / ".env.podman", override=False)
