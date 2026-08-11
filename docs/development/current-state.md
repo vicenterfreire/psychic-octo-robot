@@ -4,7 +4,7 @@
 
 - Date: 2026-08-11.
 - Branch: local `main`, based on published commit `14d5d9c` and developed through small local commits.
-- Phase: simulated checkout complete; signed ticket presentation and sharing are next.
+- Phase: signed ticket presentation and sharing complete; authoritative gate validation is next.
 - Frontend: React, Vite, and TypeScript application initialized.
 - Backend: Python 3.14 and FastAPI application initialized.
 - Database: PostgreSQL 17 schema migrated and seeded through Podman.
@@ -14,7 +14,8 @@
 - Discovery: public and Customer-facing upcoming event search, details, and calculated availability.
 - Reservations: ten-minute configurable holds protected by PostgreSQL time and event-row locks.
 - Checkout: deterministic approval/decline with atomic, idempotent ticket-row issuance.
-- Automated tests: 15 frontend tests and 38 backend tests, including PostgreSQL payment concurrency integration.
+- Tickets: versioned HMAC credentials, private QR collection, and minimized bearer sharing views.
+- Automated tests: 17 frontend tests and 43 backend tests, including PostgreSQL ticket ownership and tamper integration.
 - Deployment: not selected.
 
 ## Implemented Foundation
@@ -23,8 +24,8 @@
 - The PowerShell project hook resolves the candidate's Podman Desktop executable even when the current process has a stale `PATH`.
 - The hook runs a pinned Compose provider through `uvx` and adapts to missing WSL localhost forwarding without changing global Podman settings.
 - SQLAlchemy models represent users, sessions, catalog snapshots, events, reservations, and tickets.
-- Named database constraints protect roles, states, normalized values, quantities, money, timestamps, ownership references, session digests, and ticket usage shape.
-- Alembic revision `2db7467132b0` creates the initial schema without detected metadata drift.
+- Named database constraints protect roles, states, normalized values, quantities, money, timestamps, ownership references, session digests, and ticket usage/revocation shape.
+- Alembic revision `91ec7f95d3b1` is the current schema head and adds coherent ticket revocation timestamps.
 - The idempotent seed creates one organizer, two customers, one gate user, one Ticketmaster-style snapshot, and one published event.
 - Seed passwords use the accepted Argon2id implementation and are never stored in plaintext.
 - Backend runtime dependencies are locked and `requirements.txt` has been regenerated from `uv.lock`.
@@ -53,6 +54,9 @@
 - Approval changes the reservation and inserts one uniquely numbered ticket per unit in the same transaction.
 - Decline and expiry issue no tickets and make held inventory immediately available.
 - The Customer screen presents confirmation, refusal, expiration, retry, and restored terminal states.
+- A dedicated ticket signer emits deterministic `v1` HMAC-SHA-256 credentials without personal data and verifies signatures with a constant-time comparison.
+- Customer ticket reads are owner-scoped, approved-reservation-only, and non-cacheable; invalid, tampered, unknown, and foreign credentials reveal no ticket.
+- The private “My Tickets” screen renders SVG QR credentials, while public bearer links expose only presentation state and event context.
 
 ## Validated Environment
 
@@ -69,7 +73,7 @@
 - Alembic upgrades an empty database to the current head.
 - `alembic check` reports no schema drift.
 - The first seed inserts all evaluation records and the second inserts none.
-- Direct database inspection confirmed seven tables, 35 constraints, four Argon2id hashes, and the published event.
+- Direct database inspection confirmed seven tables, 36 constraints, four Argon2id hashes, and the published event.
 - PostgreSQL rejects a reservation with quantity zero.
 - Login was verified for valid, unknown, and wrong-password credentials.
 - Session restoration, expiration, logout revocation, cookie attributes, role denial, and ownership denial are covered.
@@ -81,15 +85,16 @@
 - Two simultaneous four-ticket holds against capacity five consistently produce one success and one conflict, leaving four active units.
 - Approved, declined, expired, repeated, contradictory, foreign-owner, invalid-outcome, and concurrent payment paths are covered.
 - Two simultaneous approvals of one three-unit hold both return the approved result while PostgreSQL contains exactly ticket numbers 1, 2, and 3.
+- Ticket tests cover deterministic signing, malformed and unsupported versions, identifier/signature tampering, unknown signed identifiers, missing secrets, role and ownership boundaries, response minimization, and stored revocation state.
 - A live Ticketmaster search returned 12 normalized results, and a live detail fetch confirmed identifier matching and credential absence from the snapshot body.
 - A live local HTTP query returned only the seeded published event with the expected availability and no management fields.
-- All 38 backend tests pass with 94% coverage of the current backend.
-- All 15 frontend tests pass, and frontend formatting, linting, type checking, and production build succeed.
+- All 43 backend tests pass with 94% coverage of the current backend.
+- All 17 frontend tests pass, and frontend formatting, linting, type checking, and production build succeed.
 - Generated Vitest JSON, pytest JUnit XML, and summary JSON parse successfully and report no failures.
 
 ## Known Limitations
 
-- Event and reservation ownership are enforced in their resource queries; ticket resources must apply the same backend authority when introduced.
+- Event, reservation, and private ticket ownership are enforced in their backend resource queries.
 - Frontend route guards improve navigation but are not security controls.
 - Expired and revoked session rows are not cleaned automatically.
 - Login rate limiting, session rotation/device management, and topology-specific CSRF hardening remain deferred.
@@ -99,7 +104,9 @@
 - Displayed availability is a read snapshot; only a successful reservation transaction guarantees a temporary quantity.
 - Expiration is lazy: stale pending rows can retain that stored status until a relevant operation observes them, but stop consuming inventory at the deadline.
 - Payment is an explicit deterministic simulation; it has no provider, card input, webhook, reconciliation, refund, or fraud behavior.
-- Ticket rows are issued, but HMAC credentials, QR images, customer ticket lists, and sharing links are not implemented yet.
+- Gate validation and atomic one-time use are not implemented yet; ticket use state is currently read-only presentation data.
+- Ticket revocation state is persisted and presented, but no cancellation or administrative revocation command exists yet.
+- The initial signing format has no key identifier or verification key ring, so changing `TICKET_HMAC_SECRET` invalidates existing tokens.
 - Approved reservations and issued tickets are final; cancellation and refunds remain deferred.
 - The Podman hook is Windows-specific; other systems can use the standard `compose.yaml` with their installed Compose provider.
 - The backend test client still emits an upstream FastAPI/Starlette deprecation warning.
@@ -107,4 +114,4 @@
 
 ## Next Commit
 
-`feat(tickets): issue HMAC-signed QR tickets and sharing links`
+`feat(gate): validate ticket codes exactly once`

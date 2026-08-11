@@ -15,6 +15,7 @@ The frontend is a React single-page application built by Vite. It presents role-
 - `src/features/events/` contains event transport types, local-detail forms, owned-event listing, editing, and publication interactions.
 - `src/features/discovery/` contains public/customer event queries, search, result cards, detail presentation, and session-aware navigation.
 - `src/features/reservations/` contains hold transport, quantity submission, server-offset countdown, simulated checkout, and reload/terminal-state recovery.
+- `src/features/tickets/` contains private/public ticket queries, Customer presentation, bearer sharing, and SVG QR rendering.
 - `src/features/` groups screens, requests, and tests by product feature.
 - `src/test/setup.ts` configures browser-like assertions for Vitest.
 
@@ -70,8 +71,14 @@ The API returns `server_time` beside `expires_at`. The countdown records the bro
 
 The pending-hold screen exposes explicit approval and decline buttons and states that no real charge occurs. Both call the same payment endpoint with a deterministic outcome. On success, the mutation replaces the reservation query with the returned terminal state and invalidates published-event availability.
 
-Approval shows the persisted ticket count. Decline and expiration explain that inventory was released and link back to a new hold. Reload uses the same reservation GET, so confirmation and failure states do not depend on in-memory mutation state. QR presentation is deliberately absent until the signed-ticket increment.
+Approval shows the persisted ticket count. Decline and expiration explain that inventory was released and link back to a new hold. Reload uses the same reservation GET, so confirmation and failure states do not depend on in-memory mutation state.
+
+## Signed Ticket Flow
+
+The protected `/customer/tickets` route loads only the authenticated Customer's approved tickets. Each card presents event context, current use/revocation state, and the HMAC token as an SVG QR through `qrcode.react`. The focused QR dependency is localized to one presentational component; the backend remains responsible for token creation and validity.
+
+The copy action uses the generated absolute sharing URL and handles unavailable or rejected clipboard access. The public `/tickets/share/:token` route deliberately avoids session restoration, loads the minimized bearer response, and renders the same token from the URL as the QR payload. Both views warn that possession grants presentation ability. Neither view treats frontend state or QR decoding as authorization.
 
 ## Quality Boundary
 
-Prettier owns formatting, Oxlint owns static linting, TypeScript runs with strict project settings, and Vitest with Testing Library protects meaningful interaction and integration boundaries. Tests cover health transport, login, session restoration, cross-role redirection, catalog search/selection, stable errors, provider-secret absence, event management, published discovery, quantity submission, server-clock correction, payment approval, issued quantity, and expired-hold recovery. The root test-report hook also writes a Vitest JSON result for automated inspection.
+Prettier owns formatting, Oxlint owns static linting, TypeScript runs with strict project settings, and Vitest with Testing Library protects meaningful interaction and integration boundaries. Tests cover health transport, login, session restoration, cross-role redirection, catalog search/selection, stable errors, provider-secret absence, event management, published discovery, quantity submission, server-clock correction, payment approval, issued quantity, expired-hold recovery, private QR presentation, and unauthenticated bearer sharing. The root test-report hook also writes a Vitest JSON result for automated inspection.

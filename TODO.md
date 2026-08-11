@@ -2,9 +2,9 @@
 
 ## Current Status
 
-The requirements, architecture decisions, runnable full-stack foundation, PostgreSQL persistence layer, opaque-session authentication, and organizer Ticketmaster search are complete. Local event management and later business workflows have not been implemented yet. No later planned task is considered done until its changes are validated, staged, and committed locally.
+The requirements, architecture decisions, runnable full-stack foundation, persistence, authentication, organizer/catalog flows, discovery, temporary reservations, checkout, and signed ticket presentation are complete. Authoritative gate validation and later delivery-quality increments remain. No planned task is considered done until its changes are validated, staged, and committed locally.
 
-Commit progress: 5 of 15 planned increments complete; 10 remain.
+Commit progress: 10 of 15 planned increments complete; 5 remain.
 
 The local `main` branch is based on published commit `14d5d9c`. Local project commits remain unpushed until the candidate chooses to publish them.
 
@@ -31,6 +31,7 @@ Additional accepted implementation direction:
 - Frontend state: TanStack Query for server state and local state for forms and countdowns; no general global state store.
 - Session lifetime: fixed seven days, no sliding renewal, immediate logout revocation.
 - Reservation lifetime: configurable ten-minute default using PostgreSQL time and lazy expiration; no background worker initially.
+- Ticket QR rendering: localized SVG generation through `qrcode.react`; authenticity remains a backend responsibility.
 - Test tools: pytest/pytest-cov, Vitest/Testing Library, Playwright, and conditional focused `mutmut` use.
 
 ## Resolved Decision Gate
@@ -374,13 +375,13 @@ Sign issued ticket identifiers, present QR credentials, and add private and shar
 
 ---
 
-## feat(tickets): issue HMAC-signed QR tickets and sharing links
+## Done - feat(tickets): issue HMAC-signed QR tickets and sharing links
 
 ### Goal
 
 Give customers persistent, presentable, shareable, and verifiable tickets.
 
-### Planned
+### Implemented
 
 - Create one ticket per approved quantity.
 - Define and document a compact, versioned HMAC token format.
@@ -396,10 +397,17 @@ Give customers persistent, presentable, shareable, and verifiable tickets.
 - Confirm that valid tokens survive page reloads and can be shared.
 - Reject modified identifiers, signatures, and unsupported token versions.
 - Confirm that personal data is absent from QR payloads and public sharing responses.
+- Passed 17 frontend tests and 43 backend tests with successful JSON/XML reports and 94% backend coverage.
+- Passed frontend formatting, linting, and strict TypeScript checks plus backend Ruff and strict mypy checks.
+- Applied Alembic revision `91ec7f95d3b1` and confirmed the current schema matches the SQLAlchemy metadata.
 
 ### Expected Result
 
 Customers can view and share persistent QR tickets that cannot be fabricated without the HMAC secret.
+
+### Next
+
+Add authoritative manual gate validation with atomic one-time use.
 
 ---
 

@@ -240,6 +240,9 @@ class Ticket(Base):
             name="ck_tickets_usage_fields_together",
         ),
         CheckConstraint("used_at IS NULL OR used_at >= issued_at", name="ck_tickets_usage_time"),
+        CheckConstraint(
+            "revoked_at IS NULL OR revoked_at >= issued_at", name="ck_tickets_revocation_time"
+        ),
         UniqueConstraint("reservation_id", "ticket_number", name="uq_tickets_reservation_number"),
         Index("ix_tickets_reservation_id", "reservation_id"),
     )
@@ -252,6 +255,7 @@ class Ticket(Base):
     issued_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     used_by_user_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("users.id", ondelete="RESTRICT")

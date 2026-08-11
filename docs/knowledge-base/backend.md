@@ -2,7 +2,7 @@
 
 ## Current Responsibility
 
-The backend is a FastAPI modular monolith. It owns API behavior, authentication, authorization, Ticketmaster access, persistence, reservation concurrency, and simulated checkout, and will later own ticket presentation and validation.
+The backend is a FastAPI modular monolith. It owns API behavior, authentication, authorization, Ticketmaster access, persistence, reservation concurrency, simulated checkout, and ticket authenticity/presentation state, and will later own gate validation.
 
 ## Current Structure
 
@@ -13,6 +13,7 @@ The backend is a FastAPI modular monolith. It owns API behavior, authentication,
 - `src/backend/catalog/` owns Ticketmaster transport, response validation, normalization, and organizer-only search.
 - `src/backend/events/` owns organizer-scoped event commands, responses, lifecycle rules, and persistence transactions.
 - `src/backend/reservations/` owns Customer-scoped holds, database deadlines, inventory locking, lazy expiration, payment simulation, and ticket-row issuance.
+- `src/backend/tickets/` owns signing configuration, token verification, Customer ticket reads, and minimized bearer sharing responses.
 - `src/backend/core/settings.py` reads process configuration into an immutable settings object.
 - `src/backend/database/dependencies.py` supplies one synchronous SQLAlchemy session per request.
 - `src/backend/database/models.py` defines the complete relational mapping and database constraints.
@@ -55,7 +56,7 @@ SQLAlchemy 2 maps persistence, Psycopg 3 connects to PostgreSQL, Alembic owns sc
 
 The cookie is HTTP-only, `SameSite=Lax`, scoped to `/`, and conditionally `Secure`; authentication responses are marked `Cache-Control: no-store`. SHA-256 is appropriate here because the input is a high-entropy random credential. It is not used for passwords, which require the deliberately expensive Argon2id function.
 
-Backend dependencies provide the authoritative current user and role checks. Event and reservation queries include the authenticated owner where required; future private ticket routes must do the same. Frontend route guards alone never authorize a request.
+Backend dependencies provide the authoritative current user and role checks. Event, reservation, and private ticket queries include the authenticated owner where required. Frontend route guards alone never authorize a request.
 
 ## External Catalog Boundary
 
@@ -103,9 +104,19 @@ For a pending hold, expiration has priority over the requested outcome. A valid 
 
 Approved, declined, and expired are terminal. A repeated request returns the stored status and current ticket count, even when its requested outcome conflicts with the first result. A declined or expired Customer retries by creating a new hold because the previous quantity has already returned to availability.
 
+## Signed Ticket Boundary
+
+`GET /api/tickets` requires a Customer session and joins only tickets from that Customer's approved reservations. It reconstructs each stable credential from the persisted UUID and the configured secret, returns its bearer sharing URL, and marks the response non-cacheable. The database stores no plaintext bearer credential.
+
+The token is `v1.<32-lowercase-hex-UUID>.<unpadded-base64url-HMAC-SHA-256>`. The canonical signed payload is `v1:<identifier>`, the dedicated `TICKET_HMAC_SECRET` must contain at least 32 bytes, and verification uses `hmac.compare_digest`. A missing or short secret produces `503`; changing it changes all derived credentials. No personal, reservation, or event data is embedded in the token.
+
+`GET /api/tickets/shared/{token}` is public because the token is an intentional bearer capability. The service verifies the signature before querying, then still requires a ticket backed by an approved reservation. Malformed, tampered, unsupported, unknown-but-validly-signed, and absent tickets all return the same `404`. The response omits ticket UUID, token, share URL, reservation, and Customer identity, but includes the event presentation fields and current use/revocation state.
+
+HMAC proves origin, not current validity. PostgreSQL remains authoritative for approval, use, and revocation, which lets the next gate increment enforce one-time admission atomically.
+
 ## Persistence Boundary
 
-The schema contains users, opaque-session records, immutable catalog snapshots, organizer-owned events, temporary reservations, and one ticket row per issued admission. PostgreSQL constraints protect local invariants such as normalized emails, valid roles and statuses, positive capacity and quantities, fixed-length session digests, unique ticket positions, and coherent usage timestamps.
+The schema contains users, opaque-session records, immutable catalog snapshots, organizer-owned events, temporary reservations, and one ticket row per issued admission. PostgreSQL constraints protect local invariants such as normalized emails, valid roles and statuses, positive capacity and quantities, fixed-length session digests, unique ticket positions, and coherent usage/revocation timestamps.
 
 Enums are stored as strings with explicit named `CHECK` constraints. This keeps migrations easy to review and makes adding a state a normal versioned constraint change instead of a PostgreSQL enum-type operation.
 

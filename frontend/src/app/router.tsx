@@ -10,6 +10,8 @@ import { EventDiscoveryPage } from '../features/discovery/EventDiscoveryPage'
 import { HomePage } from '../features/home/HomePage'
 import { NotFoundPage } from '../features/navigation/NotFoundPage'
 import { ReservationHoldPage } from '../features/reservations/ReservationHoldPage'
+import { CustomerTicketsPage } from '../features/tickets/CustomerTicketsPage'
+import { SharedTicketPage } from '../features/tickets/SharedTicketPage'
 
 export const router = createBrowserRouter([
   {
@@ -27,6 +29,10 @@ export const router = createBrowserRouter([
   {
     path: '/events/:eventId',
     element: <EventDetailPage />,
+  },
+  {
+    path: '/tickets/share/:token',
+    element: <SharedTicketPage />,
   },
   {
     element: <RequireSession />,
@@ -61,6 +67,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireRole role="customer">
             <ReservationHoldPage />
+          </RequireRole>
+        ),
+      },
+      {
+        path: '/customer/tickets',
+        element: (
+          <RequireRole role="customer">
+            <CustomerTicketsPage />
           </RequireRole>
         ),
       },

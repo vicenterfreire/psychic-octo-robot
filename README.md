@@ -6,7 +6,7 @@ The mandatory product flow will allow an organizer to create a local event from 
 
 ## Current Status
 
-The runnable project, persistence, authentication, Ticketmaster catalog, organizer management, published-event discovery, temporary inventory holds, and simulated checkout are complete:
+The runnable project, persistence, authentication, Ticketmaster catalog, organizer management, published-event discovery, temporary inventory holds, simulated checkout, and signed ticket presentation are complete:
 
 - `frontend/` contains a React, Vite, and TypeScript single-page application.
 - `backend/` contains a Python 3.14 and FastAPI application.
@@ -20,8 +20,9 @@ The runnable project, persistence, authentication, Ticketmaster catalog, organiz
 - Visitors and Customers can search upcoming published events and inspect date, location, price, and current availability.
 - Customers can hold a selected quantity for a PostgreSQL-timed payment window without overselling under concurrent requests.
 - Customers can deterministically approve or decline the simulation; approval finalizes the reservation and issues exactly one persistent ticket row per unit.
+- Customers can reopen a private ticket collection, render HMAC-signed QR credentials, and share minimized bearer views without exposing personal data.
 
-The next planned increment is `feat(tickets): issue HMAC-signed QR tickets and sharing links`.
+The next planned increment is `feat(gate): validate ticket codes exactly once`.
 
 ## Prerequisites
 
@@ -137,7 +138,27 @@ The Customer is redirected to `/customer/reservations/{id}`, which restores the 
 
 Checkout locks the event and the Customer-owned reservation in that order, then samples PostgreSQL time. An expired hold becomes `expired`; a declined hold releases inventory immediately; an approved hold becomes `approved` and creates one persistent ticket row for each reserved unit in the same transaction. Concurrent approval requests therefore cannot duplicate tickets, and the unique reservation/ticket-number constraint remains a second integrity barrier.
 
-The hold screen presents approval, refusal, expiration, and retry guidance and restores terminal results after reload. Ticket rows are intentionally not yet exposed as QR credentials: HMAC signing, the private “My Tickets” collection, QR rendering, and bearer sharing are the next increment.
+The hold screen presents approval, refusal, expiration, and retry guidance and restores terminal results after reload. Approved ticket rows are exposed by the signed-ticket flow described below.
+
+## Signed Tickets and Sharing
+
+Set a stable, high-entropy ticket-signing secret in the untracked `backend/.env` file before opening ticket pages:
+
+```dotenv
+TICKET_HMAC_SECRET=replace-with-at-least-32-random-bytes
+```
+
+One local way to generate a suitable value is:
+
+```powershell
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+Keep the generated value stable. Replacing it invalidates signatures produced with the previous value until key rotation is implemented. Missing or shorter-than-32-byte secrets make ticket endpoints fail closed with `503` rather than issue unverifiable credentials.
+
+Each approved ticket is represented by `v1.<32-lowercase-hex-UUID>.<base64url-HMAC-SHA-256>`. The signature covers the canonical `v1:<identifier>` payload and is checked with a constant-time comparison. The token and QR contain no name, email, reservation identifier, or event details. HMAC establishes that the credential was issued by this application; PostgreSQL still determines whether its reservation is approved and whether the ticket is used or revoked.
+
+An authenticated Customer opens the private collection at `/customer/tickets`. The frontend renders the signed token as an SVG QR through `qrcode.react`. The same token appears in `/tickets/share/{token}` as an intentionally bearer-style link: anyone who receives it can present the ticket, so the interface warns the Customer to share it only with someone trusted. The public response is non-cacheable and limited to presentation state plus the event details needed by the recipient.
 
 ## Run Locally
 
@@ -179,7 +200,7 @@ This writes ignored local artifacts to `.artifacts/test-results/`: Vitest JSON, 
 
 ## Accepted Technology Direction
 
-- Frontend: React, Vite, TypeScript, React Router, and TanStack Query.
+- Frontend: React, Vite, TypeScript, React Router, TanStack Query, and localized SVG QR rendering through `qrcode.react`.
 - Backend: Python 3.14 and FastAPI.
 - Dependency management: `uv`, `pyproject.toml`, and a committed `uv.lock`.
 - Compatibility export: `requirements.txt` generated from `uv.lock`; it is not maintained manually.
@@ -215,4 +236,4 @@ No remote push is performed by the AI collaborator. Publication remains under th
 
 ## Current Limitations
 
-Authentication, catalog search, organizer event management, published discovery, temporary holds, and simulated checkout are complete, but ticket presentation/sharing and gate business APIs remain scheduled as later commits. Displayed availability can still change before a hold is created; only a successful reservation response guarantees the temporary quantity. Issued ticket rows do not yet have HMAC credentials or QR presentation. Server-side catalog caching, advanced discovery filters, pagination, background stale-row cleanup, login rate limiting, session rotation/device management, automatic expired-session cleanup, and production-topology CSRF hardening are intentionally deferred.
+Authentication, catalog search, organizer event management, published discovery, temporary holds, simulated checkout, and ticket presentation/sharing are complete, but gate validation remains scheduled as the next commit. Displayed availability can still change before a hold is created; only a successful reservation response guarantees the temporary quantity. HMAC key rotation and a ticket-revocation command are not implemented; the schema and responses already retain revocation state for later workflows. Server-side catalog caching, advanced discovery filters, pagination, background stale-row cleanup, login rate limiting, session rotation/device management, automatic expired-session cleanup, and production-topology CSRF hardening are intentionally deferred.

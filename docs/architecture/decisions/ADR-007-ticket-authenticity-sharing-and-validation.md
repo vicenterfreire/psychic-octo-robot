@@ -10,13 +10,15 @@ Tickets must be represented as QR codes, shared by link, resistant to fabricatio
 
 ## Decision
 
-- Use a compact, versioned token containing a public ticket identifier and an HMAC-SHA-256 signature.
-- Sign a canonical payload with a dedicated secret configured outside source control.
-- Encode the token in a URL-safe representation.
+- Use the compact token `v1.<32-lowercase-hex-UUID>.<base64url-HMAC-SHA-256>`.
+- Sign the canonical UTF-8 payload `v1:<32-lowercase-hex-UUID>` with a dedicated secret configured outside source control.
+- Require at least 32 bytes in the configured secret and fail ticket endpoints closed when it is absent or too short.
+- Encode the signature as unpadded URL-safe Base64.
 - Include no customer personal data in the token.
 - Compare signatures using a constant-time operation.
 - Use the same token for the QR payload and bearer sharing link.
 - Load ticket event and usage state from PostgreSQL after signature verification.
+- Render the QR locally in the React application as SVG through the focused `qrcode.react` dependency.
 - Atomically set the usage timestamp only when the ticket is unused and belongs to the selected event.
 - Keep validation outcomes explicit: valid, invalid, already used, and wrong event.
 
@@ -41,8 +43,10 @@ It cannot reliably enforce one-time use across multiple gate devices without lat
 ## Consequences
 
 - Tokens remain stable across page reloads and sharing.
+- Stability depends on retaining the same signing secret; the first version has no key identifier or verification key ring.
 - A copied valid link can be used by its bearer; that is the intended sharing model and must be explained to users.
 - Database state still controls revocation and one-time usage.
+- The browser necessarily receives the bearer token to render and share it, while the signing secret remains backend-only.
 - HMAC key rotation requires versioned verification support for already issued tickets.
 
 ## Revisit When

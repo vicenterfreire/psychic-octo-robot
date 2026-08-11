@@ -43,6 +43,11 @@ function AuthenticatedDiscoveryHeader() {
     <header className="site-header">
       <Brand />
       <div className="workspace-account">
+        {session.data?.role === 'customer' && (
+          <Link className="header-link" to="/customer/tickets">
+            My tickets
+          </Link>
+        )}
         {session.data && (
           <Link className="account-chip" to={roleHomePath(session.data.role)}>
             {session.data.email}
