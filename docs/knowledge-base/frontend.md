@@ -10,6 +10,9 @@ The frontend is a React single-page application built by Vite. It presents role-
 - `src/app/router.tsx` defines navigation.
 - `src/app/query-client.ts` configures TanStack Query for remote state.
 - `src/lib/` contains credentialed JSON transport and generic display-formatting boundaries.
+- `src/styles/index.css` is the only styling entry point and imports smaller ordered files by
+  responsibility: shared base, authentication, catalog, discovery, reservations, tickets, gate,
+  and responsive overrides.
 - `src/features/auth/` contains session requests and login/logout interactions; local `hooks/` and
   `components/` contain session state and route guards.
 - `src/features/catalog/` contains the Organizer search, normalized result cards, and transient selection.
@@ -32,6 +35,11 @@ feature root; only supporting UI and hooks gain local subdirectories. Shared abs
 only after multiple features need them or a cross-cutting owner is clear. Transport types stay with
 their API boundary and one-component props stay with that component rather than being extracted
 mechanically.
+
+Styles remain global because the current class naming and visual system already avoid collisions
+without a CSS-module migration. Splitting files changes source ownership and readability, not the
+cascade: `styles/index.css` preserves the original order and `responsive.css` stays last so its
+mobile overrides retain authority.
 
 ## State Ownership
 

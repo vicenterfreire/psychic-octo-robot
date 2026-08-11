@@ -1,0 +1,118 @@
+@media (max-width: 700px) {
+  .project-label {
+    display: none;
+  }
+
+  .hero {
+    padding: 56px 0;
+  }
+
+  .foundation-card {
+    align-items: start;
+    flex-direction: column;
+    margin-top: 44px;
+  }
+
+  .status {
+    white-space: normal;
+  }
+
+  .auth-layout {
+    min-height: auto;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 48px 0;
+  }
+
+  .auth-intro h1 {
+    margin: 18px 0;
+  }
+
+  .workspace-account .account-chip {
+    display: none;
+  }
+
+  .catalog-workspace {
+    padding-top: 48px;
+  }
+
+  .catalog-intro,
+  .catalog-results,
+  .section-heading,
+  .event-form {
+    grid-template-columns: 1fr;
+  }
+
+  .catalog-search > div,
+  .catalog-card {
+    grid-template-columns: 1fr;
+  }
+
+  .catalog-card__image {
+    min-height: 190px;
+  }
+
+  .event-form__wide {
+    grid-column: auto;
+  }
+
+  .managed-event__summary {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .discovery-workspace {
+    padding-top: 48px;
+  }
+
+  .discovery-search > div,
+  .discovery-grid,
+  .event-detail__layout,
+  .event-facts,
+  .reservation-form {
+    grid-template-columns: 1fr;
+  }
+
+  .discovery-card__footer,
+  .reservation-entry {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .event-detail__image {
+    min-height: 280px;
+    aspect-ratio: 16 / 9;
+  }
+
+  .reservation-deadline {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .tickets-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .ticket-card,
+  .shared-ticket {
+    grid-template-columns: 1fr;
+  }
+
+  .ticket-qr {
+    width: min(216px, 100%);
+    height: auto;
+    aspect-ratio: 1;
+    justify-self: center;
+  }
+
+  .gate-heading,
+  .gate-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .gate-result {
+    min-height: 330px;
+  }
+}

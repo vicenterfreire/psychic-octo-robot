@@ -25,6 +25,9 @@ existing custom CSS should be replaced by Tailwind CSS.
   shared public/authenticated header belongs to `navigation/components/`.
 - Move generic display helpers that accept primitive values to `src/lib/` instead of making one
   feature depend on another feature's presentation module.
+- Keep one styling entry point under `src/styles/index.css` and split the custom CSS into ordered
+  responsibility files for base, authentication, catalog, discovery, reservations, tickets, gate,
+  and responsive overrides.
 - Keep transport interfaces beside the feature API that owns the contract and component props
   beside their single consumer. Extract types only when they gain multiple owners or an independent
   lifecycle.
@@ -64,8 +67,9 @@ a challenge requirement.
   UI.
 - Cross-feature dependencies must be reviewed; shared navigation and generic formatting cannot be
   owned accidentally by discovery.
-- Existing CSS remains a large shared stylesheet and may be split mechanically later if that
-  improves maintenance without changing the styling strategy.
+- The styling strategy remains custom CSS, but no individual stylesheet contains the former
+  application-wide 1,646-line rule set. Import order remains explicit in one entry point because
+  the cascade is part of application behavior.
 
 ## Revisit When
 

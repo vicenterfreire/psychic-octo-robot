@@ -1,0 +1,116 @@
+.reservation-entry {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px;
+  border-radius: 15px;
+  color: #101216;
+  background: var(--lime);
+}
+
+.reservation-entry p {
+  margin: 5px 0 0;
+}
+
+.reservation-entry .primary-button {
+  flex-shrink: 0;
+  margin-top: 0;
+  color: #fff;
+  background: #101216;
+  text-decoration: none;
+}
+
+.reservation-form {
+  display: grid;
+  width: 100%;
+  grid-template-columns: minmax(120px, 0.45fr) minmax(190px, 1fr);
+  gap: 12px;
+  align-items: end;
+}
+
+.reservation-form label {
+  display: grid;
+  gap: 6px;
+  font-weight: 800;
+}
+
+.reservation-form input {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid rgb(16 18 22 / 30%);
+  border-radius: 10px;
+  color: #101216;
+  background: #fff;
+  font: inherit;
+}
+
+.reservation-form .form-error {
+  grid-column: 1 / -1;
+  color: #7d1c16;
+}
+
+.reservation-page {
+  display: grid;
+  min-height: calc(100vh - 98px);
+  place-items: center;
+  padding: 64px 0 96px;
+}
+
+.reservation-panel {
+  width: min(680px, 100%);
+  padding: clamp(32px, 7vw, 64px);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--surface);
+}
+
+.reservation-panel h1 {
+  margin: 16px 0;
+  font-size: clamp(2.5rem, 6vw, 4.8rem);
+}
+
+.reservation-deadline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 32px 0 18px;
+  padding: 20px;
+  border-radius: 14px;
+  color: #101216;
+  background: var(--lime);
+  font-weight: 800;
+}
+
+.reservation-countdown {
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  line-height: 1;
+}
+
+.reservation-note {
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.payment-simulator {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.payment-simulator p {
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.payment-simulator__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.payment-simulator__actions .primary-button,
+.payment-simulator__actions .secondary-button {
+  margin-top: 0;
+}

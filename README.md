@@ -24,10 +24,10 @@ The runnable project, persistence, authentication, Ticketmaster catalog, organiz
 - Gate staff can select a published event, scan its QR through a browser camera or enter the token manually, and receive an atomic valid, invalid, already-used, or wrong-event result.
 - Risk-focused backend, frontend, PostgreSQL integration, and cross-role browser tests run against disposable databases without changing development data.
 
-The original 15 mandatory delivery increments are complete. Candidate review added four scoped
-post-delivery increments; the first is complete, so progress is 16 of 19 with documentation,
-external-PostgreSQL workflow, and full-stack containerization remaining. Public GitHub publication
-and challenge submission remain under the candidate's control.
+The original 15 mandatory delivery increments are complete. Candidate review added five scoped
+post-delivery increments; the first two are complete, so progress is 17 of 20 with documentation,
+an existing-PostgreSQL-installation workflow, and full-stack containerization remaining. Public
+GitHub publication and challenge submission remain under the candidate's control.
 
 ## Challenge Coverage
 

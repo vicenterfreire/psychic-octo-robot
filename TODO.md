@@ -2,11 +2,11 @@
 
 ## Current Status
 
-The mandatory application, risk-focused tests, evaluator documentation, and first candidate review
-refactor are complete. Three approved post-delivery maintainability and local-execution increments
-remain before the candidate's final publication review.
+The mandatory application, risk-focused tests, evaluator documentation, and first two candidate
+review refactors are complete. Three approved post-delivery documentation and local-execution
+increments remain before the candidate's final publication review.
 
-Commit progress: 16 of 19 planned increments complete; 3 remain.
+Commit progress: 17 of 20 planned increments complete; 3 remain.
 
 The local `main` branch is based on published commit `14d5d9c`. Local project commits remain unpushed until the candidate chooses to publish them.
 
@@ -656,6 +656,42 @@ actual cache lifecycle.
 
 ### Next
 
+Split the global stylesheet into smaller responsibility files without changing the styling
+strategy.
+
+---
+
+## Done - refactor(frontend): split shared stylesheet
+
+### Goal
+
+Make the custom CSS easier to navigate without adding Tailwind, CSS Modules, or a new runtime
+dependency.
+
+### Implemented
+
+- Replaced the 1,646-line `src/index.css` with one ordered `src/styles/index.css` entry point.
+- Split rules into eight responsibility files: base, authentication, catalog, discovery,
+  reservations, tickets, gate, and responsive overrides.
+- Preserved the original cascade order and kept responsive overrides last.
+- Removed selectors belonging only to the already-deleted `RoleHomePage` placeholder.
+- Updated the application import, ADR-009, frontend knowledge base, README, current state, and this
+  plan.
+
+### Validation
+
+- Passed Prettier, Oxlint, strict TypeScript, all 29 Vitest tests, and the Vite production build.
+- Confirmed Vite resolves all source imports into one 22.06 kB production stylesheet with no
+  remaining runtime `@import` directives.
+- Confirmed the largest source stylesheet now has 331 lines.
+
+### Expected Result
+
+Styles remain globally ordered and visually equivalent for active screens, while each product area
+can be located without navigating one application-wide file.
+
+### Next
+
 Document only critical public contracts and non-obvious invariants with native Python and
 TypeScript documentation formats.
 
@@ -687,7 +723,7 @@ Document and streamline the workflow for an existing PostgreSQL installation.
 
 ---
 
-## chore(database): support externally managed PostgreSQL
+## chore(database): support existing PostgreSQL installations
 
 ### Goal
 
