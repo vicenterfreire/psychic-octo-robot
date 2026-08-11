@@ -6,7 +6,7 @@ The mandatory product flow will allow an organizer to create a local event from 
 
 ## Current Status
 
-The runnable project, persistence, authentication, Ticketmaster catalog, organizer management, and published-event discovery are complete:
+The runnable project, persistence, authentication, Ticketmaster catalog, organizer management, published-event discovery, and temporary inventory holds are complete:
 
 - `frontend/` contains a React, Vite, and TypeScript single-page application.
 - `backend/` contains a Python 3.14 and FastAPI application.
@@ -18,8 +18,9 @@ The runnable project, persistence, authentication, Ticketmaster catalog, organiz
 - Organizers can search and select normalized Ticketmaster events without exposing the provider credential to the browser.
 - Organizers can create a local draft from a trusted provider snapshot, edit only their own events, and publish explicitly.
 - Visitors and Customers can search upcoming published events and inspect date, location, price, and current availability.
+- Customers can hold a selected quantity for a PostgreSQL-timed payment window without overselling under concurrent requests.
 
-The next planned increment is `feat(reservations): implement temporary inventory holds`.
+The next planned increment is `feat(checkout): simulate payment and finalize reservations`.
 
 ## Prerequisites
 
@@ -121,6 +122,14 @@ Basic text search is case-insensitive across local event name, venue, and city a
 
 The public interface is available at `http://localhost:5173/events`. A seeded Customer sees the same discovery flow at `/customer`, with event details under the corresponding public or authenticated route.
 
+## Temporary Reservation Holds
+
+An authenticated Customer submits quantity through `POST /api/reservations`. The backend locks the published, upcoming event row, uses PostgreSQL time, marks stale holds when encountered, recalculates approved and active pending quantity, and creates the hold only when enough inventory remains. Concurrent reservation creation and capacity edits take the same event lock, so their final inventory decisions are serialized.
+
+Holds last ten minutes by default. Set `RESERVATION_LIFETIME_SECONDS` in `backend/.env` only when a different local demonstration window is useful. Discovery immediately ignores a hold after its database deadline even if its stored status has not yet been updated by a later operation.
+
+The Customer is redirected to `/customer/reservations/{id}`, which restores the private hold with `GET /api/reservations/{id}` after reload. The API returns both `expires_at` and `server_time`; the browser corrects its display for local clock skew, but only the backend may decide whether the hold is valid. An expired screen links back to the event so the Customer can select quantity again.
+
 ## Run Locally
 
 Start each application in a separate terminal from the repository root:
@@ -197,4 +206,4 @@ No remote push is performed by the AI collaborator. Publication remains under th
 
 ## Current Limitations
 
-Authentication, catalog search, organizer event management, and published discovery are complete, but reservation, payment, ticket, and gate business APIs remain scheduled as later commits. Displayed availability can change before a reservation is created and is not an inventory guarantee. Server-side catalog caching, advanced discovery filters, pagination, login rate limiting, session rotation/device management, automatic expired-session cleanup, and production-topology CSRF hardening are intentionally deferred.
+Authentication, catalog search, organizer event management, published discovery, and temporary holds are complete, but payment, ticket, and gate business APIs remain scheduled as later commits. Displayed availability can still change before a hold is created; only a successful reservation response guarantees the temporary quantity. Server-side catalog caching, advanced discovery filters, pagination, background stale-row cleanup, login rate limiting, session rotation/device management, automatic expired-session cleanup, and production-topology CSRF hardening are intentionally deferred.

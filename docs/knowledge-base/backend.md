@@ -2,7 +2,7 @@
 
 ## Current Responsibility
 
-The backend is a FastAPI modular monolith. It owns API behavior, authentication, authorization, Ticketmaster access, and persistence, and will later own reservation concurrency, payments, and ticket validation.
+The backend is a FastAPI modular monolith. It owns API behavior, authentication, authorization, Ticketmaster access, persistence, and reservation concurrency, and will later own payments and ticket validation.
 
 ## Current Structure
 
@@ -12,6 +12,7 @@ The backend is a FastAPI modular monolith. It owns API behavior, authentication,
 - `src/backend/auth/` owns password verification, opaque-session lifecycle, authentication routes, and reusable authorization checks.
 - `src/backend/catalog/` owns Ticketmaster transport, response validation, normalization, and organizer-only search.
 - `src/backend/events/` owns organizer-scoped event commands, responses, lifecycle rules, and persistence transactions.
+- `src/backend/reservations/` owns Customer-scoped holds, database deadlines, inventory locking, and lazy expiration.
 - `src/backend/core/settings.py` reads process configuration into an immutable settings object.
 - `src/backend/database/dependencies.py` supplies one synchronous SQLAlchemy session per request.
 - `src/backend/database/models.py` defines the complete relational mapping and database constraints.
@@ -81,6 +82,16 @@ Dates must carry a timezone and remain in the future. Capacity and price have bo
 The optional `q` parameter is trimmed and matched case-insensitively against event name, venue, and city. SQLAlchemy's auto-escaped containment treats `%` and `_` as user text rather than SQL wildcard controls. Results are ordered by start time and bounded to 50 while pagination remains deferred.
 
 A correlated aggregate calculates committed quantity for each event from approved reservations and pending reservations whose expiry is still in the future according to PostgreSQL. `available_quantity` is clamped at zero for defensive presentation. This read does not lock inventory: it is a useful snapshot, while the reservation command will recalculate under an event-row lock before creating a hold.
+
+## Temporary Reservation Boundary
+
+`POST /api/reservations` requires the Customer role and accepts an event identifier plus positive quantity. The service selects only an upcoming published event with `FOR UPDATE`, reads PostgreSQL time, marks stale pending rows for that event, and sums approved quantity plus pending quantity whose deadline remains in the future. It creates a ten-minute pending hold only when the requested quantity fits; otherwise it returns `409` with the availability observed inside that transaction.
+
+The event row is the inventory mutex. Reservation creation and Organizer capacity changes acquire the same lock before calculating committed quantity, so concurrent operations serialize without a long browser-held transaction or a second inventory system. Ticketmaster is never contacted inside this transaction.
+
+`GET /api/reservations/{id}` finds a reservation by both identifier and authenticated Customer, returning the same `404` for an unknown or foreign resource. It marks that specific pending row expired when its database deadline has passed. Both private responses use `Cache-Control: no-store` and include `expires_at` and the sampled `server_time` used by the UI.
+
+Discovery can ignore an expired pending row without first changing its status because the timestamp predicate is the inventory rule. Creating or restoring a hold also persists the observed expired state. This lazy approach needs no worker for correctness; a scheduled cleanup becomes worthwhile only if stale-row volume creates operational cost.
 
 ## Persistence Boundary
 

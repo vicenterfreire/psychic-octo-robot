@@ -2,7 +2,7 @@
 
 ## Current Responsibility
 
-The frontend is a React single-page application built by Vite. It presents role-specific workflows while the backend remains authoritative for identity, inventory, payment, ticket, and validation decisions.
+The frontend is a React single-page application built by Vite. It presents role-specific workflows while the backend remains authoritative for identity, inventory, hold expiration, payment, ticket, and validation decisions.
 
 ## Current Structure
 
@@ -14,6 +14,7 @@ The frontend is a React single-page application built by Vite. It presents role-
 - `src/features/catalog/` contains the Organizer search, normalized result cards, and transient selection.
 - `src/features/events/` contains event transport types, local-detail forms, owned-event listing, editing, and publication interactions.
 - `src/features/discovery/` contains public/customer event queries, search, result cards, detail presentation, and session-aware navigation.
+- `src/features/reservations/` contains hold transport, quantity submission, server-offset countdown, and reload/expiry recovery.
 - `src/features/` groups screens, requests, and tests by product feature.
 - `src/test/setup.ts` configures browser-like assertions for Vitest.
 
@@ -21,7 +22,7 @@ This boundary is intentionally light: shared abstractions should appear only aft
 
 ## State Ownership
 
-TanStack Query owns server state and future mutation invalidation. React component state will own form values, transient interaction state, and reservation countdown presentation. The server deadline remains authoritative; no general-purpose global store is planned.
+TanStack Query owns server state and mutation invalidation. React component state owns form values, transient interaction state, and reservation countdown presentation. The server deadline remains authoritative; no general-purpose global store is planned.
 
 ## API Communication
 
@@ -55,8 +56,16 @@ The public `/events` route and protected `/customer` route render the same disco
 
 TanStack Query keys include the applied search term, so default discovery, filtered results, and individual event details remain distinct server-state entries. Search executes only on form submission. Empty, loading, error, missing-image, sold-out, and result states are explicit.
 
-Cards and details format the backend's ISO timestamp and integer-minor-unit price, then display local venue/address and calculated availability. The UI states that availability is current rather than guaranteed. Quantity selection is intentionally left to the next reservation increment, where the backend will recalculate inventory transactionally.
+Cards and details format the backend's ISO timestamp and integer-minor-unit price, then display local venue/address and calculated availability. The UI states that availability is current rather than guaranteed. An authenticated Customer can choose quantity from the detail, while the backend recalculates inventory transactionally.
+
+## Temporary Reservation Flow
+
+Submitting quantity creates a hold and invalidates all published-event query keys before navigating to `/customer/reservations/:id`. A `409` remains on the event screen with the quantity observed by the backend so the Customer can adjust rather than receiving a false confirmation.
+
+The hold route fetches its private reservation by identifier and separately reuses the published event query for a friendly title. Reloading therefore restores the server state instead of depending on navigation memory. An expired response presents a direct link back to quantity selection.
+
+The API returns `server_time` beside `expires_at`. The countdown records the browser receipt time, derives the offset between browser and server clocks, and advances that estimated server time for display. When it reaches zero, the screen refetches the reservation; the browser never changes status or authorizes payment. Network delay may make the display slightly optimistic, but the next backend command remains authoritative.
 
 ## Quality Boundary
 
-Prettier owns formatting, Oxlint owns static linting, TypeScript runs with strict project settings, and Vitest with Testing Library protects meaningful interaction and integration boundaries. Tests cover health transport, login, session restoration, cross-role redirection, catalog search/selection, stable errors, provider-secret absence, event management, published discovery, basic search, empty results, event details, and availability presentation. The root test-report hook also writes a Vitest JSON result for automated inspection.
+Prettier owns formatting, Oxlint owns static linting, TypeScript runs with strict project settings, and Vitest with Testing Library protects meaningful interaction and integration boundaries. Tests cover health transport, login, session restoration, cross-role redirection, catalog search/selection, stable errors, provider-secret absence, event management, published discovery, quantity submission, server-clock correction, and expired-hold recovery. The root test-report hook also writes a Vitest JSON result for automated inspection.

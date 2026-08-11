@@ -9,6 +9,7 @@ import { EventDetailPage } from '../features/discovery/EventDetailPage'
 import { EventDiscoveryPage } from '../features/discovery/EventDiscoveryPage'
 import { HomePage } from '../features/home/HomePage'
 import { NotFoundPage } from '../features/navigation/NotFoundPage'
+import { ReservationHoldPage } from '../features/reservations/ReservationHoldPage'
 
 export const router = createBrowserRouter([
   {
@@ -52,6 +53,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireRole role="customer">
             <EventDetailPage authenticated />
+          </RequireRole>
+        ),
+      },
+      {
+        path: '/customer/reservations/:reservationId',
+        element: (
+          <RequireRole role="customer">
+            <ReservationHoldPage />
           </RequireRole>
         ),
       },

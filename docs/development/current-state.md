@@ -2,9 +2,9 @@
 
 ## Snapshot
 
-- Date: 2026-08-10.
+- Date: 2026-08-11.
 - Branch: local `main`, based on published commit `14d5d9c` and developed through small local commits.
-- Phase: published event discovery complete; temporary reservations are next.
+- Phase: temporary inventory holds complete; simulated checkout is next.
 - Frontend: React, Vite, and TypeScript application initialized.
 - Backend: Python 3.14 and FastAPI application initialized.
 - Database: PostgreSQL 17 schema migrated and seeded through Podman.
@@ -12,7 +12,8 @@
 - External catalog: organizer-only Ticketmaster search normalized entirely by the backend.
 - Event management: trusted provider snapshots with organizer-owned draft, edit, list, and publication flows.
 - Discovery: public and Customer-facing upcoming event search, details, and calculated availability.
-- Automated tests: 11 frontend tests and 33 backend tests, including PostgreSQL discovery integration.
+- Reservations: ten-minute configurable holds protected by PostgreSQL time and event-row locks.
+- Automated tests: 14 frontend tests and 35 backend tests, including PostgreSQL concurrency integration.
 - Deployment: not selected.
 
 ## Implemented Foundation
@@ -42,6 +43,10 @@
 - Public responses exclude organizer identity, lifecycle status, provider links, and raw snapshot data.
 - Availability subtracts approved reservations and unexpired pending holds using PostgreSQL time in the discovery query.
 - Public and authenticated Customer screens share responsive listing and detail components while preserving their navigation boundaries.
+- Customer-only reservation routes create and restore owned holds without disclosing another customer's identifiers.
+- Reservation creation locks the upcoming published event, expires observed stale rows, recalculates committed quantity, and rejects insufficient inventory atomically.
+- Private reservation responses are non-cacheable and expose the database deadline plus server time.
+- The Customer quantity form redirects to a reload-safe hold screen with a server-offset countdown and expired-hold recovery.
 
 ## Validated Environment
 
@@ -66,22 +71,26 @@
 - Ticketmaster success, empty, missing-key, rejected-key, quota, timeout, unavailable, malformed, and role-denial paths are covered without a live credential.
 - Provider detail snapshots, identifier matching, local persistence, ownership, invalid input, capacity reduction, and publication paths are covered.
 - Discovery integration covers draft/past exclusion, case-insensitive search, wildcard escaping, response minimization, event details, and active/expired availability.
+- Reservation integration confirms active-hold availability, lazy expiration, ownership, role denial, insufficient inventory, and exact ten-minute database deadlines.
+- Two simultaneous four-ticket holds against capacity five consistently produce one success and one conflict, leaving four active units.
 - A live Ticketmaster search returned 12 normalized results, and a live detail fetch confirmed identifier matching and credential absence from the snapshot body.
 - A live local HTTP query returned only the seeded published event with the expected availability and no management fields.
-- All 33 backend tests pass with 93% coverage of the current backend.
-- All 11 frontend tests pass, and frontend formatting, linting, type checking, and production build succeed.
+- All 35 backend tests pass with 94% coverage of the current backend.
+- All 14 frontend tests pass, and frontend formatting, linting, type checking, and production build succeed.
 - Generated Vitest JSON, pytest JUnit XML, and summary JSON parse successfully and report no failures.
 
 ## Known Limitations
 
-- Event ownership is enforced in its resource queries; reservation and ticket resources must apply the same backend authority when introduced.
+- Event and reservation ownership are enforced in their resource queries; ticket resources must apply the same backend authority when introduced.
 - Frontend route guards improve navigation but are not security controls.
 - Expired and revoked session rows are not cleaned automatically.
 - Login rate limiting, session rotation/device management, and topology-specific CSRF hardening remain deferred.
 - Search selection remains transient until creation; created event snapshots and local details are persistent.
 - Repeated catalog searches are not cached; each explicit submission consumes one provider request.
 - Discovery returns at most 50 upcoming events without pagination or advanced filters.
-- Displayed availability is a read snapshot; only the upcoming reservation transaction can guarantee inventory.
+- Displayed availability is a read snapshot; only a successful reservation transaction guarantees a temporary quantity.
+- Expiration is lazy: stale pending rows can retain that stored status until a relevant operation observes them, but stop consuming inventory at the deadline.
+- Checkout is not implemented yet, so the current hold screen cannot approve or decline payment.
 - Cross-table rules such as "tickets only from approved reservations" cannot be expressed by simple row constraints and will be enforced transactionally by services.
 - The Podman hook is Windows-specific; other systems can use the standard `compose.yaml` with their installed Compose provider.
 - The backend test client still emits an upstream FastAPI/Starlette deprecation warning.
@@ -89,4 +98,4 @@
 
 ## Next Commit
 
-`feat(reservations): implement temporary inventory holds`
+`feat(checkout): simulate payment and finalize reservations`

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { ApiError } from '../../lib/api-client'
+import { ReservationForm } from '../reservations/ReservationForm'
 import { DiscoveryHeader } from './DiscoveryHeader'
 import { getPublishedEvent, publishedEventQueryKey } from './discovery-api'
 import { availabilityLabel, formatEventDate, formatEventPrice } from './event-display'
@@ -83,10 +84,7 @@ export function EventDetailPage({ authenticated = false }: EventDetailPageProps)
               {event.available_quantity === 0 ? (
                 <p>This event is currently sold out.</p>
               ) : authenticated ? (
-                <>
-                  <strong>Ready to reserve?</strong>
-                  <p>Quantity selection will use this live availability in the next increment.</p>
-                </>
+                <ReservationForm eventId={event.id} availableQuantity={event.available_quantity} />
               ) : (
                 <>
                   <strong>Want to reserve a ticket?</strong>

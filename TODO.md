@@ -306,17 +306,17 @@ Create temporary inventory holds with PostgreSQL-time expiry and transactional c
 
 ---
 
-## feat(reservations): implement temporary inventory holds
+## Done - feat(reservations): implement temporary inventory holds
 
 ### Goal
 
 Protect the customer's selected quantity for a short payment window without overselling the event.
 
-### Planned
+### Implemented
 
 - Create pending reservations with a configurable expiration timestamp.
 - Use PostgreSQL time and transactional locking as the source of truth for expiration and capacity.
-- Expire stale pending reservations lazily during availability, reservation, and payment operations.
+- Expire stale pending reservations lazily during availability and reservation operations, leaving payment observation for its own increment.
 - Reserve quantity atomically while accounting for sold tickets and unexpired holds.
 - Reject requests that exceed the currently available quantity.
 - Expose the reservation deadline to the frontend.
@@ -325,14 +325,19 @@ Protect the customer's selected quantity for a short payment window without over
 
 ### Validation
 
-- Confirm that an active hold reduces availability for other customers.
-- Confirm that an expired hold no longer consumes availability.
-- Test simultaneous reservation attempts against the final available quantity.
-- Confirm that the frontend uses the server deadline rather than its own clock as the authority.
+- Confirmed that an active hold reduces availability and an expired hold immediately stops consuming it.
+- Confirmed Customer ownership, role denial, insufficient inventory, and non-cacheable private responses.
+- Ran simultaneous four-ticket attempts against capacity five: one succeeded, one conflicted, and active quantity remained four.
+- Confirmed that the frontend corrects a skewed browser clock from the server timestamp and refetches when the displayed deadline elapses.
+- Passed 14 frontend tests and 35 backend tests with successful JSON/XML reports and 94% backend coverage.
 
 ### Expected Result
 
 A customer receives a time-limited hold, and concurrent customers cannot reserve more than the remaining inventory.
+
+### Next
+
+Simulate deterministic payment and atomically finalize, decline, or expire the protected reservation.
 
 ---
 

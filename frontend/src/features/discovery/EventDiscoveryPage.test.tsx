@@ -106,4 +106,58 @@ describe('published event discovery', () => {
       '/login',
     )
   })
+
+  it('creates a customer hold with the selected quantity', async () => {
+    const reservation = {
+      id: '66666666-6666-4666-8666-666666666666',
+      event_id: publishedEvent().id,
+      quantity: 2,
+      status: 'pending',
+      created_at: '2032-09-21T15:00:00Z',
+      expires_at: '2032-09-21T15:10:00Z',
+      server_time: '2032-09-21T15:00:00Z',
+    }
+    const fetchMock = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url = String(input)
+      if (url.endsWith('/auth/me')) {
+        return apiResponse(200, {
+          id: '22222222-2222-4222-8222-222222222221',
+          email: 'customer.one@example.com',
+          role: 'customer',
+        })
+      }
+      if (url.endsWith('/reservations') && init?.method === 'POST') {
+        return apiResponse(201, reservation)
+      }
+      return apiResponse(200, publishedEvent())
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+    renderWithQueryClient(
+      <Routes>
+        <Route path="/customer/events/:eventId" element={<EventDetailPage authenticated />} />
+        <Route
+          path="/customer/reservations/:reservationId"
+          element={<div>Reservation created</div>}
+        />
+      </Routes>,
+      `/customer/events/${publishedEvent().id}`,
+    )
+
+    await screen.findByRole('heading', { name: 'Aurora Live 2032' })
+    const quantity = screen.getByRole('spinbutton', { name: 'Ticket quantity' })
+    await user.clear(quantity)
+    await user.type(quantity, '2')
+    await user.click(screen.getByRole('button', { name: 'Hold 2 tickets' }))
+
+    expect(await screen.findByText('Reservation created')).toBeInTheDocument()
+    const reservationCall = fetchMock.mock.calls.find(
+      ([url, init]) => String(url).endsWith('/reservations') && init?.method === 'POST',
+    )
+    expect(reservationCall).toBeDefined()
+    expect(JSON.parse(String(reservationCall?.[1]?.body))).toEqual({
+      event_id: publishedEvent().id,
+      quantity: 2,
+    })
+  })
 })
