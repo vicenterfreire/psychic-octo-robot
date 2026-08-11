@@ -3,70 +3,26 @@ param()
 
 $ErrorActionPreference = "Stop"
 $repositoryRoot = Split-Path -Parent $PSScriptRoot
-$frontendDirectory = Join-Path $repositoryRoot "frontend"
-$backendDirectory = Join-Path $repositoryRoot "backend"
 $reportDirectory = Join-Path $repositoryRoot ".artifacts\test-results"
 $frontendReport = Join-Path $reportDirectory "frontend.json"
 $backendReport = Join-Path $reportDirectory "backend.xml"
+$e2eReport = Join-Path $reportDirectory "e2e.json"
 $summaryReport = Join-Path $reportDirectory "summary.json"
-
-function Resolve-Executable {
-    param(
-        [Parameter(Mandatory)]
-        [string] $CommandName,
-
-        [Parameter(Mandatory)]
-        [string[]] $CandidatePaths
-    )
-
-    $resolvedCommand = Get-Command $CommandName -ErrorAction SilentlyContinue
-    if ($resolvedCommand) {
-        return $resolvedCommand.Source
-    }
-
-    foreach ($candidatePath in $CandidatePaths) {
-        if ($candidatePath -and (Test-Path -LiteralPath $candidatePath -PathType Leaf)) {
-            return (Resolve-Path -LiteralPath $candidatePath).Path
-        }
-    }
-
-    throw "Could not find $CommandName. Install it or add it to PATH."
-}
-
-$nodePath = Resolve-Executable -CommandName "node.exe" -CandidatePaths @(
-    (Join-Path $env:ProgramFiles "nodejs\node.exe")
-)
-$npmCliPath = @(
-    (Join-Path (Split-Path -Parent $nodePath) "node_modules\npm\bin\npm-cli.js"),
-    (Join-Path $env:ProgramFiles "nodejs\node_modules\npm\bin\npm-cli.js")
-) | Where-Object { $_ -and (Test-Path -LiteralPath $_ -PathType Leaf) } | Select-Object -First 1
-if (-not $npmCliPath) {
-    throw "Could not find npm-cli.js next to the Node.js installation."
-}
-
-$uvPath = Resolve-Executable -CommandName "uv.exe" -CandidatePaths @(
-    (Join-Path $env:USERPROFILE ".local\bin\uv.exe")
-)
+$coreTestScript = Join-Path $PSScriptRoot "test-core.ps1"
+$browserTestScript = Join-Path $PSScriptRoot "test-e2e.ps1"
 
 New-Item -ItemType Directory -Path $reportDirectory -Force | Out-Null
-foreach ($reportPath in @($frontendReport, $backendReport, $summaryReport)) {
+foreach ($reportPath in @($frontendReport, $backendReport, $e2eReport, $summaryReport)) {
     if (Test-Path -LiteralPath $reportPath -PathType Leaf) {
         Remove-Item -LiteralPath $reportPath
     }
 }
 
-Write-Output "Running frontend tests with a JSON report..."
-& $nodePath $npmCliPath --prefix $frontendDirectory run test -- `
-    --reporter=json `
-    --outputFile=$frontendReport
-$frontendExitCode = $LASTEXITCODE
+& powershell -NoProfile -ExecutionPolicy Bypass -File $coreTestScript -Report
+$coreExitCode = $LASTEXITCODE
 
-Write-Output "Running backend tests with a JUnit XML report..."
-& $uvPath --directory $backendDirectory run pytest `
-    --cov=backend `
-    --cov-report=term-missing `
-    --junitxml=$backendReport
-$backendExitCode = $LASTEXITCODE
+& powershell -NoProfile -ExecutionPolicy Bypass -File $browserTestScript
+$e2eExitCode = $LASTEXITCODE
 
 $frontendResult = if (Test-Path -LiteralPath $frontendReport -PathType Leaf) {
     Get-Content -LiteralPath $frontendReport -Raw | ConvertFrom-Json
@@ -74,12 +30,22 @@ $frontendResult = if (Test-Path -LiteralPath $frontendReport -PathType Leaf) {
 $backendResult = if (Test-Path -LiteralPath $backendReport -PathType Leaf) {
     [xml](Get-Content -LiteralPath $backendReport -Raw)
 }
+$e2eResult = if (Test-Path -LiteralPath $e2eReport -PathType Leaf) {
+    Get-Content -LiteralPath $e2eReport -Raw | ConvertFrom-Json
+}
 $backendTestSuite = $backendResult.testsuites.testsuite
+$e2eStats = $e2eResult.stats
+$frontendExitCode = if ($frontendResult -and $frontendResult.numFailedTests -eq 0) { 0 } else { 1 }
+$backendExitCode = if (
+    $backendTestSuite -and
+    [int] $backendTestSuite.failures -eq 0 -and
+    [int] $backendTestSuite.errors -eq 0
+) { 0 } else { 1 }
 
 $summary = [ordered]@{
-    schemaVersion = 1
+    schemaVersion = 2
     generatedAtUtc = [DateTime]::UtcNow.ToString("o")
-    success = $frontendExitCode -eq 0 -and $backendExitCode -eq 0
+    success = $coreExitCode -eq 0 -and $e2eExitCode -eq 0
     frontend = [ordered]@{
         exitCode = $frontendExitCode
         format = "vitest-json"
@@ -96,6 +62,16 @@ $summary = [ordered]@{
         failures = [int] $backendTestSuite.failures
         errors = [int] $backendTestSuite.errors
         skipped = [int] $backendTestSuite.skipped
+    }
+    browser = [ordered]@{
+        exitCode = $e2eExitCode
+        format = "playwright-json"
+        report = ".artifacts/test-results/e2e.json"
+        total = [int] $e2eStats.expected + [int] $e2eStats.unexpected +
+            [int] $e2eStats.flaky + [int] $e2eStats.skipped
+        passed = [int] $e2eStats.expected + [int] $e2eStats.flaky
+        failed = [int] $e2eStats.unexpected
+        skipped = [int] $e2eStats.skipped
     }
 }
 $summaryJson = $summary | ConvertTo-Json -Depth 4

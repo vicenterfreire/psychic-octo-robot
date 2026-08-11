@@ -33,7 +33,7 @@ Each planned `TODO.md` entry represents one coherent local commit.
 - Use PostgreSQL for tests whose result depends on PostgreSQL transactions or locking.
 - Re-run the relevant checks after a meaningful fix.
 
-Frequently repeated commands remain root npm scripts. A checked-in PowerShell hook is used when the command needs platform-specific executable discovery, environment orchestration, or stable machine-readable output. `npm run test:report` writes ignored Vitest JSON, pytest JUnit XML, and a compact summary JSON under `.artifacts/test-results/`; generated reports never enter Git history.
+Frequently repeated commands remain root npm scripts. A checked-in PowerShell hook is used when the command needs platform-specific executable discovery, environment orchestration, or stable machine-readable output. `npm test` and `npm run test:e2e` create and drop allowlisted isolated PostgreSQL databases instead of mutating development data. `npm run test:report` writes ignored Vitest JSON, pytest JUnit XML, Playwright JSON, and a compact summary JSON under `.artifacts/test-results/`; generated reports never enter Git history.
 
 ## Dependency Policy
 

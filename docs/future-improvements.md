@@ -88,7 +88,7 @@ These improvements are deliberately deferred until the mandatory end-to-end flow
 
 ## Broader Test and Mutation Coverage
 
-- **Current approach:** risk-focused tests and bounded backend mutation testing.
+- **Current approach:** risk-focused tests plus a deliberate manual mutation that proved the HMAC tampering test fails when signature comparison is removed.
 - **Limitation:** low-risk presentation and framework glue may remain lightly tested.
-- **Possible improvement:** expand component, accessibility, contract, performance, and mutation suites.
+- **Possible improvement:** run the next bounded automated mutation experiment, then expand component, accessibility, contract, or performance suites only where a meaningful risk remains.
 - **Worthwhile when:** critical behavior is complete and the remaining deadline is safe.

@@ -4,7 +4,7 @@
 
 - Date: 2026-08-11.
 - Branch: local `main`, based on published commit `14d5d9c` and developed through small local commits.
-- Phase: the mandatory end-to-end product flow is complete; critical-suite consolidation is next.
+- Phase: the mandatory end-to-end product flow and critical suite are complete; bounded mutation evaluation is next.
 - Frontend: React, Vite, and TypeScript application initialized.
 - Backend: Python 3.14 and FastAPI application initialized.
 - Database: PostgreSQL 17 schema migrated and seeded through Podman.
@@ -16,7 +16,7 @@
 - Checkout: deterministic approval/decline with atomic, idempotent ticket-row issuance.
 - Tickets: versioned HMAC credentials, private QR collection, and minimized bearer sharing views.
 - Gate: explicit camera/manual input with atomic valid, invalid, already-used, or wrong-event decisions.
-- Automated tests: 29 frontend tests and 46 backend tests, including PostgreSQL concurrent check-in integration.
+- Automated tests: 29 frontend tests, 46 backend tests, and one Playwright cross-role browser flow.
 - Deployment: not selected.
 
 ## Implemented Foundation
@@ -35,7 +35,8 @@
 - Argon2id password verification uses the shared seed utility and dummy verification for unknown identities.
 - Reusable backend role and ownership checks establish the authorization boundary for later resource routes.
 - The frontend restores sessions through TanStack Query and separates organizer, customer, and gate navigation.
-- The test-report hook emits ignored machine-readable JSON/XML results for both suites.
+- The core and browser hooks create, migrate, seed, and drop only allowlisted isolated PostgreSQL databases.
+- The test-report hook emits ignored Vitest JSON, pytest JUnit XML, Playwright JSON, and one aggregate summary.
 - The Ticketmaster client keeps `apikey` server-side, enforces a timeout and bounded result size, validates upstream JSON, and returns a small provider-normalized HTTP contract.
 - The Organizer interface supports explicit search, result selection, empty/error recovery, and provider source links.
 - Event creation refetches the selected provider item on the backend, verifies its identifier, and persists the raw provider response as an immutable snapshot.
@@ -64,6 +65,7 @@
 - Camera cancellation, event changes, pending validation, and route cleanup stop active scanner controls; duplicate callbacks cannot create duplicate validation requests.
 - Permission, hardware, browser-support, and startup failures keep manual entry visible with specific recovery guidance.
 - The Gate interface presents all four outcomes with large, distinct feedback and keeps manual entry independent of camera support.
+- The Playwright flow updates the seeded event as Organizer, purchases one ticket as Customer, and proves first-use/duplicate-use Gate outcomes without contacting Ticketmaster.
 
 ## Validated Environment
 
@@ -72,6 +74,7 @@
 - Podman Desktop 6.0.2 with a running WSL machine.
 - PostgreSQL 17.10 from `postgres:17-alpine`.
 - `podman-compose` 1.6.0 executed in an isolated `uvx` environment.
+- Playwright 1.62.1 with Chrome for Testing 151.0.7922.34.
 
 ## Validation Result
 
@@ -99,7 +102,10 @@
 - A live local HTTP query returned only the seeded published event with the expected availability and no management fields.
 - All 46 backend tests pass with 95% coverage of the current backend.
 - All 29 frontend tests pass, and frontend formatting, linting, type checking, and production build succeed.
-- Generated Vitest JSON, pytest JUnit XML, and summary JSON parse successfully and report no failures.
+- The Chromium cross-role test passes through Organizer edit, Customer approval, issued-ticket retrieval, valid Gate entry, and duplicate rejection.
+- `npm test` leaves `elite_dev` untouched and drops `elite_dev_test`; `npm run test:e2e` drops `elite_dev_e2e` after completion.
+- Removing HMAC signature comparison temporarily makes the focused tampering test fail; restoring it returns all three signing tests to passing.
+- Generated Vitest JSON, pytest JUnit XML, Playwright JSON, and summary JSON parse successfully and report no failures.
 - Live browser review confirmed Gate login, event loading, camera-off-by-default behavior, explicit permission request, safe cancellation, and immediately available manual fallback.
 - The browser environment had no physical camera, so optical capture remains a short device-level evaluator check; automated interaction tests exercise decoded QR submission, duplicate callback suppression, and all four authoritative outcomes.
 
@@ -119,10 +125,10 @@
 - Ticket revocation state is persisted and presented, but no cancellation or administrative revocation command exists yet.
 - The initial signing format has no key identifier or verification key ring, so changing `TICKET_HMAC_SECRET` invalidates existing tokens.
 - Approved reservations and issued tickets are final; cancellation and refunds remain deferred.
-- The Podman hook is Windows-specific; other systems can use the standard `compose.yaml` with their installed Compose provider.
+- The Podman and isolated-test hooks are Windows-specific; other systems can use the standard `compose.yaml` and equivalent commands with their installed Compose provider.
 - The backend test client still emits an upstream FastAPI/Starlette deprecation warning.
 - Deployment topology and production secrets remain deferred.
 
 ## Next Commit
 
-`test(core): cover critical business and end-to-end risks`
+`test(quality): evaluate focused mutation testing`

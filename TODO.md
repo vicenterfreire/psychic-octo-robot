@@ -483,13 +483,13 @@ Consolidate the risk-focused critical suite and add the planned cross-role brows
 
 ---
 
-## test(core): cover critical business and end-to-end risks
+## Done - test(core): cover critical business and end-to-end risks
 
 ### Goal
 
 Protect the behavior most important to correctness, security, and interview defensibility.
 
-### Planned
+### Implemented
 
 - Test authentication, persistent sessions, expiry, logout, and role boundaries.
 - Test organizer and customer ownership rules.
@@ -500,16 +500,25 @@ Protect the behavior most important to correctness, security, and interview defe
 - Test wrong-event, duplicate, and concurrent check-in.
 - Add focused frontend interaction tests for reservation expiry and gate fallback states.
 - Add one browser-level happy path across organizer, customer, and gate roles.
+- Run core and browser suites against separate disposable PostgreSQL databases.
+- Add root hooks for browser installation, core tests, E2E tests, and combined machine-readable reporting.
 
 ### Validation
 
 - Run all backend, frontend, integration, and browser tests.
 - Record the test environment and commands in the README.
 - Confirm that tests fail when their protected business rule is deliberately broken during local verification.
+- Passed 29 Vitest interactions, 46 pytest tests with 95% backend coverage, and one complete Playwright Chromium flow.
+- Confirmed the HMAC tampering test fails when signature comparison is temporarily removed and passes after restoration.
+- Passed frontend/backend formatting, linting, strict type checks, production builds, and aggregate report parsing.
 
 ### Expected Result
 
 Critical domain, authorization, concurrency, and ticket-validation behavior is reproducibly verified.
+
+### Next
+
+Evaluate bounded mutation testing without threatening delivery.
 
 ---
 

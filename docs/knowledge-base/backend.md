@@ -21,7 +21,7 @@ The backend is a FastAPI modular monolith. It owns API behavior, authentication,
 - `src/backend/database/engine.py` creates the synchronous SQLAlchemy engine.
 - `src/backend/database/seed.py` inserts stable, idempotent evaluation data.
 - `migrations/` contains the Alembic schema history.
-- `tests/` contains risk-relevant backend tests as features are introduced.
+- `tests/` contains risk-relevant backend tests as features are introduced. `scripts/isolated_database.py` is an allowlisted test-only lifecycle helper for `elite_dev_test` and `elite_dev_e2e`.
 
 The application factory keeps construction explicit and allows tests or future entry points to build an application with the same wiring. It is not a generic dependency-injection framework.
 
@@ -137,4 +137,4 @@ The local Podman hook writes an ignored `backend/.env.podman` only when it resol
 
 ## Quality Boundary
 
-Ruff owns formatting and linting, mypy runs in strict mode, and pytest with branch coverage protects behavior. Coverage is evidence for the tested foundation, not a project-wide target or a substitute for risk-focused tests. The root test-report hook also writes a JUnit XML result for automated inspection.
+Ruff owns formatting and linting, mypy runs in strict mode, and pytest with branch coverage protects behavior. Coverage is evidence for the tested foundation, not a project-wide target or a substitute for risk-focused tests. The root `npm test` hook recreates, migrates, seeds, and drops a dedicated PostgreSQL database, so concurrency tests use the production database engine without consuming development records. The machine-readable hook also writes pytest JUnit XML alongside the frontend and browser reports.

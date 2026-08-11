@@ -2,7 +2,7 @@
 
 This repository contains the incremental implementation of the Elite Dev 2026 technical challenge: an event and ticketing platform for organizers, customers, and gate staff.
 
-The mandatory product flow will allow an organizer to create a local event from the Ticketmaster catalog, a customer to hold inventory and complete a simulated payment, and gate staff to validate an HMAC-signed QR ticket exactly once.
+The mandatory product flow allows an organizer to create a local event from the Ticketmaster catalog, a customer to hold inventory and complete a simulated payment, and gate staff to validate an HMAC-signed QR ticket exactly once.
 
 ## Current Status
 
@@ -22,8 +22,9 @@ The runnable project, persistence, authentication, Ticketmaster catalog, organiz
 - Customers can deterministically approve or decline the simulation; approval finalizes the reservation and issues exactly one persistent ticket row per unit.
 - Customers can reopen a private ticket collection, render HMAC-signed QR credentials, and share minimized bearer views without exposing personal data.
 - Gate staff can select a published event, scan its QR through a browser camera or enter the token manually, and receive an atomic valid, invalid, already-used, or wrong-event result.
+- Risk-focused backend, frontend, PostgreSQL integration, and cross-role browser tests run against disposable databases without changing development data.
 
-The next planned increment is `test(core): cover critical business and end-to-end risks`.
+The next planned increment is `test(quality): evaluate focused mutation testing`.
 
 ## Prerequisites
 
@@ -33,6 +34,7 @@ The current increment was validated with:
 - `uv` 0.12.3.
 - `uv`-managed CPython 3.14.7.
 - Podman Desktop 6.0.2 with an initialized and running Podman machine.
+- Playwright 1.62.1 with its managed Chromium browser.
 
 ## Setup
 
@@ -40,6 +42,12 @@ Install the frontend dependencies from the committed npm lockfile:
 
 ```powershell
 npm --prefix frontend ci
+```
+
+Install the Chromium build used by the browser test once per machine:
+
+```powershell
+npm run test:e2e:install
 ```
 
 Create and synchronize the backend environment from the committed `uv.lock`:
@@ -60,7 +68,7 @@ Create the container, wait for PostgreSQL, apply the schema, and seed the evalua
 npm run db:prepare
 ```
 
-The project hook locates `podman.exe` from `PATH` or known Podman Desktop installation directories. It runs the pinned `podman-compose` 1.6.0 provider through `uvx`, so no global Compose installation or MCP server is required. When Podman's WSL port is not forwarded to Windows localhost, the hook resolves the current machine address and writes the ignored `backend/.env.podman` connection file.
+The project hook locates `podman.exe` from `PATH` or known Podman Desktop installation directories. It reuses an already healthy project container without resolving Compose again; otherwise it runs the pinned `podman-compose` 1.6.0 provider through `uvx`, so no global Compose installation or MCP server is required. When Podman's WSL port is not forwarded to Windows localhost, the hook resolves the current machine address and writes the ignored `backend/.env.podman` connection file.
 
 Database lifecycle commands:
 
@@ -205,10 +213,13 @@ npm run format:check
 npm run lint
 npm run typecheck
 npm test
+npm run test:e2e
 npm run build
 ```
 
-Prepare PostgreSQL before `npm test`; the backend suite intentionally exercises the real database. Use `npm run format` to apply Prettier and Ruff formatting.
+`npm test` starts the project PostgreSQL service if necessary, recreates `elite_dev_test`, migrates and seeds it, runs 29 frontend tests plus 46 backend tests, and drops that test database even after a failure. The PostgreSQL integration tests exercise the real transaction and locking behavior. Development data in `elite_dev` is not reset or modified.
+
+`npm run test:e2e` follows the same lifecycle with `elite_dev_e2e`, chooses unused loopback ports, starts FastAPI and Vite through Playwright, and exercises one complete Chromium path: Organizer edit, Customer hold and approved checkout, ticket retrieval, first Gate acceptance, and duplicate Gate rejection. It uses the stable seeded event, so no Ticketmaster credential or provider request is required. Use `npm run format` to apply Prettier and Ruff formatting.
 
 For machine-readable results, run:
 
@@ -216,7 +227,7 @@ For machine-readable results, run:
 npm run test:report
 ```
 
-This writes ignored local artifacts to `.artifacts/test-results/`: Vitest JSON, pytest JUnit XML, and `summary.json` with suite exit codes and test counts. The hook runs both suites even when one fails, making it suitable for automated inspection.
+This runs both isolated database lifecycles and writes ignored local artifacts to `.artifacts/test-results/`: Vitest JSON, pytest JUnit XML, Playwright JSON, and `summary.json` with all three suite results and test counts. Failure screenshots and traces, when present, stay under ignored `.artifacts/playwright/`.
 
 ## Accepted Technology Direction
 
@@ -230,7 +241,7 @@ This writes ignored local artifacts to `.artifacts/test-results/`: Vitest JSON, 
 - Authentication: seven-day opaque database sessions stored in an HTTP-only cookie.
 - Password hashing: Argon2id through `pwdlib`.
 - Ticket authenticity: versioned HMAC-signed ticket tokens.
-- Testing: focused backend, frontend, integration, and browser tests; bounded mutation testing only after the critical suite is stable.
+- Testing: pytest against PostgreSQL, Vitest with Testing Library, and one Playwright Chromium flow; bounded mutation testing only after the critical suite is stable.
 
 ## Documentation
 

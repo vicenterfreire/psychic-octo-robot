@@ -115,8 +115,30 @@ function Write-DatabaseEnvironment {
     Write-Output "Backend database connection: $databaseHostName`:$databasePort"
 }
 
+function Test-PostgresIsHealthy {
+    $containerId = & $podmanPath ps `
+        --filter "label=io.podman.compose.project=elite-dev-challenge" `
+        --filter "label=io.podman.compose.service=postgres" `
+        --filter "status=running" `
+        --format "{{.ID}}" |
+        Select-Object -First 1
+
+    if ($LASTEXITCODE -ne 0 -or -not $containerId) {
+        return $false
+    }
+
+    $healthStatus = & $podmanPath inspect --format "{{.State.Health.Status}}" $containerId
+    return $LASTEXITCODE -eq 0 -and $healthStatus -eq "healthy"
+}
+
 switch ($Command) {
     "up" {
+        if (Test-PostgresIsHealthy) {
+            Write-Output "PostgreSQL is already healthy; reusing the running project container."
+            Write-DatabaseEnvironment
+            break
+        }
+
         Invoke-Compose -Arguments @("up", "--detach", "--wait", "--wait-timeout", "60")
         Write-DatabaseEnvironment
     }
