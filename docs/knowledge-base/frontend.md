@@ -128,3 +128,8 @@ generated API-documentation dependency is introduced.
 Prettier owns formatting, Oxlint owns static linting, TypeScript runs with strict project settings, and Vitest with Testing Library protects meaningful interaction and integration boundaries. Tests cover health transport, login, session restoration, cross-role redirection, catalog search/selection, stable errors, provider-secret absence, event management, published discovery, quantity submission, server-clock correction, payment approval, issued quantity, expired-hold recovery, private QR presentation, unauthenticated bearer sharing, camera opt-in and fallback states, duplicate scan suppression, and all four Gate outcomes through manual and scanned input.
 
 Playwright 1.62.1 owns one intentionally broad Chromium flow. It starts FastAPI and Vite on unused loopback ports, then proves that an Organizer edit becomes visible to a Customer, an approved hold issues a signed ticket, and the Gate accepts that token exactly once. The hook uses a separate disposable PostgreSQL database and emits JSON plus failure traces/screenshots under ignored `.artifacts/`. Vitest explicitly excludes `e2e/`, so the two runners cannot collect each other's test files.
+
+The frontend container is a multi-stage build: Node compiles the Vite application, while the final
+Nginx image contains only static assets and SPA fallback configuration. `VITE_API_URL` is public
+build-time configuration, so a changed public backend address requires rebuilding the image; no
+secret belongs in a `VITE_*` variable.

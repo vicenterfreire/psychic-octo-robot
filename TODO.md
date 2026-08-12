@@ -2,11 +2,11 @@
 
 ## Current Status
 
-The mandatory application, risk-focused tests, evaluator documentation, and first four candidate
-review refactors are complete. One approved post-delivery local-execution increment remains before
-the candidate's final publication review.
+The mandatory application, risk-focused tests, evaluator documentation, all candidate review
+refactors, and the full-stack local Compose workflow are complete. The repository is ready for the
+candidate's final publication review.
 
-Commit progress: 19 of 20 planned increments complete; 1 remains.
+Commit progress: 20 of 20 planned increments complete; 0 remain.
 
 The local `main` branch is based on published commit `14d5d9c`. Local project commits remain unpushed until the candidate chooses to publish them.
 
@@ -22,7 +22,9 @@ The local `main` branch is based on published commit `14d5d9c`. Local project co
 - Ticket authenticity: persistent, versioned HMAC-signed ticket tokens.
 - Reservation model: temporary inventory holds with an explicit expiration time.
 - Testing: risk-focused automated tests; mutation testing only if the mandatory flow and critical tests are complete and the deadline remains safe.
-- Deployment provider: deliberately deferred until the mandatory end-to-end flow is complete.
+- Local execution topology: direct host processes or a three-service Compose workflow with
+  PostgreSQL, FastAPI, and the built React application.
+- Production deployment provider: deliberately deferred as an optional future improvement.
 
 Additional accepted implementation direction:
 
@@ -53,6 +55,9 @@ The initial RED decisions were accepted by the candidate and are recorded in `do
 - ADR-007: ticket authenticity, sharing, and validation.
 - ADR-008: testing strategy.
 - ADR-009: frontend module organization.
+
+ADR-010 records the candidate-requested local full-stack container topology and its explicit
+production limitations.
 
 ---
 
@@ -779,27 +784,53 @@ Containerize the frontend and backend and extend Compose to run the complete loc
 
 ---
 
-## chore(containers): run the full application with Compose
+## Done - chore(containers): run the full application with Compose
 
 ### Goal
 
 Provide one reproducible local path for PostgreSQL, FastAPI, and the built React application.
 
-### Planned
+### Implemented
 
-- Add production-oriented Dockerfiles for the frontend and backend.
-- Extend `compose.yaml` with explicit service dependencies, health checks, environment boundaries,
-  and named volumes where appropriate.
-- Preserve the existing direct host-development workflow.
-- Document how `DATABASE_URL`, migrations, and seed support an already-running PostgreSQL instance
-  without installing or starting Podman.
-- Document build, startup, shutdown, configuration, migration, seed, and troubleshooting commands.
-- Validate the complete role flow through the composed services.
+- Added multi-stage frontend and backend Dockerfiles with exact validated base versions, locked
+  application dependencies, minimized build contexts, static Nginx delivery, and a non-root API
+  runtime.
+- Extended `compose.yaml` with PostgreSQL, FastAPI, and built React services, explicit health-gated
+  dependencies, runtime-only backend secrets, published-port overrides, and the existing named
+  database volume.
+- Added `app:build`, `app:up`, `app:down`, `app:status`, and `app:logs` hooks while keeping database
+  commands and direct host development available.
+- Made the Windows hook detect missing Podman WSL localhost forwarding, align the frontend public
+  API URL and backend CORS origin, and print the reachable addresses.
+- Documented container build/start/stop/configuration, migration and seed startup behavior,
+  existing external PostgreSQL through `DATABASE_URL`, troubleshooting, and production limits.
+- Recorded the local topology and rejected alternatives in ADR-010.
+
+### Validation
+
+- Built both images from the committed npm and `uv` lockfiles with exact Node 22.21.0, Python
+  3.14.7, Nginx 1.28.3, PostgreSQL 17.10, and `uv` 0.12.3 bases.
+- Stopped and restarted the full project while preserving its database volume; PostgreSQL,
+  FastAPI, and Nginx all reached healthy status.
+- Confirmed migration startup remained at the current head and the idempotent seed inserted zero
+  duplicate records on the existing database.
+- Confirmed the published frontend and backend health URLs both return HTTP 200.
+- Passed the cross-role Playwright scenario once against an isolated three-service Compose project,
+  including Organizer edit, Customer approval, ticket retrieval, first Gate acceptance, and
+  duplicate rejection; its dedicated test volume was removed afterward.
+- Passed the normal host-process Playwright flow after the Compose changes.
+- Passed all 29 frontend tests and 46 backend tests with 95% backend coverage.
+- Passed frontend and backend formatting, linting, strict type checks, and production/package builds.
 
 ### Expected Result
 
 The evaluator can start and exercise the full stack through one Compose-compatible workflow while
 developers can still run either application directly on the host.
+
+### Next
+
+Candidate final review, public GitHub publication, and challenge-form submission. These remote
+actions remain intentionally outside the AI collaborator's authority.
 
 ---
 

@@ -25,11 +25,11 @@ The runnable project, persistence, authentication, Ticketmaster catalog, organiz
 - Risk-focused backend, frontend, PostgreSQL integration, and cross-role browser tests run against disposable databases without changing development data.
 - Feature styles use Vite CSS Modules, while only design tokens, resets, and intentional shared UI primitives remain global.
 - Critical security, concurrency, lifecycle, and integration contracts are documented with native Python docstrings and TypeScript TSDoc/JSDoc.
+- Multi-stage frontend and backend images plus the root Compose file start the complete healthy
+  stack without changing the direct host-development workflow.
 
-The original 15 mandatory delivery increments are complete. Candidate review added five scoped
-post-delivery increments; the first four are complete, so progress is 19 of 20 with full-stack
-containerization remaining. Public GitHub publication and challenge submission remain under the
-candidate's control.
+All 20 planned increments are complete. Public GitHub publication and challenge submission remain
+under the candidate's control.
 
 ## Challenge Coverage
 
@@ -119,6 +119,22 @@ npm run db:down
 `db:down` preserves the named PostgreSQL volume. `npm run db:reset` deletes only this project's database volume and starts an empty database; run migrations and seed afterward, or use `npm run db:prepare`.
 
 The Compose credentials `elite` / `elite` are deliberately public local-development defaults. Production credentials must come from environment secrets.
+
+### Use an Existing PostgreSQL Instance Without Podman
+
+Podman is a reproducible local option, not a requirement of the FastAPI code. If PostgreSQL is
+already installed locally or available at another reachable address, create the database and login
+there, point `DATABASE_URL` at it, and run the same schema and seed commands:
+
+```powershell
+$env:DATABASE_URL = "postgresql+psycopg://app_user:app_password@localhost:5432/elite_dev"
+uv --directory backend run alembic upgrade head
+uv --directory backend run python -m backend.database.seed
+```
+
+The database user must be allowed to create the application schema. The URL can instead live in
+`backend/.env`; a process variable has higher precedence. Do not run `db:prepare` in this workflow,
+because that command intentionally starts the project PostgreSQL container.
 
 ## Seeded Evaluation Data
 
@@ -225,7 +241,40 @@ Denied permission, missing or busy cameras, unsupported browser APIs, and startu
 
 Browser camera access requires a secure context. `http://localhost:5173` is accepted for same-computer development by modern browsers; testing from a phone or another computer must serve the frontend over HTTPS. The 0.1.x scanner line is deliberately locked because it supports the project's Node.js 22 runtime; the current 0.2.x peer dependency requires Node.js 24.
 
-## Run Locally
+## Run the Full Stack With Compose
+
+After creating `backend/.env` and setting `TICKET_HMAC_SECRET`, build, start, migrate, seed, and wait
+for PostgreSQL, FastAPI, and the built React application with:
+
+```powershell
+npm run app:up
+```
+
+Open the frontend URL printed by the hook. It is normally `http://localhost:5173`; when Podman WSL
+port forwarding is unavailable, the hook detects the current machine address, rebuilds the public
+API URL and CORS origin with that address, and prints the reachable alternative. Inspect or stop
+the stack with:
+
+```powershell
+npm run app:status
+npm run app:logs
+npm run app:down
+```
+
+`app:down` preserves the named PostgreSQL volume. Use `npm run app:build` when only an image rebuild
+is wanted. `PUBLIC_HOST`, `FRONTEND_PORT`, `BACKEND_PORT`, `POSTGRES_PORT`, and `POSTGRES_DB` can
+override the local defaults before `app:up`; changing the public host or backend port rebuilds the
+frontend because Vite embeds its public API URL at build time.
+
+The backend container reads secrets from untracked `backend/.env`, but Compose overrides its
+database host with the internal `postgres` service. Environment files are excluded from both image
+build contexts.
+
+An HTTP WSL-address fallback is not a browser secure context, so camera permission may remain
+unavailable there. Use the documented manual Gate input for Compose evaluation, or run the
+frontend directly on `localhost` for the device-level camera check.
+
+## Run Directly on the Host
 
 Start each application in a separate terminal from the repository root:
 
@@ -245,8 +294,8 @@ The frontend API base URL defaults to `http://localhost:8000/api`. Set `VITE_API
 
 This path exercises the mandatory product flow without private setup knowledge:
 
-1. Run `npm run db:prepare`, start the backend and frontend in separate terminals, and open
-   `http://localhost:5173`.
+1. Run `npm run app:up` and open the frontend URL it prints. Alternatively, use `db:prepare` and
+   start both applications directly as described above.
 2. Browse `/events` without signing in. Confirm that `Aurora Live 2030` exposes its date,
    location, BRL price, and available quantity.
 3. Sign in as the Organizer. With `TICKETMASTER_API_KEY` configured, search the catalog, choose a
@@ -274,9 +323,15 @@ rejection without consuming Ticketmaster quota or development data.
 - **Podman is unavailable or PostgreSQL never becomes healthy:** open Podman Desktop, start its
   machine, then run `npm run db:status` and `npm run db:logs`. The hook also searches the standard
   Podman Desktop installation directory when the current terminal has a stale `PATH`.
+- **A full-stack service does not become healthy:** run `npm run app:status` and
+  `npm run app:logs`. The backend logs include migration and seed failures; the frontend starts only
+  after the API health check succeeds.
 - **Port 5432 is already occupied:** stop the conflicting local database, or set a matching
   `POSTGRES_PORT` for Compose and port in `backend/.env`'s `DATABASE_URL`, then rerun
   `npm run db:prepare`.
+- **Port 5173 or 8000 is already occupied:** stop the conflicting process or set `FRONTEND_PORT` or
+  `BACKEND_PORT` before `app:up`. Use the resulting frontend URL consistently; the image is rebuilt
+  with the matching API URL and CORS origin.
 - **The schema or seed is missing:** rerun `npm run db:prepare`; migration and seed are idempotent.
   `npm run db:reset` is the recovery option, but it deliberately deletes this project's local
   PostgreSQL volume before rebuilding it.
@@ -326,7 +381,8 @@ Automated mutation testing is not part of the required setup or validation comma
 - Dependency management: `uv`, `pyproject.toml`, and a committed `uv.lock`.
 - Compatibility export: `requirements.txt` generated from `uv.lock`; it is not maintained manually.
 - Persistence: PostgreSQL, SQLAlchemy 2, Alembic, and Psycopg 3.
-- Local database: Podman with a Compose-compatible `compose.yaml`.
+- Local execution: direct host processes or Podman with a Compose-compatible PostgreSQL, FastAPI,
+  and built React stack.
 - External catalog: backend-only Ticketmaster Discovery API access through `httpx`.
 - Authentication: seven-day opaque database sessions stored in an HTTP-only cookie.
 - Password hashing: Argon2id through `pwdlib`.
@@ -368,12 +424,13 @@ versioned intermediate artifacts is recorded in the
 
 ## Delivery Status
 
-The required local application and documentation are complete. Production deployment is an
-optional challenge differential and was deliberately not implemented, so there is no hosted URL.
+The required local application, documentation, and full-stack Compose path are complete.
+Production deployment is an optional challenge differential and was deliberately not implemented,
+so there is no hosted URL.
 The candidate must review the final repository, publish it to a public GitHub repository, and submit
 that URL through the challenge form. Those remote actions are intentionally outside the AI
 collaborator's authority.
 
 ## Current Limitations
 
-The mandatory organizer, Customer, ticket, and camera/manual Gate flows are implemented. Camera scanning still depends on a secure browser context, user permission, and usable hardware, so manual entry remains permanently available. Displayed availability can change before a hold is created; only a successful reservation response guarantees a temporary quantity. HMAC key rotation and a ticket-revocation command are not implemented; the schema and responses already retain revocation state for later workflows. Server-side catalog caching, advanced discovery filters, pagination, background stale-row cleanup, login rate limiting, session rotation/device management, automatic expired-session cleanup, and production-topology CSRF hardening are intentionally deferred.
+The mandatory organizer, Customer, ticket, and camera/manual Gate flows are implemented. Camera scanning still depends on a secure browser context, user permission, and usable hardware, so manual entry remains permanently available. Displayed availability can change before a hold is created; only a successful reservation response guarantees a temporary quantity. HMAC key rotation and a ticket-revocation command are not implemented; the schema and responses already retain revocation state for later workflows. Server-side catalog caching, advanced discovery filters, pagination, background stale-row cleanup, login rate limiting, session rotation/device management, automatic expired-session cleanup, and production-topology CSRF hardening are intentionally deferred. The Compose path is for single-machine evaluation: it uses HTTP, a build-time public API URL, one backend replica, and startup migrations rather than production secret, TLS, migration-job, scaling, monitoring, backup, and rollback facilities.

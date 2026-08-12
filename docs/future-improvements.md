@@ -82,8 +82,11 @@ below remain deliberate post-challenge improvements rather than unfinished manda
 
 ## Deployment and Operations
 
-- **Current approach:** local execution; provider selection is deferred.
-- **Limitation:** evaluators cannot use a hosted instance yet, and no production observability exists.
+- **Current approach:** reproducible local host and full-stack Compose execution; provider selection
+  is deferred.
+- **Limitation:** the Compose topology uses local HTTP, development credentials, a build-time API
+  URL, and startup migrations; evaluators cannot use a hosted instance and no production
+  observability exists.
 - **Possible improvement:** hosted frontend, FastAPI service, managed PostgreSQL, HTTPS secrets, health monitoring, structured logs, and CI/CD.
 - **Worthwhile when:** the mandatory local flow and critical tests are stable.
 

@@ -141,6 +141,12 @@ Money uses integer minor units and timestamps include timezone information. The 
 
 The local Podman hook writes an ignored `backend/.env.podman` only when it resolves a usable database address. A user-defined process `DATABASE_URL` or `backend/.env` takes precedence.
 
+The backend container installs exactly the production dependency graph from `uv.lock`, excludes
+local environment files, tests, and developer caches, and runs as a non-root user. In the approved
+single-replica local Compose topology, its startup command applies Alembic migrations and the
+idempotent seed before Uvicorn. An existing host or managed PostgreSQL works through the same
+`DATABASE_URL` without any application-code change.
+
 ## Quality Boundary
 
 Python documentation follows the same ownership boundary as the code. Public or reusable

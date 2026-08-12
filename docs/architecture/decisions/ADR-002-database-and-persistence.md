@@ -40,7 +40,9 @@ It can increase I/O concurrency but adds `AsyncSession`, async fixture, and tran
 ## Consequences
 
 - Concurrency behavior can be tested against the same database engine used by the application.
-- PostgreSQL and Podman are required for local development and integration tests.
+- PostgreSQL is required for persistence and integration tests. Podman is the validated
+  reproducible local provider, but an existing reachable PostgreSQL instance works through the
+  same `DATABASE_URL` without code changes.
 - The candidate must understand sessions, transactions, locks, migrations, and ORM-generated queries.
 - Synchronous database operations must not be called directly from `async def` utility paths that bypass FastAPI's thread-pool handling.
 - External Ticketmaster calls must happen outside database transactions.

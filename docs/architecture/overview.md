@@ -27,7 +27,9 @@ flowchart LR
 - `frontend/` contains the React application and its npm lockfile.
 - `backend/` contains the FastAPI application, `pyproject.toml`, `uv.lock`, and generated `requirements.txt`.
 - `docs/` is persistent project knowledge and architecture history.
-- `compose.yaml` defines local PostgreSQL, and `scripts/podman-compose.ps1` provides the Windows Podman lifecycle hook.
+- `compose.yaml` defines the local PostgreSQL, FastAPI, and built React services;
+  `scripts/podman-compose.ps1` provides separate database-only and full-stack Windows Podman
+  lifecycle commands.
 - `TODO.md` defines the ordered local commit plan.
 
 No Git worktree is needed because there is no experiment or parallel implementation to isolate.
@@ -94,7 +96,11 @@ sequenceDiagram
 
 ## Deployment Boundary
 
-The mandatory application is complete for local evaluation, and production deployment remains an
-optional, deliberately deferred challenge differential. Any later topology must preserve HTTPS
-cookies, PostgreSQL connectivity, externalized secrets, and appropriate same-site or CSRF
-protections.
+The mandatory application is complete for local evaluation through either host processes or the
+three-service Compose topology. The frontend container serves the Vite build from Nginx, the
+backend container applies migrations and the idempotent seed before starting one Uvicorn process,
+and service health checks enforce startup order.
+
+This is not a production deployment. A later hosted topology must define TLS termination, managed
+secrets, same-origin or cross-origin routing, secure-cookie behavior, database connection
+management, a separate migration owner, logs, backups, monitoring, scaling, and rollback.

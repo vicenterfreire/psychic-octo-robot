@@ -2,10 +2,10 @@
 
 ## Snapshot
 
-- Date: 2026-08-11.
+- Date: 2026-08-12.
 - Branch: local `main`, based on published commit `14d5d9c` and developed through small local commits.
-- Phase: the original 15 mandatory increments and the first four of five post-delivery review
-  increments are complete; the local application remains ready for evaluation.
+- Phase: all 20 planned mandatory, review, and local-execution increments are complete; the local
+  application is ready for the candidate's final publication review.
 - Frontend: React, Vite, and TypeScript application initialized.
 - Backend: Python 3.14 and FastAPI application initialized.
 - Database: PostgreSQL 17 schema migrated and seeded through Podman.
@@ -24,13 +24,19 @@
   CSS is limited to tokens, resets, page structure, and deliberate shared primitives.
 - Code documentation: selective Python docstrings and TypeScript TSDoc/JSDoc explain critical
   security, concurrency, time-authority, integration, and lifecycle contracts.
-- Deployment: not selected.
+- Local execution: direct host processes or a healthy three-service Compose stack; production
+  deployment remains deliberately unselected.
 
 ## Implemented Foundation
 
-- `compose.yaml` defines a healthy PostgreSQL service with a named persistent volume.
+- `compose.yaml` defines healthy PostgreSQL, FastAPI, and built React services with a named
+  persistent database volume and explicit dependency order.
+- Multi-stage Dockerfiles install the locked backend runtime as a non-root user and serve only the
+  Vite build output from Nginx; local environment files never enter either image.
 - The PowerShell project hook resolves the candidate's Podman Desktop executable even when the current process has a stale `PATH`.
-- The hook runs a pinned Compose provider through `uvx` and adapts to missing WSL localhost forwarding without changing global Podman settings.
+- The hook runs a pinned Compose provider through `uvx`, separates database-only from full-stack
+  commands, waits for application health, and adapts to missing WSL localhost forwarding without
+  changing global Podman settings.
 - SQLAlchemy models represent users, sessions, catalog snapshots, events, reservations, and tickets.
 - Named database constraints protect roles, states, normalized values, quantities, money, timestamps, ownership references, session digests, and ticket usage/revocation shape.
 - Alembic revision `91ec7f95d3b1` is the current schema head and adds coherent ticket revocation timestamps.
@@ -85,6 +91,7 @@
 - PostgreSQL 17.10 from `postgres:17-alpine`.
 - `podman-compose` 1.6.0 executed in an isolated `uvx` environment.
 - Playwright 1.62.1 with Chrome for Testing 151.0.7922.34.
+- Nginx 1.28.3 in the static frontend image.
 
 ## Validation Result
 
@@ -113,6 +120,12 @@
 - All 46 backend tests pass with 95% coverage of the current backend.
 - All 29 frontend tests pass, and frontend formatting, linting, type checking, and production build succeed.
 - The Chromium cross-role test passes through Organizer edit, Customer approval, issued-ticket retrieval, valid Gate entry, and duplicate rejection.
+- Both application images build from their committed lockfiles, and the three Compose services
+  become healthy after the backend applies the current migration and idempotent seed.
+- The same cross-role Playwright scenario passes against an isolated three-service Compose project;
+  its dedicated volume is removed afterward while `elite_dev` remains untouched.
+- The full-stack hook detects missing Windows localhost forwarding, aligns the frontend build and
+  CORS origin with the current Podman machine address, and prints the reachable URLs.
 - `npm test` leaves `elite_dev` untouched and drops `elite_dev_test`; `npm run test:e2e` drops `elite_dev_e2e` after completion.
 - Removing HMAC signature comparison temporarily makes the focused tampering test fail; restoring it returns all three signing tests to passing.
 - Generated Vitest JSON, pytest JUnit XML, Playwright JSON, and summary JSON parse successfully and report no failures.
@@ -145,15 +158,17 @@
 - The initial signing format has no key identifier or verification key ring, so changing `TICKET_HMAC_SECRET` invalidates existing tokens.
 - Approved reservations and issued tickets are final; cancellation and refunds remain deferred.
 - The Podman and isolated-test hooks are Windows-specific; other systems can use the standard `compose.yaml` and equivalent commands with their installed Compose provider.
+- The local Compose topology exposes HTTP ports, embeds the public API URL at frontend build time,
+  runs one backend replica, and applies migrations during startup; it is not a production topology.
 - The backend test client still emits an upstream FastAPI/Starlette deprecation warning.
-- Deployment topology and production secrets remain deferred.
+- Production hosting, TLS, managed secrets, separate migration ownership, monitoring, backup, and
+  rollback remain deferred.
 
 ## Delivery Status
 
-The original 15-increment mandatory plan is complete. Commits 16 through 19 address the candidate's
-module-boundary, styling, and code-documentation reviews; one post-delivery increment remains for
-full-stack Compose execution. That final container increment will also document how the same
-`DATABASE_URL` supports an already-running PostgreSQL instance without Podman.
+The original 15-increment mandatory plan and all five candidate review increments are complete.
+The final increment adds full-stack Compose execution and documents how the same `DATABASE_URL`
+supports an already-running PostgreSQL instance without Podman.
 The candidate retains responsibility for final review, public GitHub publication, and
 challenge-form submission. Production deployment remains an optional, deliberately deferred
 improvement, so no hosted URL is provided.

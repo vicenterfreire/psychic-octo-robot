@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.example
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+e2e/
+src/**/*.test.ts
+src/**/*.test.tsx
