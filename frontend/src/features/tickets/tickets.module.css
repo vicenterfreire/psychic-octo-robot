@@ -75,8 +75,8 @@
   margin-top: 24px;
 }
 
-.ticket-card__actions .primary-button,
-.ticket-card__actions .secondary-button {
+.ticket-card__actions :global(.primary-button),
+.ticket-card__actions :global(.secondary-button) {
   margin-top: 0;
 }
 
@@ -116,4 +116,23 @@
 
 .shared-ticket {
   width: min(900px, 100%);
+}
+
+@media (max-width: 700px) {
+  .tickets-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .ticket-card,
+  .shared-ticket {
+    grid-template-columns: 1fr;
+  }
+
+  .ticket-qr {
+    width: min(216px, 100%);
+    height: auto;
+    aspect-ratio: 1;
+    justify-self: center;
+  }
 }

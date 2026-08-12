@@ -10,6 +10,7 @@ import {
   type GateValidationOutcome,
   type GateValidationResult,
 } from './gate-api'
+import styles from './gate.module.css'
 
 const outcomePresentation: Record<
   GateValidationOutcome,
@@ -41,11 +42,13 @@ function ValidationFeedback({ result }: { result: GateValidationResult }) {
   const presentation = outcomePresentation[result.outcome]
   return (
     <section
-      className={`gate-result gate-result--${result.outcome.replace('_', '-')}`}
+      className={`${styles['gate-result']} ${
+        styles[`gate-result--${result.outcome.replace('_', '-')}`]
+      }`}
       role="status"
       aria-live="assertive"
     >
-      <p className="gate-result__eyebrow">{presentation.eyebrow}</p>
+      <p className={styles['gate-result__eyebrow']}>{presentation.eyebrow}</p>
       <h2>{presentation.title}</h2>
       <p>{presentation.detail}</p>
       {result.ticket_number !== null && <strong>Ticket #{result.ticket_number}</strong>}
@@ -103,10 +106,10 @@ export function GateValidationPage() {
   }
 
   return (
-    <div className="page-shell gate-shell">
+    <div className={`page-shell ${styles['gate-shell']}`}>
       <SiteHeader authenticated />
-      <main className="gate-workspace">
-        <section className="gate-heading">
+      <main className={styles['gate-workspace']}>
+        <section className={styles['gate-heading']}>
           <div>
             <p className="eyebrow">Gate validation</p>
             <h1>Fast checks. Clear decisions.</h1>
@@ -141,8 +144,8 @@ export function GateValidationPage() {
         )}
 
         {eventsQuery.data && eventsQuery.data.length > 0 && (
-          <div className="gate-layout">
-            <form className="gate-form" onSubmit={submitValidation}>
+          <div className={styles['gate-layout']}>
+            <form className={styles['gate-form']} onSubmit={submitValidation}>
               <div>
                 <label htmlFor="gate-event">Event</label>
                 <select
@@ -160,7 +163,7 @@ export function GateValidationPage() {
               </div>
 
               {selectedEvent && (
-                <div className="gate-event-context">
+                <div className={styles['gate-event-context']}>
                   <strong>{formatEventDate(selectedEvent.start_at)}</strong>
                   <span>
                     {selectedEvent.venue_name} · {selectedEvent.city}, {selectedEvent.country_code}
@@ -193,7 +196,7 @@ export function GateValidationPage() {
               </div>
 
               <button
-                className="primary-button gate-submit"
+                className={`primary-button ${styles['gate-submit']}`}
                 type="submit"
                 disabled={!token.trim() || validationMutation.isPending}
               >
@@ -207,12 +210,12 @@ export function GateValidationPage() {
               )}
             </form>
 
-            <div className="gate-feedback" aria-label="Latest validation result">
+            <div className={styles['gate-feedback']} aria-label="Latest validation result">
               {validationMutation.data ? (
                 <ValidationFeedback result={validationMutation.data} />
               ) : (
-                <section className="gate-result gate-result--waiting">
-                  <p className="gate-result__eyebrow">Ready</p>
+                <section className={`${styles['gate-result']} ${styles['gate-result--waiting']}`}>
+                  <p className={styles['gate-result__eyebrow']}>Ready</p>
                   <h2>Waiting for a ticket</h2>
                   <p>The latest authoritative result will appear here.</p>
                 </section>

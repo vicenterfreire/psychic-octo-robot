@@ -5,6 +5,8 @@ import { SiteHeader } from '../navigation/components/SiteHeader'
 import { ReservationForm } from '../reservations/components/ReservationForm'
 import { getPublishedEvent, publishedEventQueryKey } from './discovery-api'
 import { availabilityLabel, formatEventDate, formatEventPrice } from '../../lib/event-display'
+import reservationStyles from '../reservations/reservations.module.css'
+import styles from './discovery.module.css'
 
 interface EventDetailPageProps {
   authenticated?: boolean
@@ -40,26 +42,26 @@ export function EventDetailPage({ authenticated = false }: EventDetailPageProps)
   return (
     <div className="page-shell">
       <SiteHeader authenticated={authenticated} />
-      <main className="event-detail">
-        <Link className="event-detail__back" to={listPath}>
+      <main className={styles['event-detail']}>
+        <Link className={styles['event-detail__back']} to={listPath}>
           ← All published events
         </Link>
-        <div className="event-detail__layout">
-          <div className="event-detail__image">
+        <div className={styles['event-detail__layout']}>
+          <div className={styles['event-detail__image']}>
             {event.image_url ? (
               <img src={event.image_url} alt="" />
             ) : (
               <span aria-hidden="true">G</span>
             )}
           </div>
-          <article className="event-detail__content">
+          <article className={styles['event-detail__content']}>
             <p className="eyebrow">{formatEventDate(event.start_at)}</p>
             <h1>{event.name}</h1>
-            <p className="event-detail__description">
+            <p className={styles['event-detail__description']}>
               {event.description ?? 'No additional event description is available.'}
             </p>
 
-            <dl className="event-facts">
+            <dl className={styles['event-facts']}>
               <div>
                 <dt>Venue</dt>
                 <dd>{event.venue_name}</dd>
@@ -80,7 +82,7 @@ export function EventDetailPage({ authenticated = false }: EventDetailPageProps)
               </div>
             </dl>
 
-            <div className="reservation-entry">
+            <div className={reservationStyles['reservation-entry']}>
               {event.available_quantity === 0 ? (
                 <p>This event is currently sold out.</p>
               ) : authenticated ? (

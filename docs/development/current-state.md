@@ -4,7 +4,7 @@
 
 - Date: 2026-08-11.
 - Branch: local `main`, based on published commit `14d5d9c` and developed through small local commits.
-- Phase: the original 15 mandatory increments and the first two of five post-delivery review
+- Phase: the original 15 mandatory increments and the first three of five post-delivery review
   increments are complete; the local application remains ready for evaluation.
 - Frontend: React, Vite, and TypeScript application initialized.
 - Backend: Python 3.14 and FastAPI application initialized.
@@ -20,8 +20,8 @@
 - Automated tests: 29 frontend tests, 46 backend tests, and one Playwright cross-role browser flow.
 - Frontend organization: feature-first, with local component/hook directories and explicit shared
   navigation and formatting ownership under ADR-009.
-- Styling: one ordered `src/styles/index.css` entry point composes eight responsibility files; the
-  largest has 331 lines instead of one 1,646-line application stylesheet.
+- Styling: Vite CSS Modules isolate feature-owned rules and co-locate responsive behavior; global
+  CSS is limited to tokens, resets, page structure, and deliberate shared primitives.
 - Deployment: not selected.
 
 ## Implemented Foundation
@@ -148,9 +148,10 @@
 
 ## Delivery Status
 
-The original 15-increment mandatory plan is complete. Commits 16 and 17 address the candidate's
-module-boundary and stylesheet reviews; three post-delivery increments remain for focused code
-documentation, an existing PostgreSQL installation workflow, and full-stack Compose execution.
+The original 15-increment mandatory plan is complete. Commits 16 through 18 address the candidate's
+module-boundary and styling reviews; two post-delivery increments remain for focused code
+documentation and full-stack Compose execution. That final container increment will also document
+how the same `DATABASE_URL` supports an already-running PostgreSQL instance without Podman.
 The candidate retains responsibility for final review, public GitHub publication, and
 challenge-form submission. Production deployment remains an optional, deliberately deferred
 improvement, so no hosted URL is provided.

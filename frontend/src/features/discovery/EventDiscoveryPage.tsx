@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { SiteHeader } from '../navigation/components/SiteHeader'
 import { getPublishedEvents, publishedEventsQueryKey, type PublishedEvent } from './discovery-api'
 import { availabilityLabel, formatEventDate, formatEventPrice } from '../../lib/event-display'
+import styles from './discovery.module.css'
 
 interface EventDiscoveryPageProps {
   authenticated?: boolean
@@ -16,23 +17,25 @@ interface EventCardProps {
 
 function EventCard({ event, detailPath }: EventCardProps) {
   return (
-    <article className="discovery-card">
-      <div className="discovery-card__image">
+    <article className={styles['discovery-card']}>
+      <div className={styles['discovery-card__image']}>
         {event.image_url ? <img src={event.image_url} alt="" /> : <span aria-hidden="true">G</span>}
       </div>
-      <div className="discovery-card__content">
-        <p className="discovery-card__date">{formatEventDate(event.start_at)}</p>
+      <div className={styles['discovery-card__content']}>
+        <p className={styles['discovery-card__date']}>{formatEventDate(event.start_at)}</p>
         <h2>{event.name}</h2>
-        <p className="discovery-card__location">
+        <p className={styles['discovery-card__location']}>
           {event.venue_name} · {event.city}, {event.country_code}
         </p>
-        <p className="discovery-card__description">
+        <p className={styles['discovery-card__description']}>
           {event.description ?? 'Event details will be available at the venue.'}
         </p>
-        <div className="discovery-card__footer">
+        <div className={styles['discovery-card__footer']}>
           <div>
             <strong>{formatEventPrice(event.price_minor, event.currency)}</strong>
-            <span className={event.available_quantity === 0 ? 'availability--empty' : ''}>
+            <span
+              className={event.available_quantity === 0 ? styles['availability--empty'] : undefined}
+            >
               {availabilityLabel(event.available_quantity)}
             </span>
           </div>
@@ -69,8 +72,8 @@ export function EventDiscoveryPage({ authenticated = false }: EventDiscoveryPage
   return (
     <div className="page-shell">
       <SiteHeader authenticated={authenticated} />
-      <main className="discovery-workspace">
-        <section className="discovery-intro">
+      <main className={styles['discovery-workspace']}>
+        <section className={styles['discovery-intro']}>
           <p className="eyebrow">Published events</p>
           <h1>Find a reason to show up.</h1>
           <p>
@@ -79,7 +82,7 @@ export function EventDiscoveryPage({ authenticated = false }: EventDiscoveryPage
           </p>
         </section>
 
-        <form className="discovery-search" role="search" onSubmit={submitSearch}>
+        <form className={styles['discovery-search']} role="search" onSubmit={submitSearch}>
           <label htmlFor="event-search">Search published events</label>
           <div>
             <input
@@ -101,7 +104,7 @@ export function EventDiscoveryPage({ authenticated = false }: EventDiscoveryPage
           </div>
         </form>
 
-        <div className="discovery-feedback" aria-live="polite">
+        <div className={styles['discovery-feedback']} aria-live="polite">
           {eventsQuery.isPending && <p>Loading published events...</p>}
           {eventsQuery.isError && (
             <p className="form-error">Unable to load events. Please try again.</p>
@@ -116,7 +119,7 @@ export function EventDiscoveryPage({ authenticated = false }: EventDiscoveryPage
         </div>
 
         {events.length > 0 && (
-          <section className="discovery-grid" aria-label="Published event results">
+          <section className={styles['discovery-grid']} aria-label="Published event results">
             {events.map((event) => (
               <EventCard
                 event={event}

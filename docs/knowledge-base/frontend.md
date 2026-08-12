@@ -10,9 +10,8 @@ The frontend is a React single-page application built by Vite. It presents role-
 - `src/app/router.tsx` defines navigation.
 - `src/app/query-client.ts` configures TanStack Query for remote state.
 - `src/lib/` contains credentialed JSON transport and generic display-formatting boundaries.
-- `src/styles/index.css` is the only styling entry point and imports smaller ordered files by
-  responsibility: shared base, authentication, catalog, discovery, reservations, tickets, gate,
-  and responsive overrides.
+- `src/styles/index.css` imports the global design tokens, element reset, page structure, and
+  deliberately shared primitives from `src/styles/base.css`.
 - `src/features/auth/` contains session requests and login/logout interactions; local `hooks/` and
   `components/` contain session state and route guards.
 - `src/features/catalog/` contains the Organizer search, normalized result cards, and transient selection.
@@ -28,6 +27,8 @@ The frontend is a React single-page application built by Vite. It presents role-
 - `src/features/tickets/` contains private/public ticket queries, Customer presentation, bearer
   sharing, and SVG QR rendering, with QR presentation under `components/`.
 - `src/features/` groups screens, requests, and tests by product feature.
+- Each styled feature owns a co-located `*.module.css`; components import only the locally scoped
+  classes they render, and responsive rules stay with the same feature.
 - `src/test/setup.ts` configures browser-like assertions for Vitest.
 
 This boundary is intentionally light. Pages, API contracts, utilities, and tests remain at the
@@ -36,10 +37,11 @@ only after multiple features need them or a cross-cutting owner is clear. Transp
 their API boundary and one-component props stay with that component rather than being extracted
 mechanically.
 
-Styles remain global because the current class naming and visual system already avoid collisions
-without a CSS-module migration. Splitting files changes source ownership and readability, not the
-cascade: `styles/index.css` preserves the original order and `responsive.css` stays last so its
-mobile overrides retain authority.
+Vite transforms CSS Module class names at build time, so feature styles are isolated without a
+runtime library such as styled-components. Global CSS is reserved for tokens, element defaults,
+page/header structure, buttons, links, and feedback primitives that intentionally form one shared
+visual contract. This is not strict one-file-per-component isolation: components within one
+feature may share their feature module when that ownership is cohesive.
 
 ## State Ownership
 

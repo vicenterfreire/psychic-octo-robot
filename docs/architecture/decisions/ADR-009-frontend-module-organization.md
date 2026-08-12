@@ -11,8 +11,9 @@ pages, reusable UI, hooks, API contracts, and tests. Keeping every file at the f
 larger modules harder to scan, while organizing the entire application into global `Pages`,
 `Components`, and `Hooks` directories separates code that changes for the same business flow.
 
-The review also questioned whether interfaces should always live in separate files and whether the
-existing custom CSS should be replaced by Tailwind CSS.
+The review also questioned whether interfaces should always live in separate files, whether the
+existing custom CSS should be replaced by Tailwind CSS, and whether feature styles should remain
+in a global cascade or be isolated by component ownership.
 
 ## Decision
 
@@ -25,9 +26,12 @@ existing custom CSS should be replaced by Tailwind CSS.
   shared public/authenticated header belongs to `navigation/components/`.
 - Move generic display helpers that accept primitive values to `src/lib/` instead of making one
   feature depend on another feature's presentation module.
-- Keep one styling entry point under `src/styles/index.css` and split the custom CSS into ordered
-  responsibility files for base, authentication, catalog, discovery, reservations, tickets, gate,
-  and responsive overrides.
+- Keep design tokens, element resets, and deliberately shared primitives in the global
+  `src/styles/` entry point.
+- Co-locate each feature's visual rules in a CSS Module and import that module only from the
+  feature components that use it. Keep responsive rules with the same owning module.
+- Use Vite's compile-time CSS Modules support, which generates locally scoped class names without
+  a runtime styling dependency.
 - Keep transport interfaces beside the feature API that owns the contract and component props
   beside their single consumer. Extract types only when they gain multiple owners or an independent
   lifecycle.
@@ -59,6 +63,18 @@ Tailwind can accelerate utility-first composition, but it is not included by Rea
 project. Adding it now would introduce a dependency and rewrite stable visual work without solving
 a challenge requirement.
 
+### Keep all feature styles in ordered global files
+
+Splitting the original stylesheet by responsibility made it navigable, but every feature class
+still participated in one application-wide namespace and depended on implicit import order. This
+remains suitable for the small shared primitives, not for styles owned by one feature.
+
+### Use styled-components or another CSS-in-JS runtime
+
+CSS-in-JS can couple styles closely to components and support dynamic values, but this application
+does not need runtime style generation. It would add a dependency, runtime work, and another API
+for the candidate to defend when Vite already provides compile-time isolation.
+
 ## Consequences
 
 - A feature remains understandable from one directory subtree.
@@ -67,14 +83,19 @@ a challenge requirement.
   UI.
 - Cross-feature dependencies must be reviewed; shared navigation and generic formatting cannot be
   owned accidentally by discovery.
-- The styling strategy remains custom CSS, but no individual stylesheet contains the former
-  application-wide 1,646-line rule set. Import order remains explicit in one entry point because
-  the cascade is part of application behavior.
+- The visual language remains custom CSS without Tailwind or CSS-in-JS dependencies.
+- Feature class names are locally scoped at build time, reducing accidental cross-feature
+  collisions and making style ownership explicit in TypeScript imports.
+- Shared page structure, navigation, buttons, and feedback remain intentionally global; changing
+  them can still affect multiple flows and must be reviewed as a shared contract.
+- Responsive behavior lives beside its feature rules instead of relying on one final override
+  file.
 
 ## Revisit When
 
 - Multiple features require the same hooks or components and no existing feature clearly owns
   them.
 - A design system or component library becomes a concrete requirement.
+- Shared primitives grow enough to justify a dedicated reusable component layer.
 - The team deliberately chooses a utility-first styling workflow for future development rather
   than as a post-delivery rewrite.

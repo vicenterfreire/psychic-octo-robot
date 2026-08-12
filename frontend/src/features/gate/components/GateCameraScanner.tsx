@@ -1,5 +1,6 @@
 import type { IScannerControls } from '@zxing/browser'
 import { useEffect, useRef, useState } from 'react'
+import styles from '../gate.module.css'
 
 type GateCameraState = 'idle' | 'starting' | 'scanning' | 'captured' | 'error'
 
@@ -142,8 +143,8 @@ export function GateCameraScanner({ disabled, onScan }: GateCameraScannerProps) 
   }[cameraState]
 
   return (
-    <section className="gate-camera" aria-labelledby="gate-camera-title">
-      <div className="gate-camera__heading">
+    <section className={styles['gate-camera']} aria-labelledby="gate-camera-title">
+      <div className={styles['gate-camera__heading']}>
         <div>
           <p className="eyebrow">Camera input</p>
           <h2 id="gate-camera-title">Scan the ticket QR</h2>
@@ -151,18 +152,22 @@ export function GateCameraScanner({ disabled, onScan }: GateCameraScannerProps) 
         <span>{cameraBadge}</span>
       </div>
 
-      <div className={`gate-camera__viewport ${cameraIsActive ? 'is-active' : ''}`}>
+      <div className={styles['gate-camera__viewport']}>
         <video ref={videoRef} aria-label="Gate camera preview" autoPlay muted playsInline />
         {!cameraIsActive && (
-          <div className="gate-camera__placeholder" aria-hidden="true">
+          <div className={styles['gate-camera__placeholder']} aria-hidden="true">
             <span>Camera off</span>
           </div>
         )}
-        {cameraState === 'scanning' && <div className="gate-camera__target" aria-hidden="true" />}
+        {cameraState === 'scanning' && (
+          <div className={styles['gate-camera__target']} aria-hidden="true" />
+        )}
       </div>
 
       <p
-        className={cameraState === 'error' ? 'gate-camera__status is-error' : 'gate-camera__status'}
+        className={`${styles['gate-camera__status']} ${
+          cameraState === 'error' ? styles['is-error'] : ''
+        }`}
         role={cameraState === 'error' ? 'alert' : 'status'}
         aria-live="polite"
       >

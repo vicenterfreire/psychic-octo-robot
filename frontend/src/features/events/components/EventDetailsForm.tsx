@@ -1,5 +1,6 @@
 import { type FormEvent, useId, useState } from 'react'
 import { eventErrorMessage, type EventDetailsInput, type OrganizerEvent } from '../events-api'
+import styles from '../events.module.css'
 
 interface EventDetailsFormProps {
   initialEvent?: OrganizerEvent
@@ -65,8 +66,8 @@ export function EventDetailsForm({
   const externalError = eventErrorMessage(error)
 
   return (
-    <form className="event-form" onSubmit={submit}>
-      <div className="event-form__wide">
+    <form className={styles['event-form']} onSubmit={submit}>
+      <div className={styles['event-form-wide']}>
         <label htmlFor={`${formId}-name`}>Event name</label>
         <input
           id={`${formId}-name`}
@@ -77,7 +78,7 @@ export function EventDetailsForm({
           required
         />
       </div>
-      <div className="event-form__wide">
+      <div className={styles['event-form-wide']}>
         <label htmlFor={`${formId}-description`}>Description</label>
         <textarea
           id={`${formId}-description`}
@@ -165,7 +166,7 @@ export function EventDetailsForm({
         />
       </div>
 
-      <div className="event-form__actions event-form__wide">
+      <div className={`${styles['event-form-actions']} ${styles['event-form-wide']}`}>
         <button className="primary-button" type="submit" disabled={isPending}>
           {isPending ? 'Saving...' : submitLabel}
         </button>

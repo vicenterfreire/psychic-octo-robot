@@ -4,6 +4,7 @@ import { formatEventDate } from '../../lib/event-display'
 import { SiteHeader } from '../navigation/components/SiteHeader'
 import { TicketQrCode } from './components/TicketQrCode'
 import { getSharedTicket, sharedTicketQueryKey } from './tickets-api'
+import styles from './tickets.module.css'
 
 export function SharedTicketPage() {
   const { token = '' } = useParams()
@@ -34,8 +35,8 @@ export function SharedTicketPage() {
   return (
     <div className="page-shell">
       <SiteHeader authenticated={false} />
-      <main className="shared-ticket-page">
-        <article className="shared-ticket">
+      <main className={styles['shared-ticket-page']}>
+        <article className={styles['shared-ticket']}>
           <div>
             <p className="eyebrow">Shared ticket #{ticket.ticket_number}</p>
             <h1>{ticket.event.name}</h1>
@@ -45,7 +46,9 @@ export function SharedTicketPage() {
               {ticket.event.country_code}
             </p>
             <span
-              className={`ticket-state ${ticket.is_used || ticket.is_revoked ? 'ticket-state--used' : ''}`}
+              className={`${styles['ticket-state']} ${
+                ticket.is_used || ticket.is_revoked ? styles['ticket-state--used'] : ''
+              }`}
             >
               {ticket.is_revoked
                 ? 'Ticket revoked'
@@ -53,7 +56,7 @@ export function SharedTicketPage() {
                   ? 'Already used'
                   : 'Ready for entry'}
             </span>
-            <p className="ticket-bearer-warning">
+            <p className={styles['ticket-bearer-warning']}>
               This is a bearer ticket. Anyone with this link can present it at the gate.
             </p>
           </div>

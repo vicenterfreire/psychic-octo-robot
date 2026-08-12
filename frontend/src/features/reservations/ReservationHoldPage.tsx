@@ -11,6 +11,7 @@ import {
   processPayment,
   reservationQueryKey,
 } from './reservations-api'
+import styles from './reservations.module.css'
 
 export function ReservationHoldPage() {
   const { reservationId = '' } = useParams()
@@ -62,8 +63,8 @@ export function ReservationHoldPage() {
   return (
     <div className="page-shell">
       <SiteHeader authenticated />
-      <main className="reservation-page">
-        <section className="reservation-panel">
+      <main className={styles['reservation-page']}>
+        <section className={styles['reservation-panel']}>
           {reservation.status === 'pending' ? (
             <>
               <p className="eyebrow">Tickets temporarily held</p>
@@ -72,7 +73,7 @@ export function ReservationHoldPage() {
                 {reservation.quantity} {reservation.quantity === 1 ? 'ticket is' : 'tickets are'}
                 {' held while you complete checkout.'}
               </p>
-              <div className="reservation-deadline">
+              <div className={styles['reservation-deadline']}>
                 <span>Time remaining</span>
                 <ReservationCountdown
                   key={reservation.server_time}
@@ -81,14 +82,14 @@ export function ReservationHoldPage() {
                   onElapsed={refreshAfterCountdown}
                 />
               </div>
-              <p className="reservation-note">
+              <p className={styles['reservation-note']}>
                 PostgreSQL decides whether this hold is still valid. This countdown is a display of
                 the server deadline.
               </p>
-              <div className="payment-simulator">
+              <div className={styles['payment-simulator']}>
                 <strong>Payment simulator</strong>
                 <p>No real charge occurs. Choose a deterministic result for this demonstration.</p>
-                <div className="payment-simulator__actions">
+                <div className={styles['payment-simulator__actions']}>
                   <button
                     className="primary-button"
                     type="button"
@@ -124,7 +125,7 @@ export function ReservationHoldPage() {
                 {reservation.ticket_count === 1 ? 'ticket was' : 'tickets were'} created for{' '}
                 {eventName}.
               </p>
-              <p className="reservation-note">
+              <p className={styles['reservation-note']}>
                 Open My Tickets to present, share, or scan the issued QR credentials.
               </p>
               <Link className="primary-button" to="/customer/tickets">

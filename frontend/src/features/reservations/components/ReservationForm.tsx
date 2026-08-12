@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ApiError } from '../../../lib/api-client'
 import { createReservation } from '../reservations-api'
+import styles from '../reservations.module.css'
 
 interface ReservationFormProps {
   eventId: string
@@ -24,7 +25,7 @@ export function ReservationForm({ eventId, availableQuantity }: ReservationFormP
 
   return (
     <form
-      className="reservation-form"
+      className={styles['reservation-form']}
       onSubmit={(event) => {
         event.preventDefault()
         if (validQuantity) {

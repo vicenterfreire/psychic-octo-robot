@@ -10,6 +10,7 @@ import {
   type LoginCredentials,
 } from './auth-api'
 import { useSession } from './hooks/use-session'
+import styles from './auth.module.css'
 
 const demoAccounts: Array<LoginCredentials & { label: string }> = [
   { label: 'Organizer', email: 'organizer@example.com', password: 'Organizer123!' },
@@ -54,24 +55,24 @@ export function LoginPage() {
         : null
 
   return (
-    <div className="auth-shell">
+    <div className={styles['auth-shell']}>
       <header className="site-header">
         <Link className="brand" to="/" aria-label="Gather home">
           <span className="brand__mark" aria-hidden="true" />
           Gather
         </Link>
-        <span className="project-label">Elite Dev Challenge 2026</span>
+        <span className={styles['project-label']}>Elite Dev Challenge 2026</span>
       </header>
 
-      <main className="auth-layout">
-        <section className="auth-intro">
+      <main className={styles['auth-layout']}>
+        <section className={styles['auth-intro']}>
           <p className="eyebrow">Welcome back</p>
           <h1>Your next event starts here.</h1>
           <p>Sign in as an organizer, customer, or gate operator. Your session lasts seven days.</p>
         </section>
 
-        <section className="auth-card" aria-labelledby="login-heading">
-          <p className="auth-card__label">Account access</p>
+        <section className={styles['auth-card']} aria-labelledby="login-heading">
+          <p className={styles['auth-card__label']}>Account access</p>
           <h2 id="login-heading">Sign in</h2>
 
           <form onSubmit={submit}>
@@ -104,7 +105,7 @@ export function LoginPage() {
             </button>
           </form>
 
-          <div className="demo-accounts">
+          <div className={styles['demo-accounts']}>
             <p>Use a seeded account</p>
             <div>
               {demoAccounts.map((account) => (

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { formatReservationCountdown, reservationRemainingMilliseconds } from '../reservation-time'
+import styles from '../reservations.module.css'
 
 interface ReservationCountdownProps {
   expiresAt: string
@@ -31,7 +32,7 @@ export function ReservationCountdown({
   }, [onElapsed, remaining])
 
   return (
-    <time className="reservation-countdown" dateTime={expiresAt}>
+    <time className={styles['reservation-countdown']} dateTime={expiresAt}>
       {formatReservationCountdown(remaining)}
     </time>
   )

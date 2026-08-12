@@ -58,7 +58,7 @@
   box-shadow: 0 0 0 3px rgb(140 124 255 / 15%);
 }
 
-.discovery-search .primary-button {
+.discovery-search :global(.primary-button) {
   margin-top: 0;
 }
 
@@ -249,4 +249,27 @@
   margin: 8px 0 0;
   font-weight: 700;
   line-height: 1.4;
+}
+
+@media (max-width: 700px) {
+  .discovery-workspace {
+    padding-top: 48px;
+  }
+
+  .discovery-search > div,
+  .discovery-grid,
+  .event-detail__layout,
+  .event-facts {
+    grid-template-columns: 1fr;
+  }
+
+  .discovery-card__footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .event-detail__image {
+    min-height: 280px;
+    aspect-ratio: 16 / 9;
+  }
 }

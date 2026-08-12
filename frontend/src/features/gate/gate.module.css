@@ -122,7 +122,7 @@
   justify-content: space-between;
 }
 
-.gate-camera__heading .eyebrow {
+.gate-camera__heading :global(.eyebrow) {
   margin: 0 0 5px;
 }
 
@@ -197,7 +197,7 @@
   color: var(--gate-invalid);
 }
 
-.gate-camera .secondary-button {
+.gate-camera :global(.secondary-button) {
   width: 100%;
   min-height: 46px;
 }
@@ -289,4 +289,15 @@
 
 .gate-result--waiting {
   border-style: dashed;
+}
+
+@media (max-width: 700px) {
+  .gate-heading,
+  .gate-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .gate-result {
+    min-height: 330px;
+  }
 }

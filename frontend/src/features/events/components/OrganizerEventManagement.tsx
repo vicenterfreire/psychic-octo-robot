@@ -12,6 +12,7 @@ import {
   publishEvent,
   updateEvent,
 } from '../events-api'
+import styles from '../events.module.css'
 
 interface OrganizerEventCreatorProps {
   selectedEvent: CatalogEvent
@@ -48,8 +49,8 @@ export function OrganizerEventCreator({ selectedEvent, onCreated }: OrganizerEve
   }
 
   return (
-    <section className="event-editor" aria-labelledby="new-event-heading">
-      <div className="section-heading">
+    <section className={styles['event-editor']} aria-labelledby="new-event-heading">
+      <div className={styles['section-heading']}>
         <div>
           <p className="eyebrow">Local event details</p>
           <h2 id="new-event-heading">Create from {selectedEvent.name}</h2>
@@ -100,8 +101,8 @@ export function OrganizerEventList({ enabled }: OrganizerEventListProps) {
   const events = eventsQuery.data ?? []
 
   return (
-    <section className="managed-events" aria-labelledby="managed-events-heading">
-      <div className="section-heading">
+    <section className={styles['managed-events']} aria-labelledby="managed-events-heading">
+      <div className={styles['section-heading']}>
         <div>
           <p className="eyebrow">Your events</p>
           <h2 id="managed-events-heading">Drafts and published events</h2>
@@ -115,12 +116,16 @@ export function OrganizerEventList({ enabled }: OrganizerEventListProps) {
         <p className="empty-panel">No local events yet. Search Ticketmaster to create the first.</p>
       )}
 
-      <div className="managed-event-list">
+      <div className={styles['managed-event-list']}>
         {events.map((event) => (
-          <article className="managed-event" key={event.id}>
-            <div className="managed-event__summary">
+          <article className={styles['managed-event']} key={event.id}>
+            <div className={styles['managed-event-summary']}>
               <div>
-                <span className={`event-status event-status--${event.status}`}>{event.status}</span>
+                <span
+                  className={`${styles['event-status']} ${styles[`event-status-${event.status}`]}`}
+                >
+                  {event.status}
+                </span>
                 <h3>{event.name}</h3>
                 <p>
                   {new Intl.DateTimeFormat('en', {
@@ -131,7 +136,7 @@ export function OrganizerEventList({ enabled }: OrganizerEventListProps) {
                 </p>
                 <small>Source snapshot: {event.source.name}</small>
               </div>
-              <div className="managed-event__actions">
+              <div className={styles['managed-event-actions']}>
                 <button
                   className="secondary-button"
                   type="button"

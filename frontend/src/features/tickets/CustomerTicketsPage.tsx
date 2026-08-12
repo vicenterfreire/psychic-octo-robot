@@ -5,6 +5,7 @@ import { formatEventDate } from '../../lib/event-display'
 import { SiteHeader } from '../navigation/components/SiteHeader'
 import { TicketQrCode } from './components/TicketQrCode'
 import { customerTicketsQueryKey, getCustomerTickets } from './tickets-api'
+import styles from './tickets.module.css'
 
 interface CopyFeedback {
   ticketId: string
@@ -50,8 +51,8 @@ export function CustomerTicketsPage() {
   return (
     <div className="page-shell">
       <SiteHeader authenticated />
-      <main className="tickets-workspace">
-        <div className="tickets-heading">
+      <main className={styles['tickets-workspace']}>
+        <div className={styles['tickets-heading']}>
           <div>
             <p className="eyebrow">Customer wallet</p>
             <h1>My Tickets</h1>
@@ -68,10 +69,10 @@ export function CustomerTicketsPage() {
             <p>Approved reservations will appear here.</p>
           </section>
         ) : (
-          <div className="ticket-list">
+          <div className={styles['ticket-list']}>
             {ticketsQuery.data.map((ticket) => (
-              <article className="ticket-card" key={ticket.id}>
-                <div className="ticket-card__details">
+              <article className={styles['ticket-card']} key={ticket.id}>
+                <div className={styles['ticket-card__details']}>
                   <p className="eyebrow">Ticket #{ticket.ticket_number}</p>
                   <h2>{ticket.event.name}</h2>
                   <p>{formatEventDate(ticket.event.start_at)}</p>
@@ -79,7 +80,9 @@ export function CustomerTicketsPage() {
                     {ticket.event.venue_name} · {ticket.event.city}, {ticket.event.country_code}
                   </p>
                   <span
-                    className={`ticket-state ${ticket.is_used || ticket.is_revoked ? 'ticket-state--used' : ''}`}
+                    className={`${styles['ticket-state']} ${
+                      ticket.is_used || ticket.is_revoked ? styles['ticket-state--used'] : ''
+                    }`}
                   >
                     {ticket.is_revoked
                       ? 'Ticket revoked'
@@ -87,7 +90,7 @@ export function CustomerTicketsPage() {
                         ? 'Already used'
                         : 'Ready for entry'}
                   </span>
-                  <div className="ticket-card__actions">
+                  <div className={styles['ticket-card__actions']}>
                     <button
                       className="primary-button"
                       type="button"
@@ -100,11 +103,11 @@ export function CustomerTicketsPage() {
                     </a>
                   </div>
                   {copyFeedback?.ticketId === ticket.id && (
-                    <p className="ticket-copy-feedback" aria-live="polite">
+                    <p className={styles['ticket-copy-feedback']} aria-live="polite">
                       {copyFeedback.message}
                     </p>
                   )}
-                  <p className="ticket-bearer-warning">
+                  <p className={styles['ticket-bearer-warning']}>
                     Anyone with the link can present this ticket. Share it only with someone you
                     trust.
                   </p>

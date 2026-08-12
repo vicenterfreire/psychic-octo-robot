@@ -13,7 +13,7 @@
   margin: 5px 0 0;
 }
 
-.reservation-entry .primary-button {
+.reservation-entry :global(.primary-button) {
   flex-shrink: 0;
   margin-top: 0;
   color: #fff;
@@ -45,7 +45,7 @@
   font: inherit;
 }
 
-.reservation-form .form-error {
+.reservation-form :global(.form-error) {
   grid-column: 1 / -1;
   color: #7d1c16;
 }
@@ -110,7 +110,24 @@
   gap: 12px;
 }
 
-.payment-simulator__actions .primary-button,
-.payment-simulator__actions .secondary-button {
+.payment-simulator__actions :global(.primary-button),
+.payment-simulator__actions :global(.secondary-button) {
   margin-top: 0;
+}
+
+@media (max-width: 700px) {
+  .reservation-form {
+    grid-template-columns: 1fr;
+  }
+
+  .reservation-entry,
+  .reservation-deadline {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .reservation-deadline {
+    align-items: flex-start;
+    gap: 12px;
+  }
 }

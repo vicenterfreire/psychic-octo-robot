@@ -9,6 +9,7 @@ import {
   OrganizerEventList,
 } from '../events/components/OrganizerEventManagement'
 import { type CatalogEvent, searchCatalogEvents } from './catalog-api'
+import styles from './catalog.module.css'
 
 function providerErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
@@ -62,8 +63,8 @@ export function OrganizerCatalogPage() {
         </div>
       </header>
 
-      <main className="catalog-workspace">
-        <section className="catalog-intro">
+      <main className={styles['catalog-workspace']}>
+        <section className={styles['catalog-intro']}>
           <div>
             <p className="eyebrow">Organizer catalog</p>
             <h1>Start with something people already love.</h1>
@@ -74,7 +75,7 @@ export function OrganizerCatalogPage() {
           </p>
         </section>
 
-        <form className="catalog-search" role="search" onSubmit={submitSearch}>
+        <form className={styles['catalog-search']} role="search" onSubmit={submitSearch}>
           <label htmlFor="catalog-query">Event or artist</label>
           <div>
             <input
@@ -94,7 +95,7 @@ export function OrganizerCatalogPage() {
           </div>
         </form>
 
-        <div className="catalog-feedback" aria-live="polite">
+        <div className={styles['catalog-feedback']} aria-live="polite">
           {searchMutation.isError && (
             <p className="form-error">{providerErrorMessage(searchMutation.error)}</p>
           )}
@@ -102,30 +103,30 @@ export function OrganizerCatalogPage() {
             <p>No Ticketmaster events matched this search. Try another complete word.</p>
           )}
           {selectedEvent && (
-            <p className="selection-notice">
+            <p className={styles['selection-notice']}>
               Selected <strong>{selectedEvent.name}</strong>. Complete its local details below.
             </p>
           )}
         </div>
 
         {results.length > 0 && (
-          <section className="catalog-results" aria-label="Ticketmaster search results">
+          <section className={styles['catalog-results']} aria-label="Ticketmaster search results">
             {results.map((event) => {
               const isSelected = selectedEvent?.provider_event_id === event.provider_event_id
               return (
-                <article className="catalog-card" key={event.provider_event_id}>
-                  <div className="catalog-card__image">
+                <article className={styles['catalog-card']} key={event.provider_event_id}>
+                  <div className={styles['catalog-card__image']}>
                     {event.image_url ? (
                       <img src={event.image_url} alt="" />
                     ) : (
                       <span aria-hidden="true">TM</span>
                     )}
                   </div>
-                  <div className="catalog-card__content">
-                    <p className="catalog-card__provider">Ticketmaster source</p>
+                  <div className={styles['catalog-card__content']}>
+                    <p className={styles['catalog-card__provider']}>Ticketmaster source</p>
                     <h2>{event.name}</h2>
                     <p>{event.description ?? 'No provider description is available.'}</p>
-                    <div className="catalog-card__actions">
+                    <div className={styles['catalog-card__actions']}>
                       <button
                         className="secondary-button"
                         type="button"

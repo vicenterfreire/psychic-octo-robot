@@ -74,33 +74,6 @@
   box-shadow: 0 0 0 3px rgb(140 124 255 / 15%);
 }
 
-.primary-button,
-.secondary-button {
-  border: 0;
-  border-radius: 999px;
-  font-weight: 750;
-}
-
-.primary-button {
-  margin-top: 18px;
-  padding: 14px 20px;
-  color: #101216;
-  background: var(--lime);
-}
-
-.secondary-button {
-  padding: 12px 20px;
-  color: #fff;
-  background: var(--surface-raised);
-  box-shadow: inset 0 0 0 1px var(--line);
-}
-
-.form-error {
-  margin: 10px 0 0;
-  color: #ff8c81;
-  line-height: 1.45;
-}
-
 .demo-accounts {
   margin-top: 30px;
   padding-top: 24px;
@@ -131,26 +104,19 @@
   border-color: var(--violet);
 }
 
-.account-chip {
-  overflow: hidden;
-  max-width: 50%;
-  text-overflow: ellipsis;
-  text-transform: none;
-  white-space: nowrap;
-}
+@media (max-width: 700px) {
+  .project-label {
+    display: none;
+  }
 
-.workspace-account {
-  display: flex;
-  gap: 18px;
-  align-items: center;
-}
+  .auth-layout {
+    min-height: auto;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 48px 0;
+  }
 
-.header-action {
-  padding: 0;
-  border: 0;
-  color: var(--lime);
-  background: transparent;
-  font-weight: 700;
-  letter-spacing: inherit;
-  text-transform: uppercase;
+  .auth-intro h1 {
+    margin: 18px 0;
+  }
 }
