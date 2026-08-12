@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useSession } from '../hooks/use-session'
 
+/** Restore authenticated navigation state without acting as a backend security boundary. */
 export function RequireSession() {
   const session = useSession()
   const location = useLocation()

@@ -20,6 +20,8 @@ def get_current_user(
     database: Database,
     settings: ApplicationSettings,
 ) -> User:
+    """Resolve an active opaque session or stop the request at the authentication boundary."""
+
     raw_token = request.cookies.get(settings.session_cookie_name)
     user = find_user_by_session(database, raw_token) if raw_token else None
     if user is None:
@@ -35,6 +37,8 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
 def require_roles(*allowed_roles: UserRole) -> Callable[[CurrentUser], User]:
+    """Create a FastAPI dependency that authorizes any one of the supplied roles."""
+
     def dependency(current_user: CurrentUser) -> User:
         ensure_role(current_user, *allowed_roles)
         return current_user

@@ -56,6 +56,7 @@ function ValidationFeedback({ result }: { result: GateValidationResult }) {
   )
 }
 
+/** Coordinate camera and manual input through one server-authoritative validation mutation. */
 export function GateValidationPage() {
   const [eventId, setEventId] = useState('')
   const [token, setToken] = useState('')

@@ -2,6 +2,7 @@ const defaultApiUrl = 'http://localhost:8000/api'
 
 const apiUrl = (import.meta.env.VITE_API_URL ?? defaultApiUrl).replace(/\/$/, '')
 
+/** Normalized non-success HTTP response exposed to feature-level recovery logic. */
 export class ApiError extends Error {
   readonly status: number
 
@@ -30,6 +31,12 @@ async function getErrorMessage(response: Response): Promise<string> {
   return `API request failed with status ${response.status}`
 }
 
+/**
+ * Call the JSON API with the opaque session cookie and normalize its response boundary.
+ *
+ * The generic type is a compile-time contract, not runtime validation. Successful 204 responses
+ * resolve as `undefined`; every other non-success response throws `ApiError`.
+ */
 export async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers)
   if (!headers.has('Accept')) {

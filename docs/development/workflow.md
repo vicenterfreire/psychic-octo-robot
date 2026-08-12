@@ -57,3 +57,8 @@ Frequently repeated commands remain root npm scripts. A checked-in PowerShell ho
 - Preserve superseded ADRs rather than deleting architectural history.
 - Record intentionally deferred work in `docs/future-improvements.md`.
 - Keep the final README executable as an evaluator guide, not as aspirational documentation.
+- Use PEP 257 docstrings in Python and TSDoc/JSDoc in TypeScript; Doxygen-specific syntax is not a
+  project requirement for these languages.
+- Document non-obvious authority, security, transaction, concurrency, time, integration, and
+  lifecycle contracts. Do not duplicate clear signatures or impose a comment-coverage quota.
+- Update a contract comment in the same commit whenever the behavior it describes changes.

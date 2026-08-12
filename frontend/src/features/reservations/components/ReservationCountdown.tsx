@@ -8,6 +8,7 @@ interface ReservationCountdownProps {
   onElapsed: () => void
 }
 
+/** Display the estimated server deadline and request authoritative state when it elapses. */
 export function ReservationCountdown({
   expiresAt,
   serverTime,

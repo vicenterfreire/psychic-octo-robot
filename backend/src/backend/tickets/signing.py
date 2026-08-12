@@ -12,6 +12,12 @@ class InvalidTicketSigningSecretError(ValueError):
 
 
 class TicketSigner:
+    """Create and verify compact versioned HMAC ticket credentials.
+
+    Signatures prove that this application issued an identifier; PostgreSQL still decides whether
+    the ticket is approved, revoked, used, and valid for the selected event.
+    """
+
     def __init__(self, secret: str) -> None:
         secret_bytes = secret.encode("utf-8")
         if len(secret_bytes) < MINIMUM_SECRET_BYTES:
@@ -21,11 +27,15 @@ class TicketSigner:
         self._secret = secret_bytes
 
     def sign(self, ticket_id: UUID) -> str:
+        """Derive a stable bearer credential without embedding personal or event data."""
+
         identifier = ticket_id.hex
         signature = self._signature(identifier)
         return f"{TOKEN_VERSION}.{identifier}.{signature}"
 
     def verify(self, token: str) -> UUID | None:
+        """Return the authentic canonical ticket UUID or ``None`` without trusting token state."""
+
         parts = token.split(".")
         if len(parts) != 3:
             return None

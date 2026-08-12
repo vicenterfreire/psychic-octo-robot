@@ -46,6 +46,8 @@ class ReservationStatus(StrEnum):
 
 
 class User(Base):
+    """Authenticated account with exactly one constrained application role."""
+
     __tablename__ = "users"
     __table_args__ = (
         CheckConstraint("email = lower(email)", name="ck_users_email_lowercase"),
@@ -79,6 +81,8 @@ class User(Base):
 
 
 class Session(Base):
+    """Persistent opaque session record containing a digest, never the raw credential."""
+
     __tablename__ = "sessions"
     __table_args__ = (
         CheckConstraint("expires_at > created_at", name="ck_sessions_expiry_after_creation"),
@@ -104,6 +108,12 @@ class Session(Base):
 
 
 class CatalogSnapshot(Base):
+    """Provider response copied when an organizer creates a local event.
+
+    Application services treat this row as immutable after creation so later provider changes do
+    not silently alter the local event.
+    """
+
     __tablename__ = "catalog_snapshots"
     __table_args__ = (
         CheckConstraint("provider IN ('ticketmaster')", name="catalog_provider"),
@@ -134,6 +144,8 @@ class CatalogSnapshot(Base):
 
 
 class Event(Base):
+    """Organizer-owned sellable event with local schedule, capacity, price, and lifecycle."""
+
     __tablename__ = "events"
     __table_args__ = (
         CheckConstraint("capacity > 0", name="ck_events_positive_capacity"),
@@ -190,6 +202,8 @@ class Event(Base):
 
 
 class Reservation(Base):
+    """Customer quantity hold whose active lifetime is decided by PostgreSQL time."""
+
     __tablename__ = "reservations"
     __table_args__ = (
         CheckConstraint("quantity > 0", name="ck_reservations_positive_quantity"),
@@ -232,6 +246,8 @@ class Reservation(Base):
 
 
 class Ticket(Base):
+    """One issued admission unit with coherent revocation and one-time usage state."""
+
     __tablename__ = "tickets"
     __table_args__ = (
         CheckConstraint("ticket_number > 0", name="ck_tickets_positive_number"),

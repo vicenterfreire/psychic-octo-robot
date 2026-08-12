@@ -1,3 +1,5 @@
+"""Reset or drop only the explicitly allowlisted PostgreSQL test databases."""
+
 import argparse
 import os
 
@@ -16,6 +18,8 @@ def parse_action() -> str:
 
 
 def isolated_database_url() -> tuple[str, str]:
+    """Return the admin URL and reject any target outside the fixed test allowlist."""
+
     database_url = os.environ.get("DATABASE_URL")
     if not database_url:
         raise RuntimeError("DATABASE_URL is required.")
@@ -30,6 +34,8 @@ def isolated_database_url() -> tuple[str, str]:
 
 
 def terminate_connections(connection: Connection, database_name: str) -> None:
+    """Terminate other sessions connected only to the already allowlisted target database."""
+
     connection.execute(
         text(
             """
@@ -44,6 +50,8 @@ def terminate_connections(connection: Connection, database_name: str) -> None:
 
 
 def manage_database(action: str) -> None:
+    """Drop, and optionally recreate, the validated disposable database target."""
+
     admin_url, database_name = isolated_database_url()
     engine = create_engine(admin_url, isolation_level="AUTOCOMMIT")
 

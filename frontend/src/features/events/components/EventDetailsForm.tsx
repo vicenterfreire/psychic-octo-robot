@@ -42,6 +42,11 @@ function readEventDetails(form: HTMLFormElement): EventDetailsInput {
   }
 }
 
+/**
+ * Normalize human-entered price and local date-time values into the event API contract.
+ *
+ * Browser validation improves feedback; backend validation remains authoritative.
+ */
 export function EventDetailsForm({
   initialEvent,
   submitLabel,

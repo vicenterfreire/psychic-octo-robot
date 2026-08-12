@@ -30,6 +30,12 @@ function cameraErrorMessage(error: unknown): string {
   return 'Camera scanning could not start. Check browser permissions or use manual entry below.'
 }
 
+/**
+ * Lazily acquire a camera, emit at most one token per active scan, and release scanner controls.
+ *
+ * Decoding supplies input only: `onScan` must send the token to the authoritative backend. Manual
+ * entry remains available when browser, permission, or hardware support fails.
+ */
 export function GateCameraScanner({ disabled, onScan }: GateCameraScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const controlsRef = useRef<IScannerControls | null>(null)

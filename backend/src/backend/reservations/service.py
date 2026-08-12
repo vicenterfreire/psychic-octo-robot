@@ -18,6 +18,8 @@ class ReservationNotFoundError(Exception):
 
 
 class InsufficientAvailabilityError(Exception):
+    """The locked inventory snapshot cannot satisfy the requested quantity."""
+
     def __init__(self, available_quantity: int) -> None:
         self.available_quantity = available_quantity
         super().__init__(f"Only {available_quantity} tickets are currently available.")
@@ -30,6 +32,12 @@ def create_reservation(
     quantity: int,
     lifetime_seconds: int,
 ) -> ReservationResponse:
+    """Create a database-timed hold without overselling the event.
+
+    The event row is the inventory mutex shared with capacity edits and payment. Availability is
+    recalculated only after that lock is held, and the hold is committed before returning.
+    """
+
     event = database.scalar(
         select(Event)
         .where(
@@ -68,6 +76,8 @@ def get_customer_reservation(
     customer_id: UUID,
     reservation_id: UUID,
 ) -> ReservationResponse:
+    """Load an owned reservation and lazily persist expiration observed by PostgreSQL."""
+
     reservation = database.scalar(
         select(Reservation)
         .where(
@@ -98,6 +108,13 @@ def process_payment(
     reservation_id: UUID,
     outcome: PaymentOutcome,
 ) -> ReservationResponse:
+    """Apply the first terminal payment outcome and issue tickets at most once.
+
+    The event is locked before the reservation to preserve the project-wide lock order. Expiration
+    wins over the requested outcome; approval and one ticket per unit commit atomically. Repeated
+    or contradictory requests return the already stored terminal result.
+    """
+
     event_id = database.scalar(
         select(Reservation.event_id).where(
             Reservation.id == reservation_id,
@@ -148,6 +165,8 @@ def process_payment(
 
 
 def _database_time(database: Session) -> datetime:
+    """Sample the PostgreSQL clock used for every reservation lifecycle decision."""
+
     return cast(datetime, database.scalar(select(func.now())))
 
 
@@ -156,6 +175,8 @@ def _expire_stale_reservations(
     event_id: UUID,
     database_time: datetime,
 ) -> None:
+    """Persist stale pending holds as expired without changing inventory semantics."""
+
     database.execute(
         update(Reservation)
         .where(
@@ -172,6 +193,8 @@ def _committed_quantity(
     event_id: UUID,
     database_time: datetime,
 ) -> int:
+    """Count approved units and pending units still active at the sampled database time."""
+
     quantity = database.scalar(
         select(func.coalesce(func.sum(Reservation.quantity), 0)).where(
             Reservation.event_id == event_id,

@@ -24,6 +24,12 @@ def list_customer_tickets(
     signer: TicketSigner,
     frontend_origin: str,
 ) -> list[CustomerTicketResponse]:
+    """List approved tickets owned by one customer and derive their bearer credentials.
+
+    Tokens are reconstructed from persisted UUIDs and the configured secret rather than stored as
+    plaintext database values.
+    """
+
     rows = database.execute(
         _issued_ticket_statement().where(Reservation.customer_id == customer_id)
     ).all()
@@ -47,6 +53,8 @@ def get_shared_ticket(
     token: str,
     signer: TicketSigner,
 ) -> SharedTicketResponse:
+    """Verify a bearer credential before returning its minimized approved-ticket view."""
+
     ticket_id = signer.verify(token)
     if ticket_id is None:
         raise SharedTicketNotFoundError
@@ -58,6 +66,8 @@ def get_shared_ticket(
 
 
 def _issued_ticket_statement() -> Select[tuple[Ticket, Event, CatalogSnapshot]]:
+    """Build the common approved-reservation ticket projection used by private and shared reads."""
+
     return (
         select(Ticket, Event, CatalogSnapshot)
         .join(Reservation, Reservation.id == Ticket.reservation_id)

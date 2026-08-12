@@ -21,6 +21,8 @@ class EventNotFoundError(Exception):
 
 
 class UnsafeCapacityReductionError(Exception):
+    """The requested capacity is below approved sales and active holds."""
+
     def __init__(self, committed_quantity: int) -> None:
         self.committed_quantity = committed_quantity
         super().__init__(f"Capacity cannot be lower than {committed_quantity} committed tickets.")
@@ -36,6 +38,8 @@ def create_event(
     command: EventCreate,
     provider_snapshot: CatalogEventSnapshot,
 ) -> OrganizerEventResponse:
+    """Persist the verified provider snapshot and an organizer-owned local draft together."""
+
     source = provider_snapshot.event
     snapshot = CatalogSnapshot(
         provider=CatalogProvider.TICKETMASTER,
@@ -71,6 +75,8 @@ def create_event(
 
 
 def list_organizer_events(database: Session, organizer_id: UUID) -> list[OrganizerEventResponse]:
+    """List only events owned by the authenticated organizer."""
+
     rows = database.execute(
         select(Event, CatalogSnapshot)
         .join(CatalogSnapshot, CatalogSnapshot.id == Event.catalog_snapshot_id)
@@ -86,6 +92,8 @@ def update_event(
     event_id: UUID,
     command: EventUpdate,
 ) -> OrganizerEventResponse:
+    """Replace local event details while holding its row and preserving committed inventory."""
+
     event = _lock_owned_event(database, organizer_id, event_id)
     committed_quantity = _committed_quantity(database, event.id)
     if command.capacity < committed_quantity:
@@ -106,6 +114,8 @@ def publish_event(
     organizer_id: UUID,
     event_id: UUID,
 ) -> OrganizerEventResponse:
+    """Publish an owned future event through an idempotent row-locked state transition."""
+
     event = _lock_owned_event(database, organizer_id, event_id)
     if event.start_at <= datetime.now(UTC):
         raise EventCannotBePublishedError
@@ -119,6 +129,8 @@ def publish_event(
 
 
 def _lock_owned_event(database: Session, organizer_id: UUID, event_id: UUID) -> Event:
+    """Return the owned event as the shared inventory mutex without disclosing foreign rows."""
+
     event = database.scalar(
         select(Event)
         .where(Event.id == event_id, Event.organizer_id == organizer_id)
@@ -130,6 +142,8 @@ def _lock_owned_event(database: Session, organizer_id: UUID, event_id: UUID) -> 
 
 
 def _committed_quantity(database: Session, event_id: UUID) -> int:
+    """Count approved units and pending holds still active according to PostgreSQL time."""
+
     quantity = database.scalar(
         select(func.coalesce(func.sum(Reservation.quantity), 0)).where(
             Reservation.event_id == event_id,

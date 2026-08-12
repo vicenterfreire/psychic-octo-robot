@@ -24,6 +24,12 @@ def list_published_events(
     database: Session,
     search_query: str | None,
 ) -> list[PublishedEventResponse]:
+    """Return a bounded non-locking availability snapshot for upcoming published events.
+
+    PostgreSQL time determines whether events and pending holds are active. Reservation creation
+    recalculates availability under an event-row lock before promising inventory.
+    """
+
     committed_quantity = _committed_quantity_expression()
     statement = (
         select(Event, CatalogSnapshot, committed_quantity.label("committed_quantity"))
@@ -49,6 +55,8 @@ def list_published_events(
 
 
 def get_published_event(database: Session, event_id: UUID) -> PublishedEventResponse:
+    """Return one upcoming published event with the same non-locking availability semantics."""
+
     committed_quantity = _committed_quantity_expression()
     row = database.execute(
         select(Event, CatalogSnapshot, committed_quantity.label("committed_quantity"))
@@ -66,6 +74,8 @@ def get_published_event(database: Session, event_id: UUID) -> PublishedEventResp
 
 
 def _committed_quantity_expression() -> ScalarSelect[int]:
+    """Correlate approved sales and unexpired pending holds to the surrounding event row."""
+
     return (
         select(func.coalesce(func.sum(Reservation.quantity), 0))
         .where(

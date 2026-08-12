@@ -15,6 +15,7 @@ export interface LoginCredentials {
 
 export const sessionQueryKey = ['auth', 'session'] as const
 
+/** Treat only an authoritative 401 as no session; propagate transport and server failures. */
 export async function getCurrentUser(): Promise<CurrentUser | null> {
   try {
     return await apiRequest<CurrentUser>('/auth/me')

@@ -25,6 +25,8 @@ EVENT_ID = UUID("55555555-5555-4555-8555-555555555555")
 
 @dataclass(frozen=True, slots=True)
 class SeedUser:
+    """Stable evaluator account fixture used to make seeding reproducible."""
+
     id: UUID
     email: str
     password: str
@@ -40,6 +42,8 @@ SEED_USERS = (
 
 
 def seed_database() -> dict[str, int]:
+    """Insert missing evaluation fixtures idempotently by their stable UUIDs."""
+
     inserted = {"users": 0, "catalog_snapshots": 0, "events": 0}
 
     with Session(get_engine()) as session, session.begin():

@@ -21,6 +21,8 @@ class GateEventNotFoundError(Exception):
 
 
 def list_gate_events(database: Session) -> list[GateEventResponse]:
+    """List published Gate contexts, including events whose scheduled start has passed."""
+
     events = database.scalars(
         select(Event)
         .where(Event.status == EventStatus.PUBLISHED)
@@ -37,6 +39,13 @@ def validate_ticket(
     token: str,
     signer: TicketSigner,
 ) -> GateValidationResponse:
+    """Validate and consume an authentic ticket at most once for the selected event.
+
+    Signature verification precedes state lookup. The ticket row lock serializes concurrent scans;
+    revoked, wrong-event, and already-used checks have deliberate disclosure order, and only a
+    valid transition commits PostgreSQL usage time with the Gate user.
+    """
+
     selected_event_exists = database.scalar(
         select(Event.id).where(Event.id == event_id, Event.status == EventStatus.PUBLISHED)
     )

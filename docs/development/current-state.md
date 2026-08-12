@@ -4,7 +4,7 @@
 
 - Date: 2026-08-11.
 - Branch: local `main`, based on published commit `14d5d9c` and developed through small local commits.
-- Phase: the original 15 mandatory increments and the first three of five post-delivery review
+- Phase: the original 15 mandatory increments and the first four of five post-delivery review
   increments are complete; the local application remains ready for evaluation.
 - Frontend: React, Vite, and TypeScript application initialized.
 - Backend: Python 3.14 and FastAPI application initialized.
@@ -22,6 +22,8 @@
   navigation and formatting ownership under ADR-009.
 - Styling: Vite CSS Modules isolate feature-owned rules and co-locate responsive behavior; global
   CSS is limited to tokens, resets, page structure, and deliberate shared primitives.
+- Code documentation: selective Python docstrings and TypeScript TSDoc/JSDoc explain critical
+  security, concurrency, time-authority, integration, and lifecycle contracts.
 - Deployment: not selected.
 
 ## Implemented Foundation
@@ -148,10 +150,10 @@
 
 ## Delivery Status
 
-The original 15-increment mandatory plan is complete. Commits 16 through 18 address the candidate's
-module-boundary and styling reviews; two post-delivery increments remain for focused code
-documentation and full-stack Compose execution. That final container increment will also document
-how the same `DATABASE_URL` supports an already-running PostgreSQL instance without Podman.
+The original 15-increment mandatory plan is complete. Commits 16 through 19 address the candidate's
+module-boundary, styling, and code-documentation reviews; one post-delivery increment remains for
+full-stack Compose execution. That final container increment will also document how the same
+`DATABASE_URL` supports an already-running PostgreSQL instance without Podman.
 The candidate retains responsibility for final review, public GitHub publication, and
 challenge-form submission. Production deployment remains an optional, deliberately deferred
 improvement, so no hosted URL is provided.

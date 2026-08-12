@@ -115,6 +115,16 @@ QR decoding extracts transport text but does not validate authenticity, event ow
 
 ## Quality Boundary
 
+TSDoc/JSDoc is reserved for exported or non-obvious contracts whose behavior cannot be recovered
+from the signature alone. Current examples document credentialed transport, the distinction
+between navigation guards and backend authorization, server-clock countdown estimation, form
+normalization, and camera lifecycle. Types and presentational components remain uncommented when
+their names and signatures already explain the contract.
+
+Comments describe authority, lifecycle, fallbacks, and limitations rather than restating TypeScript
+types. Documentation is updated with the behavior it protects; no comment-coverage metric or
+generated API-documentation dependency is introduced.
+
 Prettier owns formatting, Oxlint owns static linting, TypeScript runs with strict project settings, and Vitest with Testing Library protects meaningful interaction and integration boundaries. Tests cover health transport, login, session restoration, cross-role redirection, catalog search/selection, stable errors, provider-secret absence, event management, published discovery, quantity submission, server-clock correction, payment approval, issued quantity, expired-hold recovery, private QR presentation, unauthenticated bearer sharing, camera opt-in and fallback states, duplicate scan suppression, and all four Gate outcomes through manual and scanned input.
 
 Playwright 1.62.1 owns one intentionally broad Chromium flow. It starts FastAPI and Vite on unused loopback ports, then proves that an Organizer edit becomes visible to a Customer, an approved hold issues a signed ticket, and the Gate accepts that token exactly once. The hook uses a separate disposable PostgreSQL database and emits JSON plus failure traces/screenshots under ignored `.artifacts/`. Vitest explicitly excludes `e2e/`, so the two runners cannot collect each other's test files.

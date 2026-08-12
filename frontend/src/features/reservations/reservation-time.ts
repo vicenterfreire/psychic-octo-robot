@@ -1,3 +1,9 @@
+/**
+ * Estimate remaining hold time from one server clock sample and elapsed client time.
+ *
+ * This corrects ordinary client clock skew for display only. The backend still decides whether a
+ * reservation is active.
+ */
 export function reservationRemainingMilliseconds(
   expiresAt: string,
   serverTime: string,

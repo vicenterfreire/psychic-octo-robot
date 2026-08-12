@@ -6,6 +6,8 @@ from backend.core.settings import Settings, get_settings
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
+    """Build the API with one explicit settings snapshot and credentialed CORS policy."""
+
     resolved_settings = settings or get_settings()
     application = FastAPI(
         title=resolved_settings.app_name,

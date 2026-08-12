@@ -24,11 +24,12 @@ The runnable project, persistence, authentication, Ticketmaster catalog, organiz
 - Gate staff can select a published event, scan its QR through a browser camera or enter the token manually, and receive an atomic valid, invalid, already-used, or wrong-event result.
 - Risk-focused backend, frontend, PostgreSQL integration, and cross-role browser tests run against disposable databases without changing development data.
 - Feature styles use Vite CSS Modules, while only design tokens, resets, and intentional shared UI primitives remain global.
+- Critical security, concurrency, lifecycle, and integration contracts are documented with native Python docstrings and TypeScript TSDoc/JSDoc.
 
 The original 15 mandatory delivery increments are complete. Candidate review added five scoped
-post-delivery increments; the first three are complete, so progress is 18 of 20 with focused code
-documentation and full-stack containerization remaining. Public GitHub publication and challenge
-submission remain under the candidate's control.
+post-delivery increments; the first four are complete, so progress is 19 of 20 with full-stack
+containerization remaining. Public GitHub publication and challenge submission remain under the
+candidate's control.
 
 ## Challenge Coverage
 

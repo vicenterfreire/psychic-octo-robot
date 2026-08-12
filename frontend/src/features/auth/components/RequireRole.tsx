@@ -8,6 +8,7 @@ interface RequireRoleProps {
   children: ReactNode
 }
 
+/** Redirect cross-role navigation while leaving authoritative authorization to the API. */
 export function RequireRole({ role, children }: RequireRoleProps) {
   const session = useSession()
 

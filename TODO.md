@@ -2,11 +2,11 @@
 
 ## Current Status
 
-The mandatory application, risk-focused tests, evaluator documentation, and first three candidate
-review refactors are complete. Two approved post-delivery documentation and local-execution
-increments remain before the candidate's final publication review.
+The mandatory application, risk-focused tests, evaluator documentation, and first four candidate
+review refactors are complete. One approved post-delivery local-execution increment remains before
+the candidate's final publication review.
 
-Commit progress: 18 of 20 planned increments complete; 2 remain.
+Commit progress: 19 of 20 planned increments complete; 1 remains.
 
 The local `main` branch is based on published commit `14d5d9c`. Local project commits remain unpushed until the candidate chooses to publish them.
 
@@ -737,21 +737,37 @@ TypeScript documentation formats.
 
 ---
 
-## docs(code): document critical contracts and invariants
+## Done - docs(code): document critical contracts and invariants
 
 ### Goal
 
 Improve interview and maintenance guidance without duplicating self-explanatory signatures.
 
-### Planned
+### Implemented
 
-- Use Python docstrings and TSDoc/JSDoc rather than C/C++-oriented Doxygen syntax.
-- Document security, concurrency, transaction, time-authority, external-integration, and lifecycle
-  behavior where it is not obvious from the signature.
-- Cover exported or reusable contracts that benefit from an explicit guarantee.
-- Leave trivial wrappers, obvious private helpers, and purely presentational components free of
-  boilerplate comments.
-- Record the documentation policy in the knowledge base.
+- Added PEP 257 docstrings to critical backend factories, dependencies, mappings, external adapters,
+  services, signing behavior, and the isolated-database safety boundary.
+- Added TSDoc/JSDoc to the frontend credentialed API client, navigation guards, event-form
+  normalization, reservation clock estimation, countdown lifecycle, and Gate camera/validation
+  boundaries.
+- Documented security, lock order, transaction ownership, PostgreSQL time authority, idempotency,
+  provider trust, bearer-token limitations, and camera fallback behavior where signatures alone
+  are insufficient.
+- Kept trivial route wrappers, obvious mappings, and purely presentational components free of
+  duplicated signature comments.
+- Recorded the selective documentation policy in the backend/frontend knowledge base and
+  development workflow.
+
+### Validation
+
+- Passed frontend Prettier, Oxlint, strict TypeScript, all 29 Vitest tests, and the Vite production
+  build.
+- Passed backend Ruff formatting/linting, strict mypy, source/wheel builds, and all 46 pytest tests
+  with 95% coverage.
+- Ran the core-test hook against disposable PostgreSQL and confirmed `elite_dev_test` was dropped
+  afterward.
+- Reviewed the comments against the implementation and the challenge's security, concurrency,
+  persistence, QR, camera-fallback, and documentation requirements.
 
 ### Expected Result
 

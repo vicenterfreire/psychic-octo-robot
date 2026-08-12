@@ -10,6 +10,8 @@ BACKEND_ROOT = Path(__file__).resolve().parents[3]
 
 @dataclass(frozen=True, slots=True)
 class Settings:
+    """Immutable process configuration shared through the FastAPI application state."""
+
     app_name: str = "Elite Dev Challenge API"
     environment: str = "development"
     api_prefix: str = "/api"
@@ -26,6 +28,12 @@ class Settings:
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
+    """Return the process settings snapshot with environment variables taking precedence.
+
+    The zero-argument cache deliberately creates one instance per process. Restart the process, or
+    clear this cache in a test, after changing configuration values.
+    """
+
     load_dotenv(BACKEND_ROOT / ".env", override=False)
     load_dotenv(BACKEND_ROOT / ".env.podman", override=False)
 

@@ -45,6 +45,8 @@ class CatalogItemNotFoundError(CatalogProviderError):
 
 @dataclass(frozen=True, slots=True)
 class CatalogEventSnapshot:
+    """Normalized browser contract plus raw provider data for local snapshot persistence."""
+
     event: CatalogEvent
     raw_data: dict[str, Any]
 
@@ -95,6 +97,8 @@ def _select_image(images: list[_TicketmasterImage]) -> str | None:
 
 
 class TicketmasterClient:
+    """Synchronous server-side adapter that contains credentials and provider response shapes."""
+
     def __init__(
         self,
         api_key: str | None,
@@ -109,6 +113,8 @@ class TicketmasterClient:
         self._transport = transport
 
     def search_events(self, keyword: str) -> list[CatalogEvent]:
+        """Return a bounded normalized search result or a safely mappable provider error."""
+
         raw_data = self._get_json(
             "events.json",
             params={
@@ -130,6 +136,8 @@ class TicketmasterClient:
         return [_normalize_event(event) for event in provider_response.embedded.events]
 
     def get_event_snapshot(self, provider_event_id: str) -> CatalogEventSnapshot:
+        """Refetch and verify one provider item before it becomes trusted local source data."""
+
         raw_data = self._get_json(
             f"events/{quote(provider_event_id, safe='')}.json",
             params={"locale": "*"},

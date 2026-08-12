@@ -143,6 +143,17 @@ The local Podman hook writes an ignored `backend/.env.podman` only when it resol
 
 ## Quality Boundary
 
+Python documentation follows the same ownership boundary as the code. Public or reusable
+factories, dependencies, adapters, services, and domain mappings receive PEP 257 docstrings when
+their lifecycle or guarantee is not obvious. Critical private helpers may also be documented when
+they encode transaction order, PostgreSQL time, inventory accounting, or security behavior.
+
+Docstrings explain authority, side effects, invariants, and failure semantics rather than repeating
+typed parameters or implementation steps. Trivial route wrappers, obvious mappings, and small
+private helpers remain undocumented unless a hidden contract appears. There is deliberately no
+docstring-coverage quota: stale ceremonial comments would be less trustworthy than selective
+documentation reviewed with the behavior it describes.
+
 Ruff owns formatting and linting, mypy runs in strict mode, and pytest with branch coverage protects behavior. Coverage is evidence for the tested foundation, not a project-wide target or a substitute for risk-focused tests. The root `npm test` hook recreates, migrates, seeds, and drops a dedicated PostgreSQL database, so concurrency tests use the production database engine without consuming development records. The machine-readable hook also writes pytest JUnit XML alongside the frontend and browser reports.
 
 `mutmut` is the accepted optional mutation tool, but it is not a declared dependency because its current release could not be resolved through the unavailable PyPI proxy. The planned experiment is limited to authorization, reservation/payment, signing, and Gate service modules, with matching focused tests and a separate disposable database. Mutation testing remains diagnostic evidence rather than a quality gate.

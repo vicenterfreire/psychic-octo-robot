@@ -10,6 +10,8 @@ ApplicationSettings = Annotated[Settings, Depends(get_application_settings)]
 
 
 def get_ticket_signer(settings: ApplicationSettings) -> TicketSigner:
+    """Provide a signer or fail ticket endpoints closed when configuration is unsafe."""
+
     try:
         return TicketSigner(settings.ticket_hmac_secret or "")
     except InvalidTicketSigningSecretError as error:
