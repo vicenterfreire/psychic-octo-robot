@@ -6,7 +6,7 @@ The mandatory application, risk-focused tests, evaluator documentation, all cand
 refactors, and the full-stack local Compose workflow are complete. The repository is ready for the
 candidate's final publication review.
 
-Commit progress: 20 of 20 planned increments complete; 0 remain.
+Commit progress: 21 of 21 planned increments complete; 0 remain.
 
 The local `main` branch is based on published commit `14d5d9c`. Local project commits remain unpushed until the candidate chooses to publish them.
 
@@ -826,6 +826,41 @@ Provide one reproducible local path for PostgreSQL, FastAPI, and the built React
 
 The evaluator can start and exercise the full stack through one Compose-compatible workflow while
 developers can still run either application directly on the host.
+
+### Next
+
+Candidate final review, public GitHub publication, and challenge-form submission. These remote
+actions remain intentionally outside the AI collaborator's authority.
+
+---
+
+## Done - docs(readme): add a concise run and test guide
+
+### Goal
+
+Make the shortest reliable evaluator workflow visible at the top of the README.
+
+### Implemented
+
+- Added a TL;DR that distinguishes one-time environment setup from the normal one-command startup.
+- Documented `app:up` as the recommended Compose entry point and clarified that it builds, migrates,
+  seeds, waits for health, resolves the Podman WSL address, and prints the reachable URLs.
+- Added a compact mandatory-flow smoke test, automated pre-submission checks, machine-readable test
+  report command, and non-destructive shutdown command.
+- Clarified that `db:prepare` is not an extra step when the complete application runs through
+  Compose.
+
+### Validation
+
+- Cross-checked every documented command against the root package scripts and Compose hook.
+- Confirmed the startup behavior against `compose.yaml` and ADR-010.
+- Checked the Markdown diff for whitespace errors.
+
+### Expected Result
+
+An evaluator can identify the required setup, start the full application, exercise the central
+business flow, run the automated checks, and stop the environment without reading the detailed
+reference sections first.
 
 ### Next
 

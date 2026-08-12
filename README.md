@@ -4,6 +4,50 @@ This repository contains the incremental implementation of the Elite Dev 2026 te
 
 The mandatory product flow allows an organizer to create a local event from the Ticketmaster catalog, a customer to hold inventory and complete a simulated payment, and gate staff to validate an HMAC-signed QR ticket exactly once.
 
+## TL;DR: Run and Test
+
+For the normal full-stack workflow, the application needs only one start command after the
+one-time environment setup. Keep Podman Desktop open with its machine running.
+
+1. On the first checkout, create `backend/.env` from `backend/.env.example` if the file does not
+   already exist. Set a stable `TICKET_HMAC_SECRET` with at least 32 bytes. Set
+   `TICKETMASTER_API_KEY` only when live Organizer catalog search must also be exercised.
+2. From the repository root, start the complete environment:
+
+   ```powershell
+   npm run app:up
+   ```
+
+   This command builds the images, starts PostgreSQL, applies migrations, seeds the evaluation
+   data, starts FastAPI and the React frontend, waits for all health checks, and prints the URL to
+   open. Do not run `db:prepare` separately for this Compose workflow.
+3. Smoke-test the mandatory path with the seeded accounts: browse the public event, sign in as a
+   Customer to reserve and approve a ticket, then sign in as Gate and confirm that the first token
+   validation is `valid` and the second is `already_used`. The credentials are listed in
+   [Seeded Evaluation Data](#seeded-evaluation-data).
+4. Run the automated pre-submission checks:
+
+   ```powershell
+   npm run format:check
+   npm run lint
+   npm run typecheck
+   npm test
+   npm run test:e2e
+   npm run build
+   ```
+
+   `npm run test:report` is the single-command alternative when machine-readable JSON/XML results
+   are wanted for both test suites.
+5. Stop the environment without deleting PostgreSQL data:
+
+   ```powershell
+   npm run app:down
+   ```
+
+`npm run app:up` is the recommended Compose entry point for this Windows/Podman setup. It uses the
+checked-in `compose.yaml` through the pinned provider, handles Podman WSL address differences, waits
+for service health, and prints the reachable frontend and backend URLs.
+
 ## Current Status
 
 The runnable project, persistence, authentication, Ticketmaster catalog, organizer management, published-event discovery, temporary inventory holds, simulated checkout, signed ticket presentation, and complete gate validation are implemented:
@@ -28,7 +72,7 @@ The runnable project, persistence, authentication, Ticketmaster catalog, organiz
 - Multi-stage frontend and backend images plus the root Compose file start the complete healthy
   stack without changing the direct host-development workflow.
 
-All 20 planned increments are complete. Public GitHub publication and challenge submission remain
+All 21 planned increments are complete. Public GitHub publication and challenge submission remain
 under the candidate's control.
 
 ## Challenge Coverage

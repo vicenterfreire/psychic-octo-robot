@@ -4,8 +4,8 @@
 
 - Date: 2026-08-12.
 - Branch: local `main`, based on published commit `14d5d9c` and developed through small local commits.
-- Phase: all 20 planned mandatory, review, and local-execution increments are complete; the local
-  application is ready for the candidate's final publication review.
+- Phase: all 21 planned mandatory, review, documentation, and local-execution increments are
+  complete; the local application is ready for the candidate's final publication review.
 - Frontend: React, Vite, and TypeScript application initialized.
 - Backend: Python 3.14 and FastAPI application initialized.
 - Database: PostgreSQL 17 schema migrated and seeded through Podman.
