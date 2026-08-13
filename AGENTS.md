@@ -306,9 +306,13 @@ Never implement the entire project in one pass.
 
 Development must happen through small, coherent commits.
 
-The expected interaction is:
+The candidate authorizes each understood increment before implementation. A possible concise
+authorization is:
 
 > "Pode fazer o próximo commit"
+
+This phrase authorizes the next scope already discussed and recorded in `TODO.md`; it is not a
+substitute for requirements, review, decision-making, or the broader pair-programming exchange.
 
 When receiving this instruction:
 
@@ -946,7 +950,8 @@ After this:
 
 STOP.
 
-Wait for:
+Wait for candidate review and explicit authorization before the next increment. This may be
+expressed concisely as:
 
 > "Pode fazer o próximo commit"
 

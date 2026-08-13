@@ -4,7 +4,7 @@
 
 - Date: 2026-08-13.
 - Branch: local `main`, based on published commit `14d5d9c` and developed through small local commits.
-- Phase: all 22 planned mandatory, review, documentation, and local-execution increments are
+- Phase: all 23 planned mandatory, review, documentation, and local-execution increments are
   complete; the local application is ready for the candidate's final publication review.
 - Frontend: React, Vite, and TypeScript application initialized.
 - Backend: Python 3.14 and FastAPI application initialized.
@@ -84,7 +84,8 @@
 - The Gate interface presents all four outcomes with large, distinct feedback and keeps manual entry independent of camera support.
 - The Playwright flow updates the seeded event as Organizer, purchases one ticket as Customer, and proves first-use/duplicate-use Gate outcomes without contacting Ticketmaster.
 - The optional `mutmut` experiment is documented but deferred because the available `uv` and `pip` routes could not reach PyPI; no unresolved dependency was added.
-- The README now provides environment setup, seeded credentials, an evaluator walkthrough, troubleshooting, requirement coverage, and explicit delivery status.
+- The README is a concise evaluator entry point containing only setup, full-stack execution,
+  seeded credentials, troubleshooting, and links to the detailed project documentation.
 - The AI collaboration disclosure separates AI-assisted work, candidate-owned decisions and actions, shared review, and versioned intermediate artifacts.
 
 ## Validated Environment
@@ -172,9 +173,9 @@
 
 ## Delivery Status
 
-The mandatory plan, candidate review increments, concise evaluator workflow, full-stack Compose
-execution, and interactive API documentation are complete. The same `DATABASE_URL` continues to
-support an already-running PostgreSQL instance without Podman.
+The mandatory plan, candidate review increments, concise containerless/container evaluator
+workflows, full-stack Compose execution, and interactive API documentation are complete. The same
+`DATABASE_URL` continues to support an already-running PostgreSQL instance without Podman.
 The candidate retains responsibility for final review, public GitHub publication, and
 challenge-form submission. Production deployment remains an optional, deliberately deferred
 improvement, so no hosted URL is provided.

@@ -8,16 +8,19 @@ Development is incremental and human-in-the-loop. AI removes mechanical cost, wh
 
 Each planned `TODO.md` entry represents one coherent local commit.
 
-1. The candidate asks: `Pode fazer o próximo commit`.
-2. Inspect `AGENTS.md`, the next TODO entry, affected files, Git status, and local history.
+1. The candidate and Codex review the current state, questions, trade-offs, and next planned scope.
+2. Inspect `AGENTS.md`, the relevant TODO entry, affected files, Git status, and local history.
 3. Classify decisions as GREEN, YELLOW, or RED.
-4. Stop and ask the candidate when a RED decision is unresolved.
-5. Implement only the planned scope.
-6. Validate relevant formatting, linting, types, tests, build, migration, or manual flow.
-7. Update documentation and `TODO.md` to match reality.
-8. Stage the complete coherent increment.
-9. Create one descriptive local commit.
-10. Report the result and stop before the next TODO entry.
+4. Discuss alternatives and stop when a candidate-owned RED decision is unresolved.
+5. The candidate explicitly authorizes the understood increment. A short message such as
+   `Pode fazer o próximo commit` was sometimes used at this point; it authorized the already
+   discussed scope and was not the complete collaboration or specification.
+6. Implement only the authorized scope.
+7. Validate relevant formatting, linting, types, tests, build, migration, or manual flow.
+8. Update documentation and `TODO.md` to match reality.
+9. Stage and create one descriptive local commit.
+10. Report implementation details, limitations, learning points, and interview questions, then
+    stop for candidate review before another increment.
 
 ## Decision Policy
 
@@ -34,7 +37,6 @@ Each planned `TODO.md` entry represents one coherent local commit.
 - Re-run the relevant checks after a meaningful fix.
 
 Frequently repeated commands remain root npm scripts. A checked-in PowerShell hook is used when the command needs platform-specific executable discovery, environment orchestration, or stable machine-readable output. `npm test` and `npm run test:e2e` create and drop allowlisted isolated PostgreSQL databases instead of mutating development data. `npm run test:report` writes ignored Vitest JSON, pytest JUnit XML, Playwright JSON, and a compact summary JSON under `.artifacts/test-results/`; generated reports never enter Git history.
-
 
 ## Dependency Policy
 

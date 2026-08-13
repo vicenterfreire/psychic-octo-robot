@@ -6,7 +6,7 @@ The mandatory application, risk-focused tests, evaluator documentation, all cand
 refactors, and the full-stack local Compose workflow are complete. The repository is ready for the
 candidate's final publication review.
 
-Commit progress: 22 of 22 planned increments complete; 0 remain.
+Commit progress: 23 of 23 planned increments complete; 0 remain.
 
 The local `main` branch is based on published commit `14d5d9c`. Local project commits remain unpushed until the candidate chooses to publish them.
 
@@ -905,6 +905,50 @@ exercise the corresponding operations against the local environment.
 Candidate README reorganization, final manual walkthrough, public GitHub publication, and
 challenge-form submission. The candidate's current uncommitted README notes remain outside this
 increment, and all remote actions remain under candidate control.
+
+---
+
+## Done - docs(delivery): streamline evaluator documentation
+
+### Goal
+
+Make local execution immediately discoverable while showing an accurate human-in-the-loop
+development process instead of suggesting an unreviewed one-prompt generation flow.
+
+### Planned
+
+- Present the containerless setup first, with PostgreSQL plus either standard `venv`/`pip` or the
+  optional `uv` workflow, followed by Docker Compose and Podman alternatives.
+- Limit the remaining README content to execution, seeded credentials, troubleshooting, and links
+  to complementary documentation.
+- Keep architecture, behavior, validation evidence, limitations, and rejected alternatives in the
+  existing focused documents under `docs/`.
+- Expand the AI disclosure with concrete candidate decisions, review interventions, incremental
+  authorization boundaries, and versioned evidence of technical ownership.
+- Clarify that `Pode fazer o próximo commit` authorized an already discussed increment rather than
+  serving as its complete specification or the entirety of the pair-programming interaction.
+- Preserve transparent attribution of the substantial AI-assisted implementation work.
+
+### Expected Result
+
+An evaluator can run the application without navigating a long architectural README and can verify
+from the linked collaboration record that the candidate directed, challenged, reviewed, and owns
+the solution.
+
+### Validation
+
+- Passed Prettier formatting and `git diff --check` for the changed Markdown files.
+- Confirmed every local Markdown link resolves.
+- Confirmed the documented `pip`/`PYTHONPATH` path imports the FastAPI application and exposes the
+  Alembic command without `uv`.
+- Cross-checked Docker, Podman, host PostgreSQL, environment, and execution commands against the
+  checked-in configuration and scripts.
+- Reviewed the final README ordering and AI-collaboration wording with the candidate before commit.
+
+### Next
+
+Candidate decision about the optional one-point production deployment, followed by public GitHub
+publication and challenge-form submission. Remote actions remain under candidate control.
 
 ---
 
