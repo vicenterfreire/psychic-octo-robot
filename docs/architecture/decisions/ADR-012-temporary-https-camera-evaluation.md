@@ -79,10 +79,11 @@ Manual entry is a required fallback, not a substitute for demonstrating the requ
 - Secure opaque sessions work through the HTTPS URL, while normal local HTTP intentionally retains
   a non-`Secure` development cookie.
 - Production TLS, access control, rate limiting, secret management, and deployment operations
-  remain unsolved and are not implied by this local evaluation aid.
+  are not implied by this local evaluation aid. ADR-013 separately defines the Railway publication
+  architecture; Quick Tunnel remains available for local device testing.
 
 ## Revisit When
 
-- The application receives a permanent hosted URL and managed certificate.
+- The Railway topology or another permanent hosted topology no longer satisfies evaluator needs.
 - Cloudflare Quick Tunnels become unavailable or their terms no longer fit development testing.
 - Evaluators must run fully offline or public temporary exposure is prohibited.

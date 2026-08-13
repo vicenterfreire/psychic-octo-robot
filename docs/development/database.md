@@ -97,6 +97,17 @@ The target database and login must already exist and allow schema creation. Do n
 `db:prepare` for this path because that command deliberately starts the project Compose service.
 Process environment variables take precedence over both backend environment files.
 
+## Railway PostgreSQL
+
+The hosted backend references Railway's managed `${{Postgres.DATABASE_URL}}` rather than publishing
+the database or copying its credentials. Provider URLs using `postgres://` or `postgresql://` are
+normalized at the settings boundary to SQLAlchemy's installed `postgresql+psycopg://` dialect.
+
+Railway executes `alembic upgrade head` and the idempotent seed from `backend/railway.toml` before
+starting the new backend deployment. This replaces the local Compose startup migration with one
+deployment owner. Exact service variables, verification, and rollback constraints are documented
+in [Railway Deployment](railway-deployment.md).
+
 ## Data Safety
 
 The local `elite` / `elite` credential is deliberately non-secret and must never be reused outside local development. `db:down` is recoverable because it preserves the volume. `db:reset` irreversibly deletes only the Compose volume owned by `elite-dev-challenge`.

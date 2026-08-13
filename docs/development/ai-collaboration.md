@@ -34,6 +34,11 @@ an explicitly temporary Quick Tunnel after reviewing its public-exposure trade-o
 interventions changed or refined the delivered repository; they were not post-hoc approval of a
 finished system.
 
+For the optional hosted differential, the candidate selected Railway, required the existing Quick
+Tunnel workflow to remain functional, and authorized only a deployment-preparation increment. The
+candidate retains the remote GitHub push, Railway account configuration, secret entry, live URL
+verification, and submission actions.
+
 Codex performed substantial implementation and validation work, but it operated under the
 versioned `AGENTS.md` policy: inspect before changing, explain behavior-affecting choices, stop for
 candidate-owned decisions, implement one coherent increment, report what the candidate should
@@ -72,7 +77,9 @@ decisions that define the solution, including:
 - HMAC-signed persistent ticket credentials;
 - risk-focused tests and a bounded mutation-testing experiment;
 - an opt-in public Quick Tunnel only for temporary phone-camera evaluation, not as production
-  deployment.
+  deployment;
+- Railway as the hosted provider, with one public same-origin gateway and private backend/database
+  services while preserving all local workflows.
 
 The candidate also installed and started Python, `uv`, and Podman locally, supplied the untracked
 Ticketmaster credential, reviewed the explanations and trade-offs, and explicitly authorized each

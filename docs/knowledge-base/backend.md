@@ -52,6 +52,10 @@ interactive-documentation paths to FastAPI inside the private network, so local 
 temporary HTTPS Quick Tunnel each remain one browser origin. Tunnel startup enables the cookie's
 `Secure` attribute; normal local HTTP deliberately leaves it disabled.
 
+The Railway topology preserves this same-origin boundary. Only Nginx is public; it receives
+FastAPI's Railway private hostname at runtime. Production settings enable the `Secure` cookie, and
+the backend receives no public domain.
+
 ## Interactive API Documentation Boundary
 
 FastAPI generates the OpenAPI document at `/openapi.json` and serves Swagger UI at `/docs`; no
@@ -174,7 +178,10 @@ The backend container installs exactly the production dependency graph from `uv.
 local environment files, tests, and developer caches, and runs as a non-root user. In the approved
 single-replica local Compose topology, its startup command applies Alembic migrations and the
 idempotent seed before Uvicorn. An existing host or managed PostgreSQL works through the same
-`DATABASE_URL` without any application-code change.
+`DATABASE_URL` without changing persistence code. At the configuration boundary, provider-generic
+`postgres://` and `postgresql://` schemes select the installed Psycopg 3 dialect; already-explicit
+SQLAlchemy driver URLs remain unchanged. Railway gives migrations and seed one pre-deploy owner
+instead of coupling them to every backend replica startup.
 
 ## Quality Boundary
 

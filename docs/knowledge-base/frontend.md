@@ -52,8 +52,9 @@ TanStack Query owns server state and mutation invalidation. React component stat
 The client reads `VITE_API_URL`, defaults to `http://localhost:8000/api`, requests JSON, and always
 includes browser credentials. The direct development hook injects the concrete host-process API
 URL. The container build injects relative `/api`, which Nginx proxies to FastAPI so normal Compose
-and the temporary HTTPS tunnel both use one browser origin. This prepares the transport for the
-accepted HTTP-only opaque session without exposing a session token to React.
+and the temporary HTTPS tunnel both use one browser origin. Railway uses the same relative path and
+injects only the private upstream hostname into Nginx at container startup. This prepares the
+transport for the accepted HTTP-only opaque session without exposing a session token to React.
 
 Failed non-JSON or JSON responses are normalized at this boundary so feature components do not duplicate transport parsing.
 
@@ -151,6 +152,8 @@ Playwright 1.62.1 owns one intentionally broad Chromium flow. It starts FastAPI 
 
 The frontend container is a multi-stage build: Node compiles the Vite application, while the final
 Nginx image contains static assets, SPA fallback, and the narrow same-origin proxy paths recorded in
-ADR-012. The container build sets public `VITE_API_URL=/api`, so a random tunnel or changed local
-host does not require rebuilding the image. Direct host development still injects its concrete API
-URL, and no secret belongs in a `VITE_*` variable.
+ADR-012. The container build sets public `VITE_API_URL=/api`, so a random tunnel, changed local host,
+or Railway domain does not require rebuilding React. The official Nginx entrypoint templates only
+`BACKEND_HOST` and `BACKEND_PORT`: local Compose uses `backend:8000`, while ADR-013 supplies the
+Railway private domain. Direct host development still injects its concrete API URL, and no secret
+belongs in a `VITE_*` variable.

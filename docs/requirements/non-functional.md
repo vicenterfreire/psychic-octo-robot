@@ -69,4 +69,5 @@
 - Real-time availability.
 - Numbered seat maps.
 - Additional automated tests.
-- Production deployment, which adds one point according to the challenge.
+- Production deployment, which adds one point according to the challenge. Railway configuration is
+  prepared; the differential is achieved only after the candidate publishes and verifies the URL.

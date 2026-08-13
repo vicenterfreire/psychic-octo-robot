@@ -8,6 +8,15 @@ from dotenv import load_dotenv
 BACKEND_ROOT = Path(__file__).resolve().parents[3]
 
 
+def normalize_database_url(database_url: str) -> str:
+    """Select Psycopg 3 when a provider supplies a generic PostgreSQL URL scheme."""
+
+    for generic_scheme in ("postgres://", "postgresql://"):
+        if database_url.startswith(generic_scheme):
+            return database_url.replace(generic_scheme, "postgresql+psycopg://", 1)
+    return database_url
+
+
 @dataclass(frozen=True, slots=True)
 class Settings:
     """Immutable process configuration shared through the FastAPI application state."""
@@ -43,9 +52,11 @@ def get_settings() -> Settings:
     return Settings(
         environment=environment,
         frontend_origin=os.getenv("FRONTEND_ORIGIN", "http://localhost:5173"),
-        database_url=os.getenv(
-            "DATABASE_URL",
-            "postgresql+psycopg://elite:elite@localhost:5432/elite_dev",
+        database_url=normalize_database_url(
+            os.getenv(
+                "DATABASE_URL",
+                "postgresql+psycopg://elite:elite@localhost:5432/elite_dev",
+            )
         ),
         session_cookie_name=os.getenv("SESSION_COOKIE_NAME", "gather_session"),
         session_lifetime_seconds=int(os.getenv("SESSION_LIFETIME_SECONDS", str(7 * 24 * 60 * 60))),

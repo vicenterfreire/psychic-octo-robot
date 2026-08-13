@@ -2,11 +2,10 @@
 
 ## Current Status
 
-The mandatory application and all 25 planned increments are complete. The final local-evaluation
-increment combines shared host binding and temporary HTTPS camera access because both depend on
-the same browser-visible origin, Compose gateway, and evaluator documentation.
+The mandatory application and all 26 planned increments are complete. Railway publication is
+prepared without changing the validated local or Quick Tunnel topologies.
 
-Commit progress: 25 of 25 planned increments complete; 0 remain.
+Commit progress: 26 of 26 planned increments complete; 0 remain.
 
 The local `main` branch contains the completed plan and remains ahead of tracked `origin/main`.
 Local project commits stay unpushed until the candidate chooses to publish them.
@@ -27,7 +26,8 @@ Local project commits stay unpushed until the candidate chooses to publish them.
   PostgreSQL, FastAPI, and the built React application.
 - Temporary phone-camera evaluation: an opt-in Cloudflare Quick Tunnel reaches a same-origin Nginx
   gateway; it is public test infrastructure, not production deployment.
-- Production deployment provider: deliberately deferred as an optional future improvement.
+- Production deployment provider: Railway, using separate frontend, backend, and managed PostgreSQL
+  services with only the same-origin frontend gateway publicly exposed.
 
 Additional accepted implementation direction:
 
@@ -1031,6 +1031,56 @@ submission. Remote operations remain under candidate control.
 
 ---
 
+## Done - feat(deploy): prepare Railway publication
+
+### Goal
+
+Publish the challenge through Railway without breaking direct host execution, normal Compose, or
+the temporary Quick Tunnel camera workflow.
+
+### Implemented
+
+- Parameterize the Nginx upstream at container startup while retaining `backend:8000` as the local
+  default.
+- Add service-local Railway configuration for Dockerfile builds, healthchecks, and backend
+  migrations/seed.
+- Keep the browser and API same-origin by publishing only the frontend gateway and reaching FastAPI
+  through Railway private networking.
+- Document exact root directories, ports, reference variables, secret handling, deployment order,
+  verification, rollback, and the public seeded-account limitation.
+- Record the accepted deployment architecture and rejected public two-origin alternative in
+  ADR-013.
+- Re-run the complete regression suite and live normal/Quick Tunnel container smoke tests.
+
+### Result
+
+An evaluator can open one permanent Railway HTTPS URL, authenticate with the opaque session,
+exercise the full application and phone camera, and reach Swagger through the same gateway, while
+all previously documented local workflows remain valid.
+
+### Validation
+
+- Cross-checked monorepo roots, Dockerfile builds, config-as-code, reference variables, PostgreSQL,
+  private networking, public domains, and pre-deploy behavior against current Railway documentation.
+- Parsed both `railway.toml` files and expanded normal and tunnel Compose configurations.
+- Passed formatting, linting, strict type checks, frontend/backend builds, all 30 frontend tests,
+  all 51 backend tests with 95% coverage, and the cross-role Playwright flow.
+- Built and started the local stack; its Nginx template rendered `backend:8000`, and internal
+  frontend, API health, OpenAPI, Gate login, and session restoration passed. The known Windows to
+  Podman-WSL localhost forwarding limitation was diagnosed by the existing hook.
+- Rendered `backend.railway.internal:8000` in a disposable Nginx container with a simulated private
+  DNS entry and passed `nginx -t`.
+- Created a real Quick Tunnel and confirmed frontend, proxied health, Swagger, OpenAPI, Gate login,
+  session restoration, and `HttpOnly` plus `Secure` cookie attributes; removed the public URL and
+  complete stack immediately afterward.
+
+### Next
+
+Candidate GitHub push, Railway service/secret configuration, live URL verification, and challenge
+submission. Remote actions remain under candidate control.
+
+---
+
 # Optional Backlog
 
 Only consider these after the mandatory flow, critical tests, and delivery documentation are complete:
@@ -1043,4 +1093,4 @@ Only consider these after the mandatory flow, critical tests, and delivery docum
 - Numbered seat-map sales.
 - Broader mutation testing.
 - Additional accessibility and visual polish.
-- Production deployment.
+- Production observability, backup verification, rate limiting, and restricted public Swagger.

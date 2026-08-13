@@ -241,6 +241,17 @@ stopped normally. Do not run `db:prepare` separately for the full-stack Compose 
 temporary tunnel should be started through the project command above because that command also
 enables the session cookie's HTTPS-only attribute.
 
+## Publish on Railway
+
+The repository supports an isolated Railway monorepo deployment with a public Nginx frontend, a
+private FastAPI backend, and managed PostgreSQL. Railway variables replace local `.env` files, and
+the backend service runs migrations and the idempotent seed before deployment.
+
+Follow [Railway Deployment](docs/development/railway-deployment.md) for the exact service names,
+root directories, config paths, variables, deployment order, verification, and rollback guidance.
+Only the frontend receives a public domain; do not import the development `compose.yaml` or publish
+the backend/database directly.
+
 ## Seeded Accounts
 
 | Role      | Email                      | Password        |
@@ -272,6 +283,7 @@ behind the implementation:
   [frontend](docs/knowledge-base/frontend.md) knowledge bases
 - [Database and alternative host-development workflow](docs/development/database.md)
 - [Development and testing workflow](docs/development/workflow.md)
+- [Railway publication](docs/development/railway-deployment.md)
 - [AI collaboration and candidate ownership](docs/development/ai-collaboration.md)
 - [Deliberately deferred improvements](docs/future-improvements.md)
 - [Original challenge](docs/challenge/Desafio-Elite-Dev-2026.pdf)

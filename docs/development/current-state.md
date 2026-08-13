@@ -4,8 +4,8 @@
 
 - Date: 2026-08-13.
 - Branch: local `main`; project commits remain ahead of tracked `origin/main` and unpushed.
-- Phase: all 25 planned increments are complete; final publication and submission remain under
-  candidate control.
+- Phase: all 26 planned increments are complete; remote Railway publication and submission remain
+  under candidate control.
 - Frontend: React, Vite, and TypeScript application initialized.
 - Backend: Python 3.14 and FastAPI application initialized.
 - Database: PostgreSQL 17 schema migrated and seeded through Docker/Podman-compatible Compose.
@@ -17,7 +17,7 @@
 - Checkout: deterministic approval/decline with atomic, idempotent ticket-row issuance.
 - Tickets: versioned HMAC credentials, private QR collection, and minimized bearer sharing views.
 - Gate: explicit camera/manual input with atomic valid, invalid, already-used, or wrong-event decisions.
-- Automated baseline: 30 frontend tests, 48 backend tests, and one Playwright cross-role browser
+- Automated baseline: 30 frontend tests, 51 backend tests, and one Playwright cross-role browser
   flow all pass with the secure-context and camera-API prerequisite checks enabled.
 - Frontend organization: feature-first, with local component/hook directories and explicit shared
   navigation and formatting ownership under ADR-009.
@@ -26,8 +26,9 @@
 - Code documentation: selective Python docstrings and TypeScript TSDoc/JSDoc explain critical
   security, concurrency, time-authority, integration, and lifecycle contracts.
 - Local execution: direct host processes or a healthy three-service Docker/Podman Compose stack,
-  with an optional fourth Quick Tunnel service for temporary phone-camera HTTPS; production
-  deployment remains deliberately unselected.
+  with an optional fourth Quick Tunnel service for temporary phone-camera HTTPS.
+- Hosted topology: prepared Railway frontend gateway, private FastAPI service, and managed
+  PostgreSQL; the candidate has not yet performed the remote deployment.
 - API documentation: generated OpenAPI plus interactive Swagger UI with domain metadata, examples,
   and the configured opaque-cookie security boundary.
 
@@ -38,7 +39,8 @@
 - Multi-stage Dockerfiles install the locked backend runtime as a non-root user and serve only the
   Vite build output from Nginx; local environment files never enter either image.
 - The containerized frontend uses relative API requests, and Nginx proxies API and Swagger paths to
-  FastAPI inside the Compose network.
+  FastAPI. Its runtime template defaults to the Compose service name and accepts Railway's private
+  backend hostname without rebuilding React.
 - An opt-in pinned `cloudflared` container exposes only Nginx through a random temporary HTTPS URL;
   its project hook enables secure cookies and prints an explicit public-exposure warning.
 - The PowerShell project hook auto-detects a running Docker or Podman engine and accepts an explicit
@@ -105,6 +107,8 @@
 - Playwright 1.62.1 with Chrome for Testing 151.0.7922.34.
 - Nginx 1.28.3 in the static frontend image.
 - Cloudflared 2026.7.3 in the optional Quick Tunnel profile.
+- Service-local Railway config-as-code for Dockerfile builds, healthchecks, restart policy, and a
+  single backend pre-deploy migration/seed owner.
 
 ## Validation Result
 
@@ -130,7 +134,7 @@
 - Two simultaneous validations of one unused ticket consistently produce exactly one `valid` and one `already_used` result.
 - A live Ticketmaster search returned 12 normalized results, and a live detail fetch confirmed identifier matching and credential absence from the snapshot body.
 - A live local HTTP query returned only the seeded published event with the expected availability and no management fields.
-- All 48 backend tests pass with 95% coverage of the current backend.
+- All 51 backend tests pass with 95% coverage of the current backend.
 - Frontend formatting, linting, type checking, production build, and all 30 frontend tests succeed
   after the secure-context and `getUserMedia` prerequisite checks were restored.
 - The Chromium cross-role test passes at a 360-pixel viewport through Organizer edit, Customer
@@ -166,7 +170,11 @@
 - Final `db:prepare` reused healthy PostgreSQL, found the migration at head, and inserted no
   duplicate seed records.
 - Final formatting, linting, strict type checking, frontend/backend builds, Alembic drift check, and
-  30-frontend/48-backend/1-browser regression suites all passed.
+  30-frontend/51-backend/1-browser regression suites all passed.
+- A disposable Railway-like Nginx runtime rendered `backend.railway.internal:8000` and passed
+  configuration validation with a simulated private DNS entry.
+- The post-Railway local Quick Tunnel regression passed frontend, API health, Swagger, OpenAPI,
+  Gate login, session restoration, and secure HTTP-only cookie checks before the URL was removed.
 - All local Markdown links resolve, and all five challenge pages were extracted, rendered, visually
   reviewed, and cross-checked against the evaluator documentation.
 
@@ -189,19 +197,21 @@
 - The Compose and isolated-test hooks are Windows-specific; other systems can use the standard
   `compose.yaml` and equivalent commands with their installed Compose provider.
 - The local Compose topology exposes HTTP ports, runs one backend replica, and applies migrations
-  during startup; it is not a production topology.
+  during startup; ADR-013 defines a separate hosted topology.
 - Quick Tunnel requires outbound internet and Cloudflare availability, has a random URL and no SLA,
   and temporarily exposes the application plus documented seeded accounts to the public internet.
 - The backend test client still emits an upstream FastAPI/Starlette deprecation warning.
-- Swagger UI operates against the real configured API and can mutate local data; production access
-  control or disabling the route must be decided with the eventual deployment topology.
-- Production hosting, TLS, managed secrets, separate migration ownership,
-  monitoring, backup, and rollback remain deferred.
+- Swagger UI operates against the real configured API and can mutate hosted challenge data through
+  the public gateway; real production use should restrict or disable it.
+- Railway TLS, service variables, private networking, healthchecks, pre-deploy migration ownership,
+  and application rollback are prepared. Monitoring, backup verification, rate limiting, WAF, and
+  schema-aware rollback remain deferred.
 
 ## Delivery Status
 
 The mandatory application, concise evaluator workflows, full-stack Compose execution, interactive
-API documentation, shared host binding, and temporary HTTPS camera evaluation are complete. The
-same `DATABASE_URL` continues to support an already-running PostgreSQL instance without containers.
-The candidate retains responsibility for final review, public GitHub publication, optional Railway
-deployment, and challenge-form submission. No permanent hosted URL is recorded yet.
+API documentation, shared host binding, and temporary HTTPS camera evaluation are complete. A
+Railway deployment is configured but does not exist until the candidate pushes, creates the remote
+services, supplies secrets, and verifies the URL. The same `DATABASE_URL` continues to support an
+already-running PostgreSQL instance without containers. Public GitHub publication, Railway actions,
+and challenge-form submission remain candidate-owned; no permanent hosted URL is recorded yet.

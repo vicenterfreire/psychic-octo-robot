@@ -1,5 +1,9 @@
 # Troubleshooting
 
+Railway-specific deployment failures are documented separately in
+[Railway Deployment](docs/development/railway-deployment.md#troubleshooting). The sections below
+cover host-process, Docker/Podman Compose, LAN, and temporary Quick Tunnel workflows.
+
 Use this guide when setup succeeds partially, a container does not become healthy, another device
 cannot reach the application, or the browser refuses a capability such as the camera.
 

@@ -82,15 +82,17 @@ below remain deliberate post-challenge improvements rather than unfinished manda
 
 ## Deployment and Operations
 
-- **Current approach:** reproducible local host and full-stack Compose execution plus an optional
-  temporary HTTPS Quick Tunnel for physical phone-camera evaluation; production provider selection
-  is deferred.
-- **Limitation:** the Quick Tunnel is public, random, has no SLA, and uses development credentials;
-  the Compose topology still runs startup migrations, evaluators have no permanent hosted instance,
-  and no production observability exists.
-- **Possible improvement:** hosted frontend, FastAPI service, managed PostgreSQL, HTTPS secrets,
-  health monitoring, structured logs, and CI/CD.
-- **Worthwhile when:** the mandatory local flow and critical tests are stable.
+- **Current approach:** reproducible local host and Compose execution, optional Quick Tunnel camera
+  testing, and a prepared Railway topology with a public same-origin frontend gateway, private
+  FastAPI/PostgreSQL, managed variables, healthchecks, and backend pre-deploy migrations.
+- **Limitation:** the hosted instance is not real until the candidate completes and verifies the
+  remote deployment. The resulting challenge service still has public seeded accounts and Swagger,
+  no formal backup/restore exercise, limited logs, and no alerts, rate limiting, WAF, or SLO.
+- **Possible improvement:** custom domain, restricted API documentation, structured centralized
+  logs, alerts, managed backups with restore tests, rate limiting, CI/CD gates, and documented
+  incident/rollback procedures.
+- **Worthwhile when:** the Railway URL is live and the application moves beyond disposable challenge
+  data or must remain operated after evaluation.
 
 ## Broader Test and Mutation Coverage
 

@@ -70,9 +70,11 @@ deployment decisions unrelated to completing the local challenge flow.
 
 ## Revisit When
 
-- A hosted provider, public domain, or TLS termination strategy is selected.
+- The selected Railway provider, public domain, or TLS termination strategy requires changing this
+  local topology rather than complementing it through ADR-013.
 - Multiple backend replicas may start concurrently.
 - Runtime-configurable frontend endpoints or a same-origin reverse proxy become necessary.
 
 ADR-012 records why phone-camera evaluation made the last condition concrete while preserving this
-ADR's local-only and single-replica boundaries.
+ADR's local-only and single-replica boundaries. ADR-013 adds a separate Railway topology with a
+pre-deploy migration owner and does not replace local Compose.

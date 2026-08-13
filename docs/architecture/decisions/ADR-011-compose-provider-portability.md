@@ -69,4 +69,4 @@ would be likely to drift.
 
 - A cross-platform scripting layer provides concrete evaluator value.
 - Podman ships a consistently available Compose provider that makes the pinned fallback obsolete.
-- Production deployment replaces this local Compose topology.
+- The Railway deployment described by ADR-013 changes independently of this local Compose topology.

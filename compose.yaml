@@ -59,6 +59,9 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_API_URL: /api
+    environment:
+      BACKEND_HOST: backend
+      BACKEND_PORT: 8000
     ports:
       - "${APP_BIND_ADDRESS:-127.0.0.1}:${FRONTEND_PORT:-5173}:80"
     depends_on:

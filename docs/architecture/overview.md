@@ -114,6 +114,20 @@ flowchart LR
 ```
 
 The tunnel is public, random, temporary, and dependent on an external development service; it is
-not a production deployment. A later hosted topology must define permanent TLS termination,
-managed secrets, access policy, database connection management, a separate migration owner, logs,
-backups, monitoring, scaling, and rollback.
+not a production deployment.
+
+ADR-013 defines the prepared Railway topology. Railway replaces Compose orchestration with three
+independent services, terminates permanent public HTTPS at the frontend, and gives migrations one
+backend pre-deploy owner. Nginx receives the private backend hostname at container startup while
+retaining `backend:8000` as its local default.
+
+```mermaid
+flowchart LR
+    Evaluator["Evaluator browser or phone"] -->|"Permanent HTTPS"| RailwayFrontend["Railway frontend - Nginx and React"]
+    RailwayFrontend -->|"Private /api and /docs"| RailwayBackend["Railway backend - FastAPI"]
+    RailwayBackend -->|"Private connection"| RailwayDatabase[("Railway PostgreSQL")]
+```
+
+Publication remains a candidate-owned remote action. Managed secrets, healthchecks, pre-deploy
+migrations, and rollback configuration are prepared, while full observability, backup policy,
+rate limiting, and production access policy remain deliberate future work.
