@@ -2,13 +2,14 @@
 
 ## Current Status
 
-The mandatory application, evaluator documentation, and candidate-requested local portability,
-mobile layout, camera diagnostics, and troubleshooting hardening are complete. The repository is
-ready for the candidate's final publication review.
+The mandatory application and all 25 planned increments are complete. The final local-evaluation
+increment combines shared host binding and temporary HTTPS camera access because both depend on
+the same browser-visible origin, Compose gateway, and evaluator documentation.
 
-Commit progress: 24 of 24 planned increments complete; 0 remain.
+Commit progress: 25 of 25 planned increments complete; 0 remain.
 
-The local `main` branch is based on published commit `14d5d9c`. Local project commits remain unpushed until the candidate chooses to publish them.
+The local `main` branch contains the completed plan and remains ahead of tracked `origin/main`.
+Local project commits stay unpushed until the candidate chooses to publish them.
 
 ## Accepted Architecture Direction
 
@@ -24,6 +25,8 @@ The local `main` branch is based on published commit `14d5d9c`. Local project co
 - Testing: risk-focused automated tests; mutation testing only if the mandatory flow and critical tests are complete and the deadline remains safe.
 - Local execution topology: direct host processes or a three-service Compose workflow with
   PostgreSQL, FastAPI, and the built React application.
+- Temporary phone-camera evaluation: an opt-in Cloudflare Quick Tunnel reaches a same-origin Nginx
+  gateway; it is public test infrastructure, not production deployment.
 - Production deployment provider: deliberately deferred as an optional future improvement.
 
 Additional accepted implementation direction:
@@ -980,6 +983,51 @@ mobile overflow, and distinguish QR-decoder failures from browser camera securit
 - The host-process Playwright flow passes at a phone-sized viewport without horizontal overflow.
 - The same database lifecycle succeeds through the detected Podman provider; Docker follows the
   same provider-neutral commands.
+
+---
+
+## Done - fix(local): support portable HTTPS camera evaluation
+
+### Goal
+
+Make host-process and Compose workflows share explicit network configuration, while giving an
+evaluator a trusted temporary HTTPS origin for phone-camera testing without certificate installs.
+
+### Implemented
+
+- Add a safe root `.env.example` for local network configuration.
+- Read the ignored root `.env` from both development and Compose wrappers.
+- Start Vite and Uvicorn through project hooks without user-provided `--` separators.
+- Bind the Compose frontend and backend publications through `APP_BIND_ADDRESS`.
+- Keep `PUBLIC_HOST` separate so wildcard binding never leaks into URLs or credentialed CORS.
+- Document that Compose cannot manufacture a missing Windows-to-Podman-WSL network forward.
+- Add an opt-in Compose profile using a pinned official Cloudflare Tunnel container.
+- Route the temporary public HTTPS origin only to Nginx.
+- Build the containerized frontend with relative `/api` requests and proxy API and Swagger paths to
+  FastAPI over the private Compose network.
+- Enable the opaque session cookie's `Secure` attribute only in the tunnel workflow.
+- Add startup, URL, log, and shutdown hooks with an explicit public-exposure warning.
+- Record the accepted RED decision, rejected local-certificate alternatives, limitations, and
+  evaluator steps in ADR-012 and focused setup/troubleshooting documentation.
+
+### Validation
+
+- Expanded both local and tunnel Compose configurations and confirmed the expected relative API,
+  pinned image, frontend target, and environment-specific cookie attributes.
+- Built and started the normal three-service stack; same-origin health, Gate login, HTTP-only
+  session restoration, and OpenAPI passed through Nginx.
+- Created a real Quick Tunnel and confirmed HTTP 200 for the frontend, proxied health, Swagger,
+  OpenAPI, Gate login, and session restoration; its cookie was both `HttpOnly` and `Secure`.
+- Removed the public URL and complete temporary stack immediately after the live check.
+- Passed formatting, linting, strict type checks, frontend/backend builds, all 30 frontend tests,
+  and all 48 backend tests with 95% coverage.
+- Passed the complete cross-role Playwright flow at a phone-sized viewport after restoring the
+  secure-context and camera-API prerequisite checks.
+
+### Next
+
+Candidate review, public GitHub publication, optional Railway deployment, and challenge-form
+submission. Remote operations remain under candidate control.
 
 ---
 

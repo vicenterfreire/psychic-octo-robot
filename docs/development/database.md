@@ -13,6 +13,7 @@ containers. On Windows, `scripts/compose.ps1` is a project hook that:
 6. Tests the published Windows database port.
 7. Falls back to the current Podman WSL address when localhost forwarding is unavailable.
 8. Writes the usable connection to ignored `backend/.env.compose`.
+9. Reads application bind, public host, and published ports from the ignored root `.env`.
 
 Database startup and logs explicitly target `postgres`, so tests and host development do not build
 or start the application containers. Status shows the entire named project because provider support
@@ -36,16 +37,34 @@ An MCP server was intentionally not introduced. The project needs deterministic 
 - `npm run app:status`: show all three Compose services.
 - `npm run app:logs`: show the latest 100 lines from all three services.
 - `npm run app:down`: stop all three services while preserving PostgreSQL data.
+- `npm run app:tunnel:up`: start the stack with a public temporary HTTPS Quick Tunnel and secure
+  session cookie.
+- `npm run app:tunnel:url`: print the URL of the active Quick Tunnel.
+- `npm run app:tunnel:logs`: show only the latest tunnel logs.
+- `npm run app:tunnel:down`: stop the temporary stack while preserving PostgreSQL data.
 - `npm test`: recreate, migrate, seed, test, and drop the isolated `elite_dev_test` database.
 - `npm run test:e2e`: do the same for `elite_dev_e2e` while Playwright runs the cross-role browser flow.
 
 After `db:reset`, run `npm run db:migrate` and `npm run db:seed`, or use `npm run db:prepare`.
 
 `app:up` normally publishes `localhost` URLs. When Podman's WSL ports are not forwarded to
-localhost, the hook can use the current machine address for host access, align `VITE_API_URL` and
-`FRONTEND_ORIGIN`, and print the reachable URLs. A missing Windows-to-WSL LAN forward cannot be
-created by application configuration; the phone-testing fallback is documented in
-`TROUBLESHOOTING.md`.
+localhost, the hook can resolve the current machine address for diagnostics and print the configured
+URLs. The containerized frontend uses its same-origin Nginx gateway, while direct host processes
+derive their API URL and CORS origin from the shared environment. A missing Windows-to-WSL LAN
+forward cannot be created by application configuration; the phone-testing fallback is documented
+in `TROUBLESHOOTING.md`.
+
+`APP_BIND_ADDRESS` controls the host-side Compose port mapping for FastAPI and Nginx.
+`PUBLIC_HOST` is the concrete hostname or IPv4 address used by direct host-process URLs,
+credentialed CORS, and local Compose output. They are deliberately separate because `0.0.0.0` is a
+listening wildcard, not a browser destination. The containerized SPA calls relative `/api`, so
+Nginx can preserve one browser origin locally or through the temporary tunnel without rebuilding
+for a random external URL.
+
+The `tunnel` profile adds the pinned official `cloudflared` container. It makes an outbound-only
+connection to a temporary public Cloudflare URL and forwards that origin to Nginx. The project hook
+sets `SESSION_COOKIE_SECURE=true` for this mode, extracts the random URL from the container logs,
+and warns that the seeded application is publicly reachable until `app:tunnel:down` runs.
 
 ## Migration Workflow
 

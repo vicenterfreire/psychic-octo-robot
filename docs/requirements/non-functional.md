@@ -49,6 +49,8 @@
 - Local PostgreSQL must be reproducible through a Compose-compatible file with Docker or Podman.
 - The complete local application should be reproducible through one Compose-compatible workflow
   without making Podman a requirement for direct host execution or an existing PostgreSQL server.
+- Physical phone-camera evaluation may use an explicitly temporary public HTTPS tunnel, but that
+  workflow must remain optional, disclose its exposure, and not be presented as production deploy.
 - Database migrations and seed commands must be documented.
 - Dependency versions must be reproducible through lockfiles.
 - `requirements.txt` is a generated compatibility artifact derived from `uv.lock`, not a second dependency source of truth.

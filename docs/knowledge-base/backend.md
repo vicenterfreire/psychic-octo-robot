@@ -32,7 +32,7 @@ only one possible cache key—but makes the intended one-instance-per-process li
 Environment changes require a process restart, and tests that replace environment values in the
 same process must clear the relevant cache.
 
-## Local HTTP Boundary
+## Browser Transport Boundary
 
 All business endpoints will be mounted below `/api`. The initial `GET /api/health` endpoint returns:
 
@@ -43,8 +43,14 @@ All business endpoints will be mounted below `/api`. The initial `GET /api/healt
 }
 ```
 
-Credentialed CORS uses one explicit `FRONTEND_ORIGIN`. A wildcard origin cannot be combined safely
-with browser credentials and would not match the accepted session-cookie architecture.
+Direct host development uses one explicit credentialed `FRONTEND_ORIGIN`. A wildcard origin cannot
+be combined safely with browser credentials and would not match the accepted session-cookie
+architecture.
+
+In the Compose topology, the browser calls relative `/api` through Nginx. Nginx forwards API and
+interactive-documentation paths to FastAPI inside the private network, so local HTTP and the
+temporary HTTPS Quick Tunnel each remain one browser origin. Tunnel startup enables the cookie's
+`Secure` attribute; normal local HTTP deliberately leaves it disabled.
 
 ## Interactive API Documentation Boundary
 

@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted; browser routing amended by ADR-012
 
 ## Context
 
@@ -17,8 +17,9 @@ remain outside the mandatory scope.
 - Build the backend from `uv.lock` in a multi-stage image and run FastAPI as a non-root user.
 - Build the React application with its configured public API URL and serve only the generated
   static files from Nginx.
-- Keep the browser-to-API request explicit through published host ports. The existing credentialed
-  CORS policy remains the integration boundary; Nginx does not become an API reverse proxy.
+- Originally keep the browser-to-API request explicit through published host ports, with
+  credentialed CORS as the integration boundary and no Nginx API proxy. ADR-012 amends only this
+  routing choice for same-origin container and temporary HTTPS camera evaluation.
 - Make PostgreSQL health gate backend startup and make backend health gate frontend startup.
 - Apply Alembic migrations and the idempotent evaluation seed before the single local backend
   process starts.
@@ -54,8 +55,9 @@ deployment decisions unrelated to completing the local challenge flow.
 - An evaluator can build and start the complete local application with one project command.
 - The frontend image contains only static build output, and the backend image contains locked
   runtime dependencies without development tests or local secrets.
-- Changing the public host or published backend port requires rebuilding the frontend because Vite
-  substitutes `VITE_API_URL` at build time.
+- Before ADR-012, changing the public host or published backend port required rebuilding the
+  frontend because Vite substituted `VITE_API_URL` at build time. The amended container build uses
+  relative `/api`; direct host development still injects its explicit API URL.
 - Running migrations in backend startup is intentionally limited to this single-replica local
   topology. A production deployment should use a separate migration job.
 - HTTP local execution requires `SESSION_COOKIE_SECURE=false`; production must use HTTPS, secure
@@ -71,3 +73,6 @@ deployment decisions unrelated to completing the local challenge flow.
 - A hosted provider, public domain, or TLS termination strategy is selected.
 - Multiple backend replicas may start concurrently.
 - Runtime-configurable frontend endpoints or a same-origin reverse proxy become necessary.
+
+ADR-012 records why phone-camera evaluation made the last condition concrete while preserving this
+ADR's local-only and single-replica boundaries.

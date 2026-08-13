@@ -17,9 +17,21 @@ PostgreSQL may be installed on the same computer or hosted elsewhere. Create an 
 a login allowed to create its schema, then copy the environment files from the repository root:
 
 ```powershell
+Copy-Item .env.example .env
 Copy-Item backend/.env.example backend/.env
 Copy-Item frontend/.env.example frontend/.env
 ```
+
+The root `.env` controls local binding for both host-process and Compose workflows. Its safe default
+uses `127.0.0.1` and advertises `localhost`. To expose the application to the local network, set:
+
+```dotenv
+APP_BIND_ADDRESS=0.0.0.0
+PUBLIC_HOST=192.168.15.130
+```
+
+Use the computer's current Wi-Fi IPv4 address for `PUBLIC_HOST`. The wildcard address is valid only
+for binding and must never be used as a browser URL.
 
 Set `DATABASE_URL` in `backend/.env` to the SQLAlchemy/Psycopg connection for that database:
 
@@ -93,7 +105,7 @@ backend/.venv/Scripts/python -m backend.database.seed
 Keep that terminal open and start FastAPI:
 
 ```powershell
-backend/.venv/Scripts/python -m uvicorn backend.main:app --reload
+npm run dev:backend
 ```
 
 ### Backend With `uv`
@@ -103,7 +115,7 @@ If the alternative `uv` setup was selected, apply migrations, seed, and start Fa
 ```powershell
 uv --directory backend run alembic upgrade head
 uv --directory backend run python -m backend.database.seed
-uv --directory backend run uvicorn backend.main:app --reload
+npm run dev:backend
 ```
 
 ### Frontend
@@ -126,20 +138,31 @@ Containers are an optional reproducibility path, not an application requirement.
 Docker with Docker Compose or Podman with a Compose provider. Host Python and PostgreSQL are not
 required for this path because they run inside the containers.
 
-Create only the backend environment file:
+Create the shared local configuration and backend secret files:
 
 ```powershell
+Copy-Item .env.example .env
 Copy-Item backend/.env.example backend/.env
 ```
 
 Set `TICKET_HMAC_SECRET` and, optionally, `TICKETMASTER_API_KEY` as described in the containerless
-setup above. Compose supplies its own internal `DATABASE_URL`.
+setup above. Compose supplies its own internal `DATABASE_URL`. The root `.env` defaults are enough
+for both normal container execution and the temporary phone-camera workflow:
+
+```dotenv
+APP_BIND_ADDRESS=127.0.0.1
+PUBLIC_HOST=localhost
+BACKEND_PORT=8000
+FRONTEND_PORT=5173
+POSTGRES_PORT=5432
+```
 
 ### Project Command: Docker or Podman
 
 The project command detects a running Docker engine first and otherwise uses the validated Podman
 path. It builds and starts PostgreSQL, applies migrations and seed data, starts FastAPI, and serves
-the built React application:
+the built React application. It reads `APP_BIND_ADDRESS`, `PUBLIC_HOST`, and the published ports
+from the same root `.env` used by the host-process commands:
 
 ```powershell
 npm run app:up
@@ -163,6 +186,39 @@ npm run app:up
 Docker uses its installed Compose plugin and does not require `uv`. The validated Windows/Podman
 fallback resolves Podman Desktop and runs a pinned Compose provider through `uv`.
 
+### Test the Camera From a Phone Without Installing a Certificate
+
+Stop any host-process Vite or FastAPI servers using the configured ports, keep the computer online,
+and start the optional Quick Tunnel profile:
+
+```powershell
+npm run app:tunnel:up
+```
+
+The command prints one temporary `https://...trycloudflare.com` application URL. Open that URL on
+the phone, sign in with the seeded Gate account, select an event, and grant camera permission. The
+same URL exposes the proxied API at `/api` and Swagger at `/docs`; no LAN IP, inbound firewall rule,
+or certificate installation is required.
+
+Reprint the active URL or inspect only the tunnel logs with:
+
+```powershell
+npm run app:tunnel:url
+npm run app:tunnel:logs
+```
+
+The random URL is public to anyone who receives it, and the evaluation credentials are documented
+below. Stop the complete temporary stack immediately after testing:
+
+```powershell
+npm run app:tunnel:down
+```
+
+This is a development-only
+[Cloudflare Quick Tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/do-more-with-tunnels/trycloudflare/)
+with no availability guarantee. Its URL changes when recreated, requires outbound internet access,
+and is not the optional production deployment bonus described by the challenge.
+
 ### Direct Docker Compose Alternative
 
 Run Compose directly:
@@ -179,9 +235,11 @@ docker compose logs --tail 100
 docker compose down
 ```
 
-Both container paths build and start PostgreSQL, apply Alembic migrations, run the idempotent seed,
-start FastAPI and the built React application, and preserve PostgreSQL data when stopped normally.
-Do not run `db:prepare` separately for the full-stack Compose workflow.
+Both normal container paths build and start PostgreSQL, apply Alembic migrations, run the
+idempotent seed, start FastAPI and the built React application, and preserve PostgreSQL data when
+stopped normally. Do not run `db:prepare` separately for the full-stack Compose workflow. The
+temporary tunnel should be started through the project command above because that command also
+enables the session cookie's HTTPS-only attribute.
 
 ## Seeded Accounts
 
@@ -197,7 +255,7 @@ The seed also creates the published `Aurora Live 2030` event with available inve
 ## Troubleshooting
 
 See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for Docker/Podman selection, database recovery, LAN and
-phone access, CORS diagnosis, nested npm arguments, Windows/Podman networking, camera security
+phone access, CORS diagnosis, shared host binding, Windows/Podman networking, camera security
 requirements, and destructive reset guidance.
 
 ## Complementary Documentation

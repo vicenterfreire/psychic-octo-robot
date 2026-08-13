@@ -97,10 +97,23 @@ sequenceDiagram
 ## Deployment Boundary
 
 The mandatory application is complete for local evaluation through either host processes or the
-three-service Compose topology. The frontend container serves the Vite build from Nginx, the
-backend container applies migrations and the idempotent seed before starting one Uvicorn process,
-and service health checks enforce startup order.
+three-service Compose topology. The frontend container serves the Vite build from Nginx and proxies
+same-origin `/api` and documentation requests to FastAPI. The backend container applies migrations
+and the idempotent seed before starting one Uvicorn process, and service health checks enforce
+startup order.
 
-This is not a production deployment. A later hosted topology must define TLS termination, managed
-secrets, same-origin or cross-origin routing, secure-cookie behavior, database connection
-management, a separate migration owner, logs, backups, monitoring, scaling, and rollback.
+An opt-in fourth `cloudflared` service gives a phone a temporary trusted HTTPS origin for physical
+camera testing. It reaches only Nginx; FastAPI and PostgreSQL remain behind the browser gateway.
+
+```mermaid
+flowchart LR
+    Phone["Phone browser - temporary HTTPS"] --> Cloudflare["Cloudflare Quick Tunnel"]
+    Cloudflare --> Nginx["Nginx - React and same-origin gateway"]
+    Nginx -->|"/api, /docs, /openapi.json"| FastAPI["FastAPI"]
+    FastAPI --> PostgreSQL[(PostgreSQL)]
+```
+
+The tunnel is public, random, temporary, and dependent on an external development service; it is
+not a production deployment. A later hosted topology must define permanent TLS termination,
+managed secrets, access policy, database connection management, a separate migration owner, logs,
+backups, monitoring, scaling, and rollback.

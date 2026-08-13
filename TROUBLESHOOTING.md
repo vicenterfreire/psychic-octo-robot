@@ -66,18 +66,16 @@ are documented in
 A failure normally means the request reached FastAPI but the browser blocked JavaScript from
 reading the response because the frontend origin does not match CORS exactly.
 
-For example, when another device opens `http://192.168.15.130:5173`:
+For example, when another device opens `http://192.168.15.130:5173`, use the shared root file:
 
 ```dotenv
-# backend/.env
-FRONTEND_ORIGIN=http://192.168.15.130:5173
-
-# frontend/.env
-VITE_API_URL=http://192.168.15.130:8000/api
+# .env
+APP_BIND_ADDRESS=0.0.0.0
+PUBLIC_HOST=192.168.15.130
 ```
 
-Restart both processes after changing either file. FastAPI caches one settings snapshot per
-process, and Vite reads its environment when it starts.
+Restart both processes after changing the file. The project wrappers derive `FRONTEND_ORIGIN` and
+`VITE_API_URL` before FastAPI or Vite starts.
 
 ## Open the Application From a Phone
 
@@ -87,27 +85,57 @@ Wi-Fi IPv4 address with `ipconfig`, then expose the host processes:
 ```powershell
 # Terminal 1
 npm run db:up
-npm run dev:backend -- --host 0.0.0.0
+npm run dev:backend
 
 # Terminal 2
-npm run dev:frontend -- -- --host 0.0.0.0
+npm run dev:frontend
 ```
 
-The second command has two `--` separators because the root npm script invokes a second npm script.
-Alternatively, call that nested script directly:
-
-```powershell
-npm --prefix frontend run dev -- --host 0.0.0.0
-```
-
-Set `FRONTEND_ORIGIN` and `VITE_API_URL` to the Wi-Fi IPv4 URLs as shown above, permit Node.js and
-Python on private networks in Windows Firewall, and open `http://<wifi-ip>:5173` on the phone.
+The scripts read the root `.env`; no nested npm argument separators are required. Permit Node.js
+and Python on private networks in Windows Firewall, and open `http://<wifi-ip>:5173` on the phone.
 
 Podman on Windows runs inside a WSL virtual machine. In some installations, container ports are
 healthy inside that machine but are not forwarded to the Windows Wi-Fi interface. Setting
-`PUBLIC_HOST` aligns the built API URL and CORS origin; it cannot create a missing Windows-to-WSL
-network forward. In that situation, keep only PostgreSQL in Podman with `npm run db:up` and run
-FastAPI and Vite on the Windows host as shown above.
+`APP_BIND_ADDRESS=0.0.0.0` publishes on all interfaces owned by the Podman engine, while
+`PUBLIC_HOST` provides the browser-visible host for direct-process URLs, CORS, and diagnostics. The
+containerized frontend now uses its same-origin Nginx gateway. Neither variable can create a
+missing Windows-to-WSL network forward. In that situation, keep only PostgreSQL in Podman with
+`npm run db:up` and run FastAPI and Vite on the Windows host as shown above.
+
+Plain LAN HTTP is useful for layout testing, but it does not provide a secure context for the phone
+camera. For the complete containerized camera path without installing a local certificate, stop
+the host Vite and FastAPI processes and run:
+
+```powershell
+npm run app:tunnel:up
+```
+
+Open the printed `https://...trycloudflare.com` URL rather than a LAN or localhost URL. The tunnel
+connects outward, so no router port forwarding or inbound Windows Firewall rule is needed.
+
+## The Quick Tunnel Does Not Print or Open a URL
+
+Inspect its logs:
+
+```powershell
+npm run app:tunnel:logs
+```
+
+The first start must download the pinned official `cloudflared` image. The computer must resolve
+public DNS and allow outbound Cloudflare Tunnel traffic. A restrictive corporate network, VPN,
+proxy, or unavailable Cloudflare service can prevent creation of the URL.
+
+If the configured local ports are already occupied by host-process Vite, FastAPI, or PostgreSQL,
+stop those processes or select unused ports in the root `.env`, then retry. A Quick Tunnel URL is
+random and changes after the container is recreated; use `npm run app:tunnel:url` to print the
+currently active URL.
+
+The URL exposes the complete evaluation application and its documented seeded accounts to the
+internet. Do not leave it running, do not use real personal data, and stop it with:
+
+```powershell
+npm run app:tunnel:down
+```
 
 ## The QR Camera Does Not Open
 
@@ -118,7 +146,8 @@ over a plain HTTP LAN address such as `http://192.168.x.x:5173`.
 Therefore:
 
 - use `localhost` when testing a camera attached to the same computer;
-- use a trusted HTTPS origin when testing from a phone;
+- use the temporary HTTPS URL printed by `npm run app:tunnel:up` when testing from a phone without
+  installing a certificate;
 - grant camera permission for the exact site;
 - close other software that may hold the camera; and
 - use manual ticket entry when a secure context or camera is unavailable.

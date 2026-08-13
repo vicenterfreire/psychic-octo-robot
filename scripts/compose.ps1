@@ -11,7 +11,11 @@ param(
         "app-up",
         "app-down",
         "app-status",
-        "app-logs"
+        "app-logs",
+        "app-tunnel-up",
+        "app-tunnel-url",
+        "app-tunnel-logs",
+        "app-tunnel-down"
     )]
     [string] $Command = "status",
 
@@ -24,9 +28,21 @@ $podmanComposeVersion = "1.6.0"
 $repositoryRoot = Split-Path -Parent $PSScriptRoot
 $composeFile = Join-Path $repositoryRoot "compose.yaml"
 $databaseEnvFile = Join-Path $repositoryRoot "backend\.env.compose"
-$databasePort = if ($env:POSTGRES_PORT) { [int] $env:POSTGRES_PORT } else { 5432 }
-$backendPort = if ($env:BACKEND_PORT) { [int] $env:BACKEND_PORT } else { 8000 }
-$frontendPort = if ($env:FRONTEND_PORT) { [int] $env:FRONTEND_PORT } else { 5173 }
+$localEnvironmentFile = Join-Path $repositoryRoot ".env"
+
+. (Join-Path $PSScriptRoot "local-environment.ps1")
+Import-LocalEnvironment -Path $localEnvironmentFile
+
+$publicHostWasConfigured = -not [string]::IsNullOrWhiteSpace($env:PUBLIC_HOST)
+$hostConfiguration = Get-LocalHostConfiguration
+$env:APP_BIND_ADDRESS = $hostConfiguration.BindAddress
+if ($publicHostWasConfigured) {
+    $env:PUBLIC_HOST = $hostConfiguration.PublicHost
+}
+
+$databasePort = Get-LocalPort -Name "POSTGRES_PORT" -Default 5432
+$backendPort = Get-LocalPort -Name "BACKEND_PORT" -Default 8000
+$frontendPort = Get-LocalPort -Name "FRONTEND_PORT" -Default 5173
 
 function Find-Executable {
     param(
@@ -205,6 +221,28 @@ function Write-DatabaseEnvironment {
     Write-Output "Backend database connection: $databaseHostName`:$databasePort"
 }
 
+function Resolve-QuickTunnelUrl {
+    $attempts = 30
+    for ($attempt = 1; $attempt -le $attempts; $attempt++) {
+        $previousErrorActionPreference = $ErrorActionPreference
+        $ErrorActionPreference = "Continue"
+        $tunnelLogs = & $composeExecutable @composePrefix --profile tunnel logs --no-color cloudflared 2>&1
+        $logsSucceeded = $LASTEXITCODE -eq 0
+        $ErrorActionPreference = $previousErrorActionPreference
+
+        if ($logsSucceeded) {
+            $tunnelLogText = $tunnelLogs -join "`n"
+            if ($tunnelLogText -match "https://[a-z0-9-]+\.trycloudflare\.com") {
+                return $Matches[0]
+            }
+        }
+
+        Start-Sleep -Milliseconds 1000
+    }
+
+    throw "The Quick Tunnel did not publish a URL within $attempts seconds. Run npm run app:tunnel:logs for details."
+}
+
 function Remove-GeneratedEnvironment {
     if (Test-Path -LiteralPath $databaseEnvFile -PathType Leaf) {
         Remove-Item -LiteralPath $databaseEnvFile
@@ -271,6 +309,7 @@ switch ($Command) {
             "240"
         )
         Write-DatabaseEnvironment
+        Write-Output "Application bind: $($env:APP_BIND_ADDRESS)"
         Write-Output "Frontend: http://$($env:PUBLIC_HOST):$frontendPort"
         Write-Output "Backend API: http://$($env:PUBLIC_HOST):$backendPort/api"
         Write-Output "Swagger: http://$($env:PUBLIC_HOST):$backendPort/docs"
@@ -288,5 +327,35 @@ switch ($Command) {
     }
     "app-logs" {
         Invoke-Compose -Arguments @("logs", "--tail", "100")
+    }
+    "app-tunnel-up" {
+        $env:SESSION_COOKIE_SECURE = "true"
+        Invoke-Compose -Arguments @(
+            "--profile",
+            "tunnel",
+            "up",
+            "--detach",
+            "--build",
+            "--wait",
+            "--wait-timeout",
+            "240"
+        )
+        Write-DatabaseEnvironment
+        $tunnelUrl = Resolve-QuickTunnelUrl
+        Write-Output "Temporary public application: $tunnelUrl"
+        Write-Output "Temporary public API: $tunnelUrl/api"
+        Write-Output "Temporary public Swagger: $tunnelUrl/docs"
+        Write-Warning "This URL is public and uses the documented seeded accounts. Stop it with npm run app:tunnel:down immediately after testing."
+    }
+    "app-tunnel-url" {
+        $tunnelUrl = Resolve-QuickTunnelUrl
+        Write-Output "Temporary public application: $tunnelUrl"
+    }
+    "app-tunnel-logs" {
+        Invoke-Compose -Arguments @("--profile", "tunnel", "logs", "--tail", "100", "cloudflared")
+    }
+    "app-tunnel-down" {
+        Invoke-Compose -Arguments @("--profile", "tunnel", "down", "--remove-orphans")
+        Remove-GeneratedEnvironment
     }
 }

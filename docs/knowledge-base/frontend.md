@@ -50,8 +50,10 @@ TanStack Query owns server state and mutation invalidation. React component stat
 ## API Communication
 
 The client reads `VITE_API_URL`, defaults to `http://localhost:8000/api`, requests JSON, and always
-includes browser credentials. This prepares the transport for the accepted HTTP-only opaque
-session without exposing a session token to React.
+includes browser credentials. The direct development hook injects the concrete host-process API
+URL. The container build injects relative `/api`, which Nginx proxies to FastAPI so normal Compose
+and the temporary HTTPS tunnel both use one browser origin. This prepares the transport for the
+accepted HTTP-only opaque session without exposing a session token to React.
 
 Failed non-JSON or JSON responses are normalized at this boundary so feature components do not duplicate transport parsing.
 
@@ -148,6 +150,7 @@ Organizer, Customer, tickets, and Gate surfaces do not exceed the viewport width
 Playwright 1.62.1 owns one intentionally broad Chromium flow. It starts FastAPI and Vite on unused loopback ports, then proves that an Organizer edit becomes visible to a Customer, an approved hold issues a signed ticket, and the Gate accepts that token exactly once. The hook uses a separate disposable PostgreSQL database and emits JSON plus failure traces/screenshots under ignored `.artifacts/`. Vitest explicitly excludes `e2e/`, so the two runners cannot collect each other's test files.
 
 The frontend container is a multi-stage build: Node compiles the Vite application, while the final
-Nginx image contains only static assets and SPA fallback configuration. `VITE_API_URL` is public
-build-time configuration, so a changed public backend address requires rebuilding the image; no
-secret belongs in a `VITE_*` variable.
+Nginx image contains static assets, SPA fallback, and the narrow same-origin proxy paths recorded in
+ADR-012. The container build sets public `VITE_API_URL=/api`, so a random tunnel or changed local
+host does not require rebuilding the image. Direct host development still injects its concrete API
+URL, and no secret belongs in a `VITE_*` variable.

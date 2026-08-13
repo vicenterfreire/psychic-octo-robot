@@ -3,9 +3,9 @@
 ## Snapshot
 
 - Date: 2026-08-13.
-- Branch: local `main`, based on published commit `14d5d9c` and developed through small local commits.
-- Phase: all 24 planned increments are committed; the local application is ready for the
-  candidate's final publication review.
+- Branch: local `main`; project commits remain ahead of tracked `origin/main` and unpushed.
+- Phase: all 25 planned increments are complete; final publication and submission remain under
+  candidate control.
 - Frontend: React, Vite, and TypeScript application initialized.
 - Backend: Python 3.14 and FastAPI application initialized.
 - Database: PostgreSQL 17 schema migrated and seeded through Docker/Podman-compatible Compose.
@@ -17,15 +17,17 @@
 - Checkout: deterministic approval/decline with atomic, idempotent ticket-row issuance.
 - Tickets: versioned HMAC credentials, private QR collection, and minimized bearer sharing views.
 - Gate: explicit camera/manual input with atomic valid, invalid, already-used, or wrong-event decisions.
-- Automated tests: 30 frontend tests, 48 backend tests, and one Playwright cross-role browser flow.
+- Automated baseline: 30 frontend tests, 48 backend tests, and one Playwright cross-role browser
+  flow all pass with the secure-context and camera-API prerequisite checks enabled.
 - Frontend organization: feature-first, with local component/hook directories and explicit shared
   navigation and formatting ownership under ADR-009.
 - Styling: Vite CSS Modules isolate feature-owned rules and co-locate responsive behavior; global
   CSS is limited to tokens, resets, page structure, and deliberate shared primitives.
 - Code documentation: selective Python docstrings and TypeScript TSDoc/JSDoc explain critical
   security, concurrency, time-authority, integration, and lifecycle contracts.
-- Local execution: direct host processes or a healthy three-service Docker/Podman Compose stack;
-  production deployment remains deliberately unselected.
+- Local execution: direct host processes or a healthy three-service Docker/Podman Compose stack,
+  with an optional fourth Quick Tunnel service for temporary phone-camera HTTPS; production
+  deployment remains deliberately unselected.
 - API documentation: generated OpenAPI plus interactive Swagger UI with domain metadata, examples,
   and the configured opaque-cookie security boundary.
 
@@ -35,6 +37,10 @@
   persistent database volume and explicit dependency order.
 - Multi-stage Dockerfiles install the locked backend runtime as a non-root user and serve only the
   Vite build output from Nginx; local environment files never enter either image.
+- The containerized frontend uses relative API requests, and Nginx proxies API and Swagger paths to
+  FastAPI inside the Compose network.
+- An opt-in pinned `cloudflared` container exposes only Nginx through a random temporary HTTPS URL;
+  its project hook enables secure cookies and prints an explicit public-exposure warning.
 - The PowerShell project hook auto-detects a running Docker or Podman engine and accepts an explicit
   provider override.
 - Docker uses its installed Compose plugin without `uv`; Podman uses the validated pinned provider,
@@ -80,8 +86,8 @@
 - Ticket validation locks the exact ticket row, classifies revoked/event/usage state, and commits the Gate user with the PostgreSQL timestamp.
 - The Gate camera remains off until explicit activation, lazily loads the QR decoder, prefers the environment camera, and stops on the first decoded credential.
 - Camera cancellation, event changes, pending validation, and route cleanup stop active scanner controls; duplicate callbacks cannot create duplicate validation requests.
-- Insecure origin, permission, hardware, browser-support, and startup failures keep manual entry
-  visible with specific recovery guidance.
+- The scanner handles insecure origin, permission, hardware, browser-support, and startup failures
+  while keeping manual entry visible; secure-context and camera-API prerequisite checks are active.
 - The Gate interface presents all four outcomes with large, distinct feedback and keeps manual entry independent of camera support.
 - The Playwright flow updates the seeded event as Organizer, purchases one ticket as Customer, and proves first-use/duplicate-use Gate outcomes without contacting Ticketmaster.
 - The optional `mutmut` experiment is documented but deferred because the available `uv` and `pip` routes could not reach PyPI; no unresolved dependency was added.
@@ -98,6 +104,7 @@
 - `podman-compose` 1.6.0 executed in an isolated `uvx` environment.
 - Playwright 1.62.1 with Chrome for Testing 151.0.7922.34.
 - Nginx 1.28.3 in the static frontend image.
+- Cloudflared 2026.7.3 in the optional Quick Tunnel profile.
 
 ## Validation Result
 
@@ -124,17 +131,24 @@
 - A live Ticketmaster search returned 12 normalized results, and a live detail fetch confirmed identifier matching and credential absence from the snapshot body.
 - A live local HTTP query returned only the seeded published event with the expected availability and no management fields.
 - All 48 backend tests pass with 95% coverage of the current backend.
-- All 30 frontend tests pass, and frontend formatting, linting, type checking, and production build
-  succeed.
+- Frontend formatting, linting, type checking, production build, and all 30 frontend tests succeed
+  after the secure-context and `getUserMedia` prerequisite checks were restored.
 - The Chromium cross-role test passes at a 360-pixel viewport through Organizer edit, Customer
   approval, issued-ticket retrieval, valid Gate entry, and duplicate rejection, with width checks
   at each role surface.
 - Both application images build from their committed lockfiles, and the three Compose services
   become healthy after the backend applies the current migration and idempotent seed.
+- A live same-origin Compose smoke test passed through Nginx for health, Gate login, HTTP-only
+  session restoration, and OpenAPI; normal local HTTP correctly omitted the cookie `Secure`
+  attribute.
+- A live Quick Tunnel produced a trusted public HTTPS URL; frontend, health, Swagger, OpenAPI, Gate
+  login, and session restoration all returned HTTP 200, and the session cookie was both `HttpOnly`
+  and `Secure`. The URL and stack were removed immediately after validation.
 - The same cross-role Playwright scenario passes against an isolated three-service Compose project;
   its dedicated volume is removed afterward while `elite_dev` remains untouched.
-- The full-stack hook detects missing Windows localhost forwarding, aligns the frontend build and
-  CORS origin with the current Podman machine address, and prints reachable URLs.
+- The full-stack hook detects missing Windows localhost forwarding, uses the reviewed local network
+  settings, and prints the configured URLs. The containerized frontend no longer embeds a host in
+  its API URL.
 - `npm test` leaves `elite_dev` untouched and drops `elite_dev_test`; `npm run test:e2e` drops `elite_dev_e2e` after completion.
 - Removing HMAC signature comparison temporarily makes the focused tampering test fail; restoring it returns all three signing tests to passing.
 - Generated Vitest JSON, pytest JUnit XML, Playwright JSON, and summary JSON parse successfully and report no failures.
@@ -143,8 +157,9 @@
   permission request on a secure origin, safe cancellation, and immediately available manual
   fallback.
 - Live HTTP LAN review confirmed that the browser reports an insecure context before ZXing loads;
-  the Gate screen now disables camera start with HTTPS-specific guidance rather than presenting a
-  generic decoder failure.
+  the committed Gate baseline disables camera start with HTTPS-specific guidance rather than
+  presenting a generic decoder failure. The restored guard is covered by the frontend regression
+  suite.
 - The browser environment had no physical camera, so optical capture remains a short device-level evaluator check; automated interaction tests exercise decoded QR submission, duplicate callback suppression, and all four authoritative outcomes.
 - Final dependency setup verification passed from both lockfiles without network access or tracked
   dependency changes.
@@ -173,8 +188,10 @@
 - Approved reservations and issued tickets are final; cancellation and refunds remain deferred.
 - The Compose and isolated-test hooks are Windows-specific; other systems can use the standard
   `compose.yaml` and equivalent commands with their installed Compose provider.
-- The local Compose topology exposes HTTP ports, embeds the public API URL at build time, runs one
-  backend replica, and applies migrations during startup; it is not a production topology.
+- The local Compose topology exposes HTTP ports, runs one backend replica, and applies migrations
+  during startup; it is not a production topology.
+- Quick Tunnel requires outbound internet and Cloudflare availability, has a random URL and no SLA,
+  and temporarily exposes the application plus documented seeded accounts to the public internet.
 - The backend test client still emits an upstream FastAPI/Starlette deprecation warning.
 - Swagger UI operates against the real configured API and can mutate local data; production access
   control or disabling the route must be decided with the eventual deployment topology.
@@ -183,9 +200,8 @@
 
 ## Delivery Status
 
-The mandatory application, concise evaluator workflows, full-stack Compose execution, and
-interactive API documentation are complete, including the portability/mobile hardening increment.
-The same `DATABASE_URL` continues to support an already-running PostgreSQL instance without
-containers. The candidate retains responsibility for final review, public GitHub publication, and
-challenge-form submission. Production deployment remains an optional, deliberately deferred
-improvement, so no hosted URL is provided.
+The mandatory application, concise evaluator workflows, full-stack Compose execution, interactive
+API documentation, shared host binding, and temporary HTTPS camera evaluation are complete. The
+same `DATABASE_URL` continues to support an already-running PostgreSQL instance without containers.
+The candidate retains responsibility for final review, public GitHub publication, optional Railway
+deployment, and challenge-form submission. No permanent hosted URL is recorded yet.

@@ -82,11 +82,12 @@ below remain deliberate post-challenge improvements rather than unfinished manda
 
 ## Deployment and Operations
 
-- **Current approach:** reproducible local host and full-stack Compose execution; provider selection
+- **Current approach:** reproducible local host and full-stack Compose execution plus an optional
+  temporary HTTPS Quick Tunnel for physical phone-camera evaluation; production provider selection
   is deferred.
-- **Limitation:** the Compose topology uses local HTTP, development credentials, a build-time API
-  URL, and startup migrations; evaluators cannot use a hosted instance and no production
-  observability exists.
+- **Limitation:** the Quick Tunnel is public, random, has no SLA, and uses development credentials;
+  the Compose topology still runs startup migrations, evaluators have no permanent hosted instance,
+  and no production observability exists.
 - **Possible improvement:** hosted frontend, FastAPI service, managed PostgreSQL, HTTPS secrets,
   health monitoring, structured logs, and CI/CD.
 - **Worthwhile when:** the mandatory local flow and critical tests are stable.

@@ -21,6 +21,10 @@ arguments that are not accepted consistently across Compose implementations.
 - Use Docker's installed Compose plugin without requiring `uv`.
 - Preserve the pinned `podman-compose` through `uv` only for the validated Podman path.
 - Keep provider-specific Windows/WSL address resolution behind the common wrapper.
+- Read bind address, browser-visible host, and published ports from one ignored root `.env` shared
+  with direct host development.
+- Keep `APP_BIND_ADDRESS` separate from `PUBLIC_HOST`; the former may be `0.0.0.0`, while the latter
+  must be a navigable hostname or IPv4 address.
 - Write the discovered host database URL to ignored `backend/.env.compose` instead of a
   provider-named file.
 - Use only Compose commands supported by both validated providers in the shared lifecycle surface.
@@ -58,6 +62,8 @@ would be likely to drift.
   standard Compose file directly.
 - Provider portability does not guarantee that Windows exposes a Podman WSL port to the LAN; that
   network boundary is diagnosed separately in `TROUBLESHOOTING.md`.
+- Host-process Vite and Uvicorn use the same network settings without requiring nested npm argument
+  forwarding.
 
 ## Revisit When
 

@@ -28,8 +28,11 @@ reasoning, and request changes. Examples include reviewing cache behavior and se
 challenging the backend and frontend folder structures, requesting feature-local components and
 hooks, selecting CSS Modules, preserving support for PostgreSQL outside Podman, choosing temporary
 inventory holds from a customer perspective, asking for focused machine-readable test hooks, and
-requesting Dockerfiles, Compose execution, and interactive API documentation. These interventions
-changed or refined the delivered repository; they were not post-hoc approval of a finished system.
+requesting Dockerfiles, Compose execution, and interactive API documentation. During final mobile
+review, the candidate also rejected installing a private certificate on evaluator phones and chose
+an explicitly temporary Quick Tunnel after reviewing its public-exposure trade-off. These
+interventions changed or refined the delivered repository; they were not post-hoc approval of a
+finished system.
 
 Codex performed substantial implementation and validation work, but it operated under the
 versioned `AGENTS.md` policy: inspect before changing, explain behavior-affecting choices, stop for
@@ -67,7 +70,9 @@ decisions that define the solution, including:
 - Argon2id password hashing;
 - temporary expiring inventory holds;
 - HMAC-signed persistent ticket credentials;
-- risk-focused tests and a bounded mutation-testing experiment.
+- risk-focused tests and a bounded mutation-testing experiment;
+- an opt-in public Quick Tunnel only for temporary phone-camera evaluation, not as production
+  deployment.
 
 The candidate also installed and started Python, `uv`, and Podman locally, supplied the untracked
 Ticketmaster credential, reviewed the explanations and trade-offs, and explicitly authorized each

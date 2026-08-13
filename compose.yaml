@@ -27,7 +27,7 @@ services:
       APP_ENV: development
       DATABASE_URL: postgresql+psycopg://elite:elite@postgres:5432/${POSTGRES_DB:-elite_dev}
       FRONTEND_ORIGIN: http://${PUBLIC_HOST:-localhost}:${FRONTEND_PORT:-5173}
-      SESSION_COOKIE_SECURE: "false"
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
     command:
       - /bin/sh
       - -c
@@ -36,7 +36,7 @@ services:
         python -m backend.database.seed &&
         exec uvicorn backend.main:app --host 0.0.0.0 --port 8000
     ports:
-      - "${BACKEND_PORT:-8000}:8000"
+      - "${APP_BIND_ADDRESS:-127.0.0.1}:${BACKEND_PORT:-8000}:8000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -58,9 +58,9 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: http://${PUBLIC_HOST:-localhost}:${BACKEND_PORT:-8000}/api
+        VITE_API_URL: /api
     ports:
-      - "${FRONTEND_PORT:-5173}:80"
+      - "${APP_BIND_ADDRESS:-127.0.0.1}:${FRONTEND_PORT:-5173}:80"
     depends_on:
       backend:
         condition: service_healthy
@@ -70,6 +70,14 @@ services:
       timeout: 3s
       start_period: 5s
       retries: 12
+
+  cloudflared:
+    image: docker.io/cloudflare/cloudflared:2026.7.3
+    profiles: ["tunnel"]
+    command: tunnel --no-autoupdate --url http://frontend:80
+    depends_on:
+      frontend:
+        condition: service_healthy
 
 volumes:
   postgres_data:
