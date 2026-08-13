@@ -42,8 +42,13 @@ class GateEventCollectionResponse(BaseModel):
 class GateValidationCommand(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
-    event_id: UUID
-    token: str = Field(min_length=1, max_length=128)
+    event_id: UUID = Field(description="Published event selected by the Gate operator.")
+    token: str = Field(
+        min_length=1,
+        max_length=128,
+        description="Versioned HMAC credential read from the QR code or entered manually.",
+        examples=["v1.0123456789abcdef0123456789abcdef.signature"],
+    )
 
 
 class GateValidationResponse(BaseModel):

@@ -10,16 +10,41 @@ from backend.database.models import CatalogProvider, CatalogSnapshot, Event, Eve
 class EventDetails(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
-    name: str = Field(min_length=1, max_length=255)
+    name: str = Field(min_length=1, max_length=255, examples=["Aurora Live 2030"])
     description: str | None = Field(default=None, max_length=5000)
-    venue_name: str = Field(min_length=1, max_length=255)
-    address: str = Field(min_length=1, max_length=500)
-    city: str = Field(min_length=1, max_length=120)
-    country_code: str = Field(min_length=2, max_length=2, pattern=r"^[A-Z]{2}$")
-    start_at: datetime
-    capacity: int = Field(gt=0, le=1_000_000)
-    price_minor: int = Field(ge=0, le=100_000_000)
-    currency: str = Field(min_length=3, max_length=3, pattern=r"^[A-Z]{3}$")
+    venue_name: str = Field(min_length=1, max_length=255, examples=["Aurora Hall"])
+    address: str = Field(min_length=1, max_length=500, examples=["100 Main Avenue"])
+    city: str = Field(min_length=1, max_length=120, examples=["Sao Paulo"])
+    country_code: str = Field(
+        min_length=2,
+        max_length=2,
+        pattern=r"^[A-Z]{2}$",
+        description="Uppercase ISO 3166-1 alpha-2 country code.",
+        examples=["BR"],
+    )
+    start_at: datetime = Field(
+        description="Timezone-aware future start instant.",
+        examples=["2030-08-20T20:00:00-03:00"],
+    )
+    capacity: int = Field(
+        gt=0,
+        le=1_000_000,
+        description="General-admission inventory capacity.",
+        examples=[100],
+    )
+    price_minor: int = Field(
+        ge=0,
+        le=100_000_000,
+        description="Ticket price in integer minor currency units; 15000 BRL means BRL 150.00.",
+        examples=[15000],
+    )
+    currency: str = Field(
+        min_length=3,
+        max_length=3,
+        pattern=r"^[A-Z]{3}$",
+        description="Uppercase ISO 4217 currency code.",
+        examples=["BRL"],
+    )
 
     @field_validator("start_at")
     @classmethod
@@ -32,7 +57,13 @@ class EventDetails(BaseModel):
 
 
 class EventCreate(EventDetails):
-    provider_event_id: str = Field(min_length=1, max_length=128)
+    provider_event_id: str = Field(
+        min_length=1,
+        max_length=128,
+        description=(
+            "Identifier selected from GET /api/catalog/events and refetched by the backend."
+        ),
+    )
 
 
 class EventUpdate(EventDetails):

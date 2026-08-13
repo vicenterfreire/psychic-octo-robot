@@ -26,7 +26,16 @@ Database = Annotated[Session, Depends(get_database_session)]
 ApplicationSettings = Annotated[Settings, Depends(get_application_settings)]
 
 
-@router.post("", response_model=ReservationResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=ReservationResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create temporary reservation",
+    description=(
+        "Customer-only inventory hold. The event row is locked while PostgreSQL-timed active "
+        "holds and approved quantities are recalculated, preventing overselling."
+    ),
+)
 def post_reservation(
     command: ReservationCreate,
     response: Response,
@@ -53,7 +62,15 @@ def post_reservation(
         ) from error
 
 
-@router.get("/{reservation_id}", response_model=ReservationResponse)
+@router.get(
+    "/{reservation_id}",
+    response_model=ReservationResponse,
+    summary="Get owned reservation",
+    description=(
+        "Restore a Customer-owned hold and persist its expired status when its database deadline "
+        "has passed."
+    ),
+)
 def get_reservation(
     reservation_id: UUID,
     response: Response,
@@ -67,7 +84,15 @@ def get_reservation(
         raise _not_found("Reservation was not found.") from error
 
 
-@router.post("/{reservation_id}/payment", response_model=ReservationResponse)
+@router.post(
+    "/{reservation_id}/payment",
+    response_model=ReservationResponse,
+    summary="Simulate reservation payment",
+    description=(
+        "Deterministically approve or decline a Customer-owned hold. Approval atomically finalizes "
+        "the reservation and issues one ticket per unit; repeated calls return the first result."
+    ),
+)
 def post_payment(
     reservation_id: UUID,
     command: PaymentCommand,

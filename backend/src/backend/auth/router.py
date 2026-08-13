@@ -16,7 +16,15 @@ Database = Annotated[DatabaseSession, Depends(get_database_session)]
 ApplicationSettings = Annotated[Settings, Depends(get_application_settings)]
 
 
-@router.post("/login", response_model=CurrentUserResponse)
+@router.post(
+    "/login",
+    response_model=CurrentUserResponse,
+    summary="Sign in",
+    description=(
+        "Validate a seeded account and create a fixed-lifetime opaque session. The raw credential "
+        "is returned only as an HTTP-only cookie and the response is non-cacheable."
+    ),
+)
 def login(
     credentials: LoginRequest,
     response: Response,
@@ -46,13 +54,26 @@ def login(
     return CurrentUserResponse.model_validate(user)
 
 
-@router.get("/me", response_model=CurrentUserResponse)
+@router.get(
+    "/me",
+    response_model=CurrentUserResponse,
+    summary="Get current session user",
+    description="Restore the user and role associated with the active opaque session cookie.",
+)
 def get_session_user(response: Response, current_user: CurrentUser) -> CurrentUserResponse:
     response.headers["Cache-Control"] = "no-store"
     return CurrentUserResponse.model_validate(current_user)
 
 
-@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+@router.post(
+    "/logout",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Sign out",
+    description=(
+        "Revoke the current server-side session when present and expire its browser cookie. The "
+        "operation is idempotent when no active cookie exists."
+    ),
+)
 def logout(
     request: Request,
     response: Response,

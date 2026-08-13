@@ -2,9 +2,9 @@
 
 ## Snapshot
 
-- Date: 2026-08-12.
+- Date: 2026-08-13.
 - Branch: local `main`, based on published commit `14d5d9c` and developed through small local commits.
-- Phase: all 21 planned mandatory, review, documentation, and local-execution increments are
+- Phase: all 22 planned mandatory, review, documentation, and local-execution increments are
   complete; the local application is ready for the candidate's final publication review.
 - Frontend: React, Vite, and TypeScript application initialized.
 - Backend: Python 3.14 and FastAPI application initialized.
@@ -17,7 +17,7 @@
 - Checkout: deterministic approval/decline with atomic, idempotent ticket-row issuance.
 - Tickets: versioned HMAC credentials, private QR collection, and minimized bearer sharing views.
 - Gate: explicit camera/manual input with atomic valid, invalid, already-used, or wrong-event decisions.
-- Automated tests: 29 frontend tests, 46 backend tests, and one Playwright cross-role browser flow.
+- Automated tests: 29 frontend tests, 48 backend tests, and one Playwright cross-role browser flow.
 - Frontend organization: feature-first, with local component/hook directories and explicit shared
   navigation and formatting ownership under ADR-009.
 - Styling: Vite CSS Modules isolate feature-owned rules and co-locate responsive behavior; global
@@ -26,6 +26,8 @@
   security, concurrency, time-authority, integration, and lifecycle contracts.
 - Local execution: direct host processes or a healthy three-service Compose stack; production
   deployment remains deliberately unselected.
+- API documentation: generated OpenAPI plus interactive Swagger UI with domain metadata, examples,
+  and the configured opaque-cookie security boundary.
 
 ## Implemented Foundation
 
@@ -50,6 +52,8 @@
 - The frontend restores sessions through TanStack Query and separates organizer, customer, and gate navigation.
 - The core and browser hooks create, migrate, seed, and drop only allowlisted isolated PostgreSQL databases.
 - The test-report hook emits ignored Vitest JSON, pytest JUnit XML, Playwright JSON, and one aggregate summary.
+- Swagger UI is served at `/docs`, its OpenAPI source at `/openapi.json`, and full-stack startup
+  prints the reachable documentation URL.
 - The Ticketmaster client keeps `apikey` server-side, enforces a timeout and bounded result size, validates upstream JSON, and returns a small provider-normalized HTTP contract.
 - The Organizer interface supports explicit search, result selection, empty/error recovery, and provider source links.
 - Event creation refetches the selected provider item on the backend, verifies its identifier, and persists the raw provider response as an immutable snapshot.
@@ -117,7 +121,7 @@
 - Two simultaneous validations of one unused ticket consistently produce exactly one `valid` and one `already_used` result.
 - A live Ticketmaster search returned 12 normalized results, and a live detail fetch confirmed identifier matching and credential absence from the snapshot body.
 - A live local HTTP query returned only the seeded published event with the expected availability and no management fields.
-- All 46 backend tests pass with 95% coverage of the current backend.
+- All 48 backend tests pass with 95% coverage of the current backend.
 - All 29 frontend tests pass, and frontend formatting, linting, type checking, and production build succeed.
 - The Chromium cross-role test passes through Organizer edit, Customer approval, issued-ticket retrieval, valid Gate entry, and duplicate rejection.
 - Both application images build from their committed lockfiles, and the three Compose services
@@ -161,14 +165,16 @@
 - The local Compose topology exposes HTTP ports, embeds the public API URL at frontend build time,
   runs one backend replica, and applies migrations during startup; it is not a production topology.
 - The backend test client still emits an upstream FastAPI/Starlette deprecation warning.
+- Swagger UI operates against the real configured API and can mutate local data; production access
+  control or disabling the route must be decided with the eventual deployment topology.
 - Production hosting, TLS, managed secrets, separate migration ownership, monitoring, backup, and
   rollback remain deferred.
 
 ## Delivery Status
 
-The original 15-increment mandatory plan and all five candidate review increments are complete.
-The final increment adds full-stack Compose execution and documents how the same `DATABASE_URL`
-supports an already-running PostgreSQL instance without Podman.
+The mandatory plan, candidate review increments, concise evaluator workflow, full-stack Compose
+execution, and interactive API documentation are complete. The same `DATABASE_URL` continues to
+support an already-running PostgreSQL instance without Podman.
 The candidate retains responsibility for final review, public GitHub publication, and
 challenge-form submission. Production deployment remains an optional, deliberately deferred
 improvement, so no hosted URL is provided.

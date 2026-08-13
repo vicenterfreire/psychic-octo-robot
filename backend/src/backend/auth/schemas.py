@@ -6,8 +6,18 @@ from backend.database.models import UserRole
 
 
 class LoginRequest(BaseModel):
-    email: str = Field(min_length=3, max_length=320)
-    password: str = Field(min_length=1, max_length=1024)
+    email: str = Field(
+        min_length=3,
+        max_length=320,
+        description="Seeded account email. It is normalized to lowercase.",
+        examples=["organizer@example.com"],
+    )
+    password: str = Field(
+        min_length=1,
+        max_length=1024,
+        description="Plaintext password accepted only by the login boundary.",
+        examples=["Organizer123!"],
+    )
 
     @field_validator("email")
     @classmethod

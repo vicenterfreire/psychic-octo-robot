@@ -11,6 +11,11 @@ class HealthResponse(BaseModel):
     service: str = "backend"
 
 
-@router.get("/health", response_model=HealthResponse)
+@router.get(
+    "/health",
+    response_model=HealthResponse,
+    summary="Check API health",
+    description="Public liveness endpoint used by local processes and container health checks.",
+)
 def get_health() -> HealthResponse:
     return HealthResponse()

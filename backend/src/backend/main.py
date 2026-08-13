@@ -1,6 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from backend.api.openapi import (
+    API_DESCRIPTION,
+    API_VERSION,
+    OPENAPI_TAGS,
+    SWAGGER_UI_PARAMETERS,
+    configure_openapi_session_cookie,
+)
 from backend.api.router import api_router
 from backend.core.settings import Settings, get_settings
 
@@ -11,7 +18,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     resolved_settings = settings or get_settings()
     application = FastAPI(
         title=resolved_settings.app_name,
-        version="0.1.0",
+        summary="Event publication, ticket reservation, and gate validation API",
+        description=API_DESCRIPTION,
+        version=API_VERSION,
+        openapi_tags=OPENAPI_TAGS,
+        swagger_ui_parameters=SWAGGER_UI_PARAMETERS,
     )
     application.state.settings = resolved_settings
     application.add_middleware(
@@ -22,6 +33,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_headers=["*"],
     )
     application.include_router(api_router, prefix=resolved_settings.api_prefix)
+    configure_openapi_session_cookie(application, resolved_settings.session_cookie_name)
     return application
 
 

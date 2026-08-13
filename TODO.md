@@ -6,7 +6,7 @@ The mandatory application, risk-focused tests, evaluator documentation, all cand
 refactors, and the full-stack local Compose workflow are complete. The repository is ready for the
 candidate's final publication review.
 
-Commit progress: 21 of 21 planned increments complete; 0 remain.
+Commit progress: 22 of 22 planned increments complete; 0 remain.
 
 The local `main` branch is based on published commit `14d5d9c`. Local project commits remain unpushed until the candidate chooses to publish them.
 
@@ -866,6 +866,45 @@ reference sections first.
 
 Candidate final review, public GitHub publication, and challenge-form submission. These remote
 actions remain intentionally outside the AI collaborator's authority.
+
+---
+
+## Done - feat(api): expose interactive Swagger documentation
+
+### Goal
+
+Turn FastAPI's existing generic documentation endpoint into a useful, testable evaluator surface.
+
+### Implemented
+
+- Add product metadata, ordered domain tags, operation summaries, descriptions, and request examples.
+- Represent the configured opaque session cookie as OpenAPI security on protected operations.
+- Explain how to authenticate by executing the real login operation without introducing JWT.
+- Print the reachable Swagger URL from the full-stack Podman hook.
+- Protect the generated document and Swagger route with focused tests.
+- Document usage, security boundaries, limitations, and the no-extra-dependency decision.
+
+### Validation
+
+- Confirmed `/docs` renders Swagger UI and references the generated `/openapi.json` document.
+- Verified all operations have summaries and descriptions, protected operations carry the
+  configured opaque-cookie scheme, and public operations remain unmarked.
+- Passed Ruff formatting/linting and strict mypy for all backend source and tests.
+- Passed all 29 frontend and 48 backend tests against disposable PostgreSQL with 95% backend
+  coverage.
+- Passed the frontend production build and backend source/wheel builds.
+- Parsed the updated PowerShell hook and checked the repository diff for whitespace errors.
+
+### Expected Result
+
+An evaluator can open `/docs`, understand the API by domain, sign in with a seeded role, and safely
+exercise the corresponding operations against the local environment.
+
+### Next
+
+Candidate README reorganization, final manual walkthrough, public GitHub publication, and
+challenge-form submission. The candidate's current uncommitted README notes remain outside this
+increment, and all remote actions remain under candidate control.
 
 ---
 

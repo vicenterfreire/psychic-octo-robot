@@ -270,6 +270,7 @@ switch ($Command) {
         Write-DatabaseEnvironment
         Write-Output "Frontend: http://$($env:PUBLIC_HOST):$frontendPort"
         Write-Output "Backend: http://$($env:PUBLIC_HOST):$backendPort/api"
+        Write-Output "Swagger: http://$($env:PUBLIC_HOST):$backendPort/docs"
     }
     "app-down" {
         Invoke-Compose -Arguments @("down", "--remove-orphans")

@@ -14,12 +14,20 @@ class PaymentOutcome(StrEnum):
 
 
 class ReservationCreate(BaseModel):
-    event_id: UUID
-    quantity: int = Field(gt=0, le=1_000_000)
+    event_id: UUID = Field(description="Published event receiving the temporary inventory hold.")
+    quantity: int = Field(
+        gt=0,
+        le=1_000_000,
+        description="General-admission ticket quantity to hold.",
+        examples=[2],
+    )
 
 
 class PaymentCommand(BaseModel):
-    outcome: PaymentOutcome
+    outcome: PaymentOutcome = Field(
+        description="Deterministic simulation result; no financial data is collected.",
+        examples=[PaymentOutcome.APPROVED],
+    )
 
 
 class ReservationResponse(BaseModel):

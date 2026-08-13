@@ -40,7 +40,15 @@ Database = Annotated[Session, Depends(get_database_session)]
 CatalogClient = Annotated[TicketmasterClient, Depends(get_ticketmaster_client)]
 
 
-@router.get("", response_model=PublishedEventCollectionResponse)
+@router.get(
+    "",
+    response_model=PublishedEventCollectionResponse,
+    summary="List published events",
+    description=(
+        "Public upcoming-event discovery with optional local text search. Availability is a "
+        "PostgreSQL-timed snapshot; reservation creation remains authoritative."
+    ),
+)
 def get_published_events(
     database: Database,
     q: Annotated[str | None, Query(max_length=100)] = None,
@@ -49,7 +57,12 @@ def get_published_events(
     return PublishedEventCollectionResponse(items=list_published_events(database, search_query))
 
 
-@router.get("/organizer", response_model=OrganizerEventCollectionResponse)
+@router.get(
+    "/organizer",
+    response_model=OrganizerEventCollectionResponse,
+    summary="List owned events",
+    description="Return only events owned by the authenticated Organizer.",
+)
 def get_organizer_events(
     organizer: Organizer,
     database: Database,
@@ -57,7 +70,12 @@ def get_organizer_events(
     return OrganizerEventCollectionResponse(items=list_organizer_events(database, organizer.id))
 
 
-@router.get("/{event_id}", response_model=PublishedEventResponse)
+@router.get(
+    "/{event_id}",
+    response_model=PublishedEventResponse,
+    summary="Get published event",
+    description="Return one upcoming published event and its current availability snapshot.",
+)
 def get_published_event_details(
     event_id: UUID,
     database: Database,
@@ -72,6 +90,11 @@ def get_published_event_details(
     "",
     response_model=OrganizerEventResponse,
     status_code=status.HTTP_201_CREATED,
+    summary="Create event draft",
+    description=(
+        "Organizer-only creation from a Ticketmaster identifier. The backend refetches the "
+        "provider item, verifies its identifier, and persists an immutable source snapshot."
+    ),
 )
 def post_event(
     command: EventCreate,
@@ -86,7 +109,15 @@ def post_event(
     return create_event(database, organizer.id, command, provider_snapshot)
 
 
-@router.put("/{event_id}", response_model=OrganizerEventResponse)
+@router.put(
+    "/{event_id}",
+    response_model=OrganizerEventResponse,
+    summary="Replace owned event details",
+    description=(
+        "Replace editable fields on an Organizer-owned event. Capacity cannot fall below "
+        "approved sales plus active temporary holds."
+    ),
+)
 def put_event(
     event_id: UUID,
     command: EventUpdate,
@@ -107,7 +138,12 @@ def put_event(
         ) from error
 
 
-@router.post("/{event_id}/publish", response_model=OrganizerEventResponse)
+@router.post(
+    "/{event_id}/publish",
+    response_model=OrganizerEventResponse,
+    summary="Publish owned event",
+    description=("Idempotently make an Organizer-owned future event visible in public discovery."),
+)
 def post_event_publication(
     event_id: UUID,
     organizer: Organizer,

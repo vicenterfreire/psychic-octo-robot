@@ -72,7 +72,7 @@ The runnable project, persistence, authentication, Ticketmaster catalog, organiz
 - Multi-stage frontend and backend images plus the root Compose file start the complete healthy
   stack without changing the direct host-development workflow.
 
-All 21 planned increments are complete. Public GitHub publication and challenge submission remain
+All 22 planned increments are complete. Public GitHub publication and challenge submission remain
 under the candidate's control.
 
 ## Challenge Coverage
@@ -317,6 +317,19 @@ build contexts.
 An HTTP WSL-address fallback is not a browser secure context, so camera permission may remain
 unavailable there. Use the documented manual Gate input for Compose evaluation, or run the
 frontend directly on `localhost` for the device-level camera check.
+
+## Interactive API Documentation
+
+FastAPI serves the interactive Swagger UI at `http://localhost:8000/docs` and its OpenAPI document
+at `http://localhost:8000/openapi.json`. The full-stack startup hook prints the reachable Swagger
+URL, including the alternative Podman WSL address when localhost forwarding is unavailable.
+
+The document groups operations by domain, describes business and authorization boundaries, marks
+cookie-protected operations, and includes useful request examples. To exercise a protected route,
+execute `POST /api/auth/login` with a seeded account in Swagger UI first. The browser stores the
+HTTP-only opaque session cookie and sends it automatically on later requests for that role; there
+is no JWT or plaintext session token to copy into the **Authorize** dialog. Execute logout before
+switching roles. Interactive requests use the real configured database and can change local data.
 
 ## Run Directly on the Host
 

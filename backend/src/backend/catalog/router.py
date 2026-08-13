@@ -18,9 +18,25 @@ Organizer = Annotated[User, Depends(require_roles(UserRole.ORGANIZER))]
 CatalogClient = Annotated[TicketmasterClient, Depends(get_ticketmaster_client)]
 
 
-@router.get("/events", response_model=CatalogSearchResponse)
+@router.get(
+    "/events",
+    response_model=CatalogSearchResponse,
+    summary="Search Ticketmaster events",
+    description=(
+        "Organizer-only explicit catalog search. The backend adds the provider credential and "
+        "returns at most 12 normalized results without exposing upstream payloads or secrets."
+    ),
+)
 def search_catalog_events(
-    q: Annotated[str, Query(min_length=2, max_length=100)],
+    q: Annotated[
+        str,
+        Query(
+            min_length=2,
+            max_length=100,
+            description="Explicit Ticketmaster keyword; whitespace-only content is rejected.",
+            examples=["music"],
+        ),
+    ],
     _organizer: Organizer,
     client: CatalogClient,
 ) -> CatalogSearchResponse:

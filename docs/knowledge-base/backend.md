@@ -7,6 +7,7 @@ The backend is a FastAPI modular monolith. It owns API behavior, authentication,
 ## Current Structure
 
 - `src/backend/main.py` creates the FastAPI application and installs cross-origin policy.
+- `src/backend/api/openapi.py` owns Swagger/OpenAPI metadata and cookie-scheme alignment.
 - `src/backend/api/router.py` is the composition point for HTTP feature routers.
 - `src/backend/api/routes/health.py` provides the initial health contract.
 - `src/backend/auth/` owns password verification, opaque-session lifecycle, authentication routes, and reusable authorization checks.
@@ -43,6 +44,26 @@ All business endpoints will be mounted below `/api`. The initial `GET /api/healt
 ```
 
 Credentialed CORS uses one explicit `FRONTEND_ORIGIN`. A wildcard origin cannot be combined safely with browser credentials and would not match the accepted session-cookie architecture.
+
+## Interactive API Documentation Boundary
+
+FastAPI generates the OpenAPI document at `/openapi.json` and serves Swagger UI at `/docs`; no
+additional documentation dependency is installed. The application factory supplies the product
+description, ordered domain tags, operation summaries, request-field semantics, examples, and
+interactive-display options from `api/openapi.py`.
+
+The `OpaqueSession` OpenAPI security scheme is declared as an API key carried by the configured
+cookie name. The scheme is attached through the same nested FastAPI dependency that resolves the
+current user, so protected operations receive a lock marker without maintaining a separate list of
+secured routes. Public discovery, health, login, and bearer-sharing operations remain unmarked.
+Changing `SESSION_COOKIE_NAME` updates the generated scheme for each application instance.
+
+The scheme describes the real session boundary but does not make the HTTP-only credential
+available to JavaScript. In Swagger UI, an evaluator executes `POST /api/auth/login`; the browser
+stores the `Set-Cookie` response and automatically reuses the cookie on same-origin requests. The
+**Authorize** dialog is intentionally not the login path, and no JWT is introduced. Interactive
+operations use real configured services and can mutate local data, so public production exposure
+would require an environment-specific access decision.
 
 ## Dependency Workflow
 

@@ -25,7 +25,15 @@ ApplicationSettings = Annotated[Settings, Depends(get_application_settings)]
 Signer = Annotated[TicketSigner, Depends(get_ticket_signer)]
 
 
-@router.get("", response_model=CustomerTicketCollectionResponse)
+@router.get(
+    "",
+    response_model=CustomerTicketCollectionResponse,
+    summary="List owned tickets",
+    description=(
+        "Return HMAC-signed credentials only for the authenticated Customer's approved "
+        "reservations. The private response is non-cacheable."
+    ),
+)
 def get_customer_tickets(
     response: Response,
     customer: Customer,
@@ -39,7 +47,15 @@ def get_customer_tickets(
     )
 
 
-@router.get("/shared/{token}", response_model=SharedTicketResponse)
+@router.get(
+    "/shared/{token}",
+    response_model=SharedTicketResponse,
+    summary="Present shared ticket",
+    description=(
+        "Public bearer presentation with minimized event and ticket state. The signature is "
+        "verified before PostgreSQL state is trusted, and no Customer identity is returned."
+    ),
+)
 def get_ticket_by_share_token(
     token: Annotated[str, Path(min_length=1, max_length=128)],
     response: Response,
