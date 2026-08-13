@@ -11,7 +11,7 @@ The application must persist users, sessions, events, reservations, and tickets.
 ## Decision
 
 - Use PostgreSQL as the relational database.
-- Run local PostgreSQL through a Compose-compatible `compose.yaml` using Podman.
+- Run local PostgreSQL through a Compose-compatible `compose.yaml` using Docker or Podman.
 - Use synchronous SQLAlchemy 2 for mapping and queries.
 - Use Psycopg 3 as the PostgreSQL driver.
 - Use Alembic for versioned schema migrations.
@@ -40,8 +40,8 @@ It can increase I/O concurrency but adds `AsyncSession`, async fixture, and tran
 ## Consequences
 
 - Concurrency behavior can be tested against the same database engine used by the application.
-- PostgreSQL is required for persistence and integration tests. Podman is the validated
-  reproducible local provider, but an existing reachable PostgreSQL instance works through the
+- PostgreSQL is required for persistence and integration tests. Docker and Podman are supported
+  reproducible local providers, but an existing reachable PostgreSQL instance works through the
   same `DATABASE_URL` without code changes.
 - The candidate must understand sessions, transactions, locks, migrations, and ORM-generated queries.
 - Synchronous database operations must not be called directly from `async def` utility paths that bypass FastAPI's thread-pool handling.

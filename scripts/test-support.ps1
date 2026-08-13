@@ -74,8 +74,8 @@ function Start-ProjectPostgres {
         [string] $RepositoryRoot
     )
 
-    $podmanHook = Join-Path $RepositoryRoot "scripts\podman-compose.ps1"
-    & powershell -NoProfile -ExecutionPolicy Bypass -File $podmanHook up
+    $composeHook = Join-Path $RepositoryRoot "scripts\compose.ps1"
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $composeHook up
     if ($LASTEXITCODE -ne 0) {
         throw "Could not start the project PostgreSQL service."
     }
@@ -94,13 +94,13 @@ function Get-IsolatedDatabaseUrl {
         throw "Refusing to create an unrecognized test database: $DatabaseName."
     }
 
-    $databaseEnvFile = Join-Path $RepositoryRoot "backend\.env.podman"
+    $databaseEnvFile = Join-Path $RepositoryRoot "backend\.env.compose"
     $databaseLine = Get-Content -LiteralPath $databaseEnvFile |
         Where-Object { $_.StartsWith("DATABASE_URL=") } |
         Select-Object -First 1
 
     if (-not $databaseLine) {
-        throw "The Podman hook did not write a DATABASE_URL."
+        throw "The Compose hook did not write a DATABASE_URL."
     }
 
     $developmentDatabaseUrl = $databaseLine.Substring("DATABASE_URL=".Length)

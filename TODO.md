@@ -2,11 +2,11 @@
 
 ## Current Status
 
-The mandatory application, risk-focused tests, evaluator documentation, all candidate review
-refactors, and the full-stack local Compose workflow are complete. The repository is ready for the
-candidate's final publication review.
+The mandatory application, evaluator documentation, and candidate-requested local portability,
+mobile layout, camera diagnostics, and troubleshooting hardening are complete. The repository is
+ready for the candidate's final publication review.
 
-Commit progress: 23 of 23 planned increments complete; 0 remain.
+Commit progress: 24 of 24 planned increments complete; 0 remain.
 
 The local `main` branch is based on published commit `14d5d9c`. Local project commits remain unpushed until the candidate chooses to publish them.
 
@@ -15,7 +15,7 @@ The local `main` branch is based on published commit `14d5d9c`. Local project co
 - Frontend: React, Vite, and TypeScript.
 - Backend: Python 3.14 and FastAPI.
 - Database: PostgreSQL.
-- Local database runtime: Podman with a Compose-compatible `compose.yaml` workflow.
+- Local database runtime: Docker or Podman with a Compose-compatible `compose.yaml` workflow.
 - External catalog: Ticketmaster Discovery API.
 - Inventory model: quantity-based general admission; no seat map in the mandatory scope.
 - Authentication: persistent opaque sessions stored in PostgreSQL and referenced by an HTTP-only cookie.
@@ -949,6 +949,37 @@ the solution.
 
 Candidate decision about the optional one-point production deployment, followed by public GitHub
 publication and challenge-form submission. Remote actions remain under candidate control.
+
+---
+
+## Done - fix(local): harden portable mobile evaluation
+
+### Goal
+
+Make the advertised local workflow reliable for Docker and Podman evaluators, prevent horizontal
+mobile overflow, and distinguish QR-decoder failures from browser camera security restrictions.
+
+### Implemented
+
+- Replace the Podman-only npm wrapper with an auto-detected Docker/Podman Compose wrapper.
+- Preserve the validated pinned provider only on the Podman path and remove the `uv` requirement
+  from Docker execution.
+- Correct provider-incompatible status behavior and use a provider-neutral generated database URL.
+- Harden global and feature CSS at narrow viewports without hiding overflow.
+- Run the critical cross-role browser flow in a mobile viewport and assert that pages do not exceed
+  its width.
+- Detect insecure camera contexts before loading ZXing and keep manual validation available.
+- Move operational recovery guidance from README to root `TROUBLESHOOTING.md`, including the actual
+  Windows/Podman, nested npm, CORS, LAN, and camera findings.
+- Record Compose-provider portability in ADR-011.
+
+### Validation
+
+- Formatting, linting, strict type checking, and frontend/backend builds pass.
+- All 30 frontend and 48 backend tests pass.
+- The host-process Playwright flow passes at a phone-sized viewport without horizontal overflow.
+- The same database lifecycle succeeds through the detected Podman provider; Docker follows the
+  same provider-neutral commands.
 
 ---
 

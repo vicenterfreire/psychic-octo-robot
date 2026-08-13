@@ -43,7 +43,8 @@ All business endpoints will be mounted below `/api`. The initial `GET /api/healt
 }
 ```
 
-Credentialed CORS uses one explicit `FRONTEND_ORIGIN`. A wildcard origin cannot be combined safely with browser credentials and would not match the accepted session-cookie architecture.
+Credentialed CORS uses one explicit `FRONTEND_ORIGIN`. A wildcard origin cannot be combined safely
+with browser credentials and would not match the accepted session-cookie architecture.
 
 ## Interactive API Documentation Boundary
 
@@ -160,7 +161,8 @@ Enums are stored as strings with explicit named `CHECK` constraints. This keeps 
 
 Money uses integer minor units and timestamps include timezone information. The application supplies UUID identifiers; PostgreSQL remains authoritative for creation timestamps and later reservation-expiration decisions.
 
-The local Podman hook writes an ignored `backend/.env.podman` only when it resolves a usable database address. A user-defined process `DATABASE_URL` or `backend/.env` takes precedence.
+The local Compose hook writes an ignored `backend/.env.compose` only when it resolves a usable
+database address. A user-defined process `DATABASE_URL` or `backend/.env` takes precedence.
 
 The backend container installs exactly the production dependency graph from `uv.lock`, excludes
 local environment files, tests, and developer caches, and runs as a non-root user. In the approved

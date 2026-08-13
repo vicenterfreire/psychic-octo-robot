@@ -80,6 +80,10 @@ function renderGatePage(outcome: GateValidationOutcome) {
 }
 
 beforeEach(() => {
+  Object.defineProperty(window, 'isSecureContext', {
+    configurable: true,
+    value: true,
+  })
   Object.defineProperty(window.navigator, 'mediaDevices', {
     configurable: true,
     value: { getUserMedia: vi.fn() },
@@ -210,11 +214,28 @@ describe('camera gate validation', () => {
     expect(
       await screen.findByRole('option', { name: 'Aurora Live 2030 — Gather Hall' }),
     ).toBeVisible()
-    fireEvent.click(screen.getByRole('button', { name: 'Start camera' }))
-
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'This browser cannot access a camera.',
     )
+    expect(screen.getByRole('button', { name: 'Start camera' })).toBeDisabled()
+    expect(zxingMocks.decodeFromConstraints).not.toHaveBeenCalled()
+    expect(screen.getByLabelText('Ticket code')).toBeEnabled()
+  })
+
+  it('explains that a LAN HTTP origin cannot request camera permission', async () => {
+    Object.defineProperty(window, 'isSecureContext', {
+      configurable: true,
+      value: false,
+    })
+    renderGatePage('valid')
+
+    expect(
+      await screen.findByRole('option', { name: 'Aurora Live 2030 — Gather Hall' }),
+    ).toBeVisible()
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Camera access requires HTTPS when this page is opened from another device.',
+    )
+    expect(screen.getByRole('button', { name: 'Start camera' })).toBeDisabled()
     expect(zxingMocks.decodeFromConstraints).not.toHaveBeenCalled()
     expect(screen.getByLabelText('Ticket code')).toBeEnabled()
   })

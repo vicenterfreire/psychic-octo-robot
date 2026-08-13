@@ -60,6 +60,8 @@ deployment decisions unrelated to completing the local challenge flow.
   topology. A production deployment should use a separate migration job.
 - HTTP local execution requires `SESSION_COOKIE_SECURE=false`; production must use HTTPS, secure
   cookies, managed secrets, and topology-specific CSRF review.
+- The project lifecycle wrapper supports Docker and Podman as recorded in ADR-011; neither engine
+  is an application runtime dependency.
 - A Podman WSL address fallback is reachable for evaluation but is not a browser secure context;
   camera testing should use direct `localhost` development or HTTPS while manual Gate entry remains
   available.

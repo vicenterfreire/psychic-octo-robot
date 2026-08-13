@@ -20,16 +20,36 @@
   --violet: #8c7cff;
 }
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
+}
+
+html,
+body {
+  max-width: 100%;
 }
 
 body {
   margin: 0;
-  min-width: 320px;
+  min-width: 0;
   min-height: 100vh;
   background:
     radial-gradient(circle at 85% 10%, rgb(140 124 255 / 18%), transparent 30rem), #101216;
+  overflow-wrap: anywhere;
+}
+
+#root {
+  min-width: 0;
+  max-width: 100%;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
 }
 
 a {
@@ -38,7 +58,10 @@ a {
 
 button,
 input,
+select,
 textarea {
+  min-width: 0;
+  max-width: 100%;
   font: inherit;
 }
 
@@ -53,15 +76,18 @@ button:disabled {
 
 .page-shell {
   display: grid;
+  min-width: 0;
   min-height: 100vh;
   grid-template-rows: auto 1fr auto;
-  width: min(1180px, calc(100% - 40px));
+  width: min(1180px, calc(100% - clamp(24px, 5vw, 40px)));
   margin: 0 auto;
 }
 
 .site-header,
 .site-footer {
   display: flex;
+  min-width: 0;
+  gap: 16px;
   align-items: center;
   justify-content: space-between;
   padding: 28px 0;
@@ -184,8 +210,11 @@ h1 {
 
 .workspace-account {
   display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
   gap: 18px;
   align-items: center;
+  justify-content: flex-end;
 }
 
 .header-action {
@@ -206,7 +235,22 @@ h1 {
 }
 
 @media (max-width: 700px) {
+  .site-header,
+  .site-footer {
+    padding: 20px 0;
+  }
+
+  .workspace-account {
+    gap: 10px 14px;
+  }
+
   .workspace-account .account-chip {
     display: none;
+  }
+
+  .header-link,
+  .header-action {
+    font-size: 0.72rem;
+    white-space: nowrap;
   }
 }

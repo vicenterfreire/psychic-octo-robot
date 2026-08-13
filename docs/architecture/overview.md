@@ -28,8 +28,8 @@ flowchart LR
 - `backend/` contains the FastAPI application, `pyproject.toml`, `uv.lock`, and generated `requirements.txt`.
 - `docs/` is persistent project knowledge and architecture history.
 - `compose.yaml` defines the local PostgreSQL, FastAPI, and built React services;
-  `scripts/podman-compose.ps1` provides separate database-only and full-stack Windows Podman
-  lifecycle commands.
+  `scripts/compose.ps1` provides provider-neutral database-only and full-stack Windows lifecycle
+  commands for Docker or Podman.
 - `TODO.md` defines the ordered local commit plan.
 
 No Git worktree is needed because there is no experiment or parallel implementation to isolate.

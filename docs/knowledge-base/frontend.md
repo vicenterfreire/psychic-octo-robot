@@ -49,7 +49,9 @@ TanStack Query owns server state and mutation invalidation. React component stat
 
 ## API Communication
 
-The client reads `VITE_API_URL`, defaults to `http://localhost:8000/api`, requests JSON, and always includes browser credentials. This prepares the transport for the accepted HTTP-only opaque session without exposing a session token to React.
+The client reads `VITE_API_URL`, defaults to `http://localhost:8000/api`, requests JSON, and always
+includes browser credentials. This prepares the transport for the accepted HTTP-only opaque
+session without exposing a session token to React.
 
 Failed non-JSON or JSON responses are normalized at this boundary so feature components do not duplicate transport parsing.
 
@@ -105,9 +107,17 @@ The copy action uses the generated absolute sharing URL and handles unavailable 
 
 The protected `/gate` route loads the Gate-specific published event collection rather than public upcoming discovery. Its native event selector and adjacent date/location context make the current validation scope explicit. The code textarea supports paste or manual typing, trims surrounding whitespace at submission, disables changes while pending, and clears only after an authoritative result is received.
 
-`GateCameraScanner` is a second input adapter for that same mutation. It does not request permission on render: an explicit button dynamically imports `@zxing/browser`, prefers an environment-facing camera, and begins QR-only decoding. The first result locks the scanner and stops its media controls before the token reaches the parent. Event changes remount the component, while cancellation, pending validation, and unmount cleanup stop active controls.
+`GateCameraScanner` is a second input adapter for that same mutation. It first checks whether the
+page is a secure context and whether `getUserMedia` is exposed. When those prerequisites exist, an
+explicit button dynamically imports `@zxing/browser`, prefers an environment-facing camera, and
+begins QR-only decoding. The first result locks the scanner and stops its media controls before the
+token reaches the parent. Event changes remount the component, while cancellation, pending
+validation, and unmount cleanup stop active controls.
 
-Unsupported APIs and camera startup exceptions are mapped to denied, missing, busy, or general recovery guidance. Manual input stays in the same form throughout. A scanned token is also copied into that field before submission; if the server response is lost, the operator can retry the identical credential instead of rescanning.
+Insecure origins, unsupported APIs, and camera startup exceptions are mapped to HTTPS, denied,
+missing, busy, or general recovery guidance. Manual input stays in the same form throughout. A
+scanned token is also copied into that field before submission; if the server response is lost, the
+operator can retry the identical credential instead of rescanning.
 
 The backend outcome controls one of four large, color-distinct panels: entry approved, invalid, already used, or wrong event. Color is reinforced by headings and explanatory text. A transport failure never claims acceptance or rejection because the server may have committed even when its response was lost; the operator is told not to admit yet and to retry the same credential.
 
@@ -125,7 +135,15 @@ Comments describe authority, lifecycle, fallbacks, and limitations rather than r
 types. Documentation is updated with the behavior it protects; no comment-coverage metric or
 generated API-documentation dependency is introduced.
 
-Prettier owns formatting, Oxlint owns static linting, TypeScript runs with strict project settings, and Vitest with Testing Library protects meaningful interaction and integration boundaries. Tests cover health transport, login, session restoration, cross-role redirection, catalog search/selection, stable errors, provider-secret absence, event management, published discovery, quantity submission, server-clock correction, payment approval, issued quantity, expired-hold recovery, private QR presentation, unauthenticated bearer sharing, camera opt-in and fallback states, duplicate scan suppression, and all four Gate outcomes through manual and scanned input.
+Prettier owns formatting, Oxlint owns static linting, TypeScript runs with strict project settings,
+and Vitest with Testing Library protects meaningful interaction and integration boundaries. Tests
+cover health transport, login, session restoration, cross-role redirection, catalog
+search/selection, stable errors, provider-secret absence, event management, published discovery,
+quantity submission, server-clock correction, payment approval, issued quantity, expired-hold
+recovery, private QR presentation, unauthenticated bearer sharing, camera opt-in and secure-context
+fallback states, duplicate scan suppression, and all four Gate outcomes through manual and scanned
+input. The cross-role Playwright scenario runs at a phone-sized viewport and checks that the
+Organizer, Customer, tickets, and Gate surfaces do not exceed the viewport width.
 
 Playwright 1.62.1 owns one intentionally broad Chromium flow. It starts FastAPI and Vite on unused loopback ports, then proves that an Organizer edit becomes visible to a Customer, an approved hold issues a signed ticket, and the Gate accepts that token exactly once. The hook uses a separate disposable PostgreSQL database and emits JSON plus failure traces/screenshots under ignored `.artifacts/`. Vitest explicitly excludes `e2e/`, so the two runners cannot collect each other's test files.
 

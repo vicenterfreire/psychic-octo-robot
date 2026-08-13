@@ -9,6 +9,18 @@ interface GateCameraScannerProps {
   onScan: (token: string) => void
 }
 
+function cameraPrerequisiteError(): string | null {
+  if (window.isSecureContext === false) {
+    return 'Camera access requires HTTPS when this page is opened from another device. Use the published HTTPS application or manual entry below.'
+  }
+
+  if (!navigator.mediaDevices?.getUserMedia) {
+    return 'This browser cannot access a camera. Use a modern browser over HTTPS or enter the code manually.'
+  }
+
+  return null
+}
+
 function cameraErrorMessage(error: unknown): string {
   const errorName =
     typeof error === 'object' && error !== null && 'name' in error
@@ -43,6 +55,7 @@ export function GateCameraScanner({ disabled, onScan }: GateCameraScannerProps) 
   const capturedRef = useRef(false)
   const [cameraState, setCameraState] = useState<GateCameraState>('idle')
   const [cameraError, setCameraError] = useState<string | null>(null)
+  const prerequisiteError = cameraPrerequisiteError()
 
   function stopActiveScanner() {
     requestIdRef.current += 1
@@ -58,11 +71,9 @@ export function GateCameraScanner({ disabled, onScan }: GateCameraScannerProps) 
   }
 
   async function startCamera() {
-    if (!navigator.mediaDevices?.getUserMedia || !videoRef.current) {
+    if (prerequisiteError || !videoRef.current) {
       setCameraState('error')
-      setCameraError(
-        'This browser cannot access a camera. Use a modern browser over HTTPS or enter the code manually.',
-      )
+      setCameraError(prerequisiteError ?? 'The camera preview could not be initialized.')
       return
     }
 
@@ -138,15 +149,23 @@ export function GateCameraScanner({ disabled, onScan }: GateCameraScannerProps) 
   )
 
   const cameraIsActive = cameraState === 'starting' || cameraState === 'scanning'
+  const cameraIsUnavailable = prerequisiteError !== null
   const cameraBadge =
-    cameraState === 'starting' ? 'Starting' : cameraState === 'scanning' ? 'Live' : 'Off'
+    cameraState === 'starting'
+      ? 'Starting'
+      : cameraState === 'scanning'
+        ? 'Live'
+        : cameraIsUnavailable
+          ? 'Unavailable'
+          : 'Off'
   const statusMessage = {
-    idle: 'Camera is off. Start it only when you are ready to scan.',
+    idle: prerequisiteError ?? 'Camera is off. Start it only when you are ready to scan.',
     starting: 'Requesting camera access...',
     scanning: 'Camera active. Hold the QR code inside the frame.',
     captured: 'QR captured. Waiting for the authoritative server result.',
     error: cameraError ?? 'Camera unavailable. Use manual entry below.',
   }[cameraState]
+  const cameraHasError = cameraState === 'error' || (cameraState === 'idle' && cameraIsUnavailable)
 
   return (
     <section className={styles['gate-camera']} aria-labelledby="gate-camera-title">
@@ -171,10 +190,8 @@ export function GateCameraScanner({ disabled, onScan }: GateCameraScannerProps) 
       </div>
 
       <p
-        className={`${styles['gate-camera__status']} ${
-          cameraState === 'error' ? styles['is-error'] : ''
-        }`}
-        role={cameraState === 'error' ? 'alert' : 'status'}
+        className={`${styles['gate-camera__status']} ${cameraHasError ? styles['is-error'] : ''}`}
+        role={cameraHasError ? 'alert' : 'status'}
         aria-live="polite"
       >
         {statusMessage}
@@ -188,7 +205,7 @@ export function GateCameraScanner({ disabled, onScan }: GateCameraScannerProps) 
         <button
           className="secondary-button"
           type="button"
-          disabled={disabled}
+          disabled={disabled || cameraIsUnavailable}
           onClick={startCamera}
         >
           {cameraState === 'captured' ? 'Scan another ticket' : 'Start camera'}

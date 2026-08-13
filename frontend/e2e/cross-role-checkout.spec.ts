@@ -16,10 +16,20 @@ async function signOut(page: Page) {
   await expect(page).toHaveURL(/\/login$/)
 }
 
+async function expectNoHorizontalOverflow(page: Page) {
+  const layoutWidth = await page.evaluate<{ viewport: number; content: number }>(
+    '({ viewport: window.innerWidth, content: document.documentElement.scrollWidth })',
+  )
+  expect(layoutWidth.content).toBeLessThanOrEqual(layoutWidth.viewport)
+}
+
 test('organizer changes reach customer checkout and one-time gate validation', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 })
+
   await test.step('Organizer updates the published event', async () => {
     await loginAs(page, 'Organizer')
     await expect(page.getByRole('heading', { name: 'Drafts and published events' })).toBeVisible()
+    await expectNoHorizontalOverflow(page)
 
     const managedEvent = page
       .getByRole('article')
@@ -34,6 +44,7 @@ test('organizer changes reach customer checkout and one-time gate validation', a
   let ticketToken = ''
   await test.step('Customer reserves, approves, and opens the issued ticket', async () => {
     await loginAs(page, 'Customer')
+    await expectNoHorizontalOverflow(page)
     const eventCard = page
       .getByRole('article')
       .filter({ has: page.getByRole('heading', { name: eventName, level: 2 }) })
@@ -45,6 +56,7 @@ test('organizer changes reach customer checkout and one-time gate validation', a
     await page.getByRole('button', { name: 'Simulate approval' }).click()
     await expect(page.getByRole('heading', { name: 'Your tickets are issued.' })).toBeVisible()
     await page.getByRole('link', { name: 'Open my tickets' }).click()
+    await expectNoHorizontalOverflow(page)
 
     const sharedTicketLink = page.getByRole('link', { name: 'Open shared view' }).first()
     const shareUrl = await sharedTicketLink.getAttribute('href')
@@ -57,6 +69,7 @@ test('organizer changes reach customer checkout and one-time gate validation', a
   await test.step('Gate accepts the ticket exactly once', async () => {
     await loginAs(page, 'Gate')
     await expect(page.getByLabel('Event')).toContainText(`${eventName} — ${updatedVenue}`)
+    await expectNoHorizontalOverflow(page)
 
     await page.getByLabel('Ticket code').fill(ticketToken)
     await page.getByRole('button', { name: 'Validate ticket' }).click()

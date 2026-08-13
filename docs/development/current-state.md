@@ -4,11 +4,11 @@
 
 - Date: 2026-08-13.
 - Branch: local `main`, based on published commit `14d5d9c` and developed through small local commits.
-- Phase: all 23 planned mandatory, review, documentation, and local-execution increments are
-  complete; the local application is ready for the candidate's final publication review.
+- Phase: all 24 planned increments are committed; the local application is ready for the
+  candidate's final publication review.
 - Frontend: React, Vite, and TypeScript application initialized.
 - Backend: Python 3.14 and FastAPI application initialized.
-- Database: PostgreSQL 17 schema migrated and seeded through Podman.
+- Database: PostgreSQL 17 schema migrated and seeded through Docker/Podman-compatible Compose.
 - Authentication: persistent opaque PostgreSQL sessions with role-aware frontend and backend boundaries.
 - External catalog: organizer-only Ticketmaster search normalized entirely by the backend.
 - Event management: trusted provider snapshots with organizer-owned draft, edit, list, and publication flows.
@@ -17,15 +17,15 @@
 - Checkout: deterministic approval/decline with atomic, idempotent ticket-row issuance.
 - Tickets: versioned HMAC credentials, private QR collection, and minimized bearer sharing views.
 - Gate: explicit camera/manual input with atomic valid, invalid, already-used, or wrong-event decisions.
-- Automated tests: 29 frontend tests, 48 backend tests, and one Playwright cross-role browser flow.
+- Automated tests: 30 frontend tests, 48 backend tests, and one Playwright cross-role browser flow.
 - Frontend organization: feature-first, with local component/hook directories and explicit shared
   navigation and formatting ownership under ADR-009.
 - Styling: Vite CSS Modules isolate feature-owned rules and co-locate responsive behavior; global
   CSS is limited to tokens, resets, page structure, and deliberate shared primitives.
 - Code documentation: selective Python docstrings and TypeScript TSDoc/JSDoc explain critical
   security, concurrency, time-authority, integration, and lifecycle contracts.
-- Local execution: direct host processes or a healthy three-service Compose stack; production
-  deployment remains deliberately unselected.
+- Local execution: direct host processes or a healthy three-service Docker/Podman Compose stack;
+  production deployment remains deliberately unselected.
 - API documentation: generated OpenAPI plus interactive Swagger UI with domain metadata, examples,
   and the configured opaque-cookie security boundary.
 
@@ -35,10 +35,10 @@
   persistent database volume and explicit dependency order.
 - Multi-stage Dockerfiles install the locked backend runtime as a non-root user and serve only the
   Vite build output from Nginx; local environment files never enter either image.
-- The PowerShell project hook resolves the candidate's Podman Desktop executable even when the current process has a stale `PATH`.
-- The hook runs a pinned Compose provider through `uvx`, separates database-only from full-stack
-  commands, waits for application health, and adapts to missing WSL localhost forwarding without
-  changing global Podman settings.
+- The PowerShell project hook auto-detects a running Docker or Podman engine and accepts an explicit
+  provider override.
+- Docker uses its installed Compose plugin without `uv`; Podman uses the validated pinned provider,
+  and its WSL address recovery remains isolated behind the common lifecycle commands.
 - SQLAlchemy models represent users, sessions, catalog snapshots, events, reservations, and tickets.
 - Named database constraints protect roles, states, normalized values, quantities, money, timestamps, ownership references, session digests, and ticket usage/revocation shape.
 - Alembic revision `91ec7f95d3b1` is the current schema head and adds coherent ticket revocation timestamps.
@@ -80,12 +80,13 @@
 - Ticket validation locks the exact ticket row, classifies revoked/event/usage state, and commits the Gate user with the PostgreSQL timestamp.
 - The Gate camera remains off until explicit activation, lazily loads the QR decoder, prefers the environment camera, and stops on the first decoded credential.
 - Camera cancellation, event changes, pending validation, and route cleanup stop active scanner controls; duplicate callbacks cannot create duplicate validation requests.
-- Permission, hardware, browser-support, and startup failures keep manual entry visible with specific recovery guidance.
+- Insecure origin, permission, hardware, browser-support, and startup failures keep manual entry
+  visible with specific recovery guidance.
 - The Gate interface presents all four outcomes with large, distinct feedback and keeps manual entry independent of camera support.
 - The Playwright flow updates the seeded event as Organizer, purchases one ticket as Customer, and proves first-use/duplicate-use Gate outcomes without contacting Ticketmaster.
 - The optional `mutmut` experiment is documented but deferred because the available `uv` and `pip` routes could not reach PyPI; no unresolved dependency was added.
-- The README is a concise evaluator entry point containing only setup, full-stack execution,
-  seeded credentials, troubleshooting, and links to the detailed project documentation.
+- The README is a concise evaluator entry point containing setup, full-stack execution, seeded
+  credentials, and links to the focused troubleshooting and project documentation.
 - The AI collaboration disclosure separates AI-assisted work, candidate-owned decisions and actions, shared review, and versioned intermediate artifacts.
 
 ## Validated Environment
@@ -123,26 +124,34 @@
 - A live Ticketmaster search returned 12 normalized results, and a live detail fetch confirmed identifier matching and credential absence from the snapshot body.
 - A live local HTTP query returned only the seeded published event with the expected availability and no management fields.
 - All 48 backend tests pass with 95% coverage of the current backend.
-- All 29 frontend tests pass, and frontend formatting, linting, type checking, and production build succeed.
-- The Chromium cross-role test passes through Organizer edit, Customer approval, issued-ticket retrieval, valid Gate entry, and duplicate rejection.
+- All 30 frontend tests pass, and frontend formatting, linting, type checking, and production build
+  succeed.
+- The Chromium cross-role test passes at a 360-pixel viewport through Organizer edit, Customer
+  approval, issued-ticket retrieval, valid Gate entry, and duplicate rejection, with width checks
+  at each role surface.
 - Both application images build from their committed lockfiles, and the three Compose services
   become healthy after the backend applies the current migration and idempotent seed.
 - The same cross-role Playwright scenario passes against an isolated three-service Compose project;
   its dedicated volume is removed afterward while `elite_dev` remains untouched.
 - The full-stack hook detects missing Windows localhost forwarding, aligns the frontend build and
-  CORS origin with the current Podman machine address, and prints the reachable URLs.
+  CORS origin with the current Podman machine address, and prints reachable URLs.
 - `npm test` leaves `elite_dev` untouched and drops `elite_dev_test`; `npm run test:e2e` drops `elite_dev_e2e` after completion.
 - Removing HMAC signature comparison temporarily makes the focused tampering test fail; restoring it returns all three signing tests to passing.
 - Generated Vitest JSON, pytest JUnit XML, Playwright JSON, and summary JSON parse successfully and report no failures.
 - Mutation scope, exclusions, survivor policy, disposable-database requirement, 20-minute total limit, and 30-second per-mutant limit are recorded for a later network-enabled run.
-- Live browser review confirmed Gate login, event loading, camera-off-by-default behavior, explicit permission request, safe cancellation, and immediately available manual fallback.
+- Live browser review confirmed Gate login, event loading, camera-off-by-default behavior, explicit
+  permission request on a secure origin, safe cancellation, and immediately available manual
+  fallback.
+- Live HTTP LAN review confirmed that the browser reports an insecure context before ZXing loads;
+  the Gate screen now disables camera start with HTTPS-specific guidance rather than presenting a
+  generic decoder failure.
 - The browser environment had no physical camera, so optical capture remains a short device-level evaluator check; automated interaction tests exercise decoded QR submission, duplicate callback suppression, and all four authoritative outcomes.
 - Final dependency setup verification passed from both lockfiles without network access or tracked
   dependency changes.
 - Final `db:prepare` reused healthy PostgreSQL, found the migration at head, and inserted no
   duplicate seed records.
 - Final formatting, linting, strict type checking, frontend/backend builds, Alembic drift check, and
-  machine-readable 29-frontend/46-backend/1-browser test report all passed.
+  30-frontend/48-backend/1-browser regression suites all passed.
 - All local Markdown links resolve, and all five challenge pages were extracted, rendered, visually
   reviewed, and cross-checked against the evaluator documentation.
 
@@ -162,20 +171,21 @@
 - Ticket revocation state is persisted and presented, but no cancellation or administrative revocation command exists yet.
 - The initial signing format has no key identifier or verification key ring, so changing `TICKET_HMAC_SECRET` invalidates existing tokens.
 - Approved reservations and issued tickets are final; cancellation and refunds remain deferred.
-- The Podman and isolated-test hooks are Windows-specific; other systems can use the standard `compose.yaml` and equivalent commands with their installed Compose provider.
-- The local Compose topology exposes HTTP ports, embeds the public API URL at frontend build time,
-  runs one backend replica, and applies migrations during startup; it is not a production topology.
+- The Compose and isolated-test hooks are Windows-specific; other systems can use the standard
+  `compose.yaml` and equivalent commands with their installed Compose provider.
+- The local Compose topology exposes HTTP ports, embeds the public API URL at build time, runs one
+  backend replica, and applies migrations during startup; it is not a production topology.
 - The backend test client still emits an upstream FastAPI/Starlette deprecation warning.
 - Swagger UI operates against the real configured API and can mutate local data; production access
   control or disabling the route must be decided with the eventual deployment topology.
-- Production hosting, TLS, managed secrets, separate migration ownership, monitoring, backup, and
-  rollback remain deferred.
+- Production hosting, TLS, managed secrets, separate migration ownership,
+  monitoring, backup, and rollback remain deferred.
 
 ## Delivery Status
 
-The mandatory plan, candidate review increments, concise containerless/container evaluator
-workflows, full-stack Compose execution, and interactive API documentation are complete. The same
-`DATABASE_URL` continues to support an already-running PostgreSQL instance without Podman.
-The candidate retains responsibility for final review, public GitHub publication, and
+The mandatory application, concise evaluator workflows, full-stack Compose execution, and
+interactive API documentation are complete, including the portability/mobile hardening increment.
+The same `DATABASE_URL` continues to support an already-running PostgreSQL instance without
+containers. The candidate retains responsibility for final review, public GitHub publication, and
 challenge-form submission. Production deployment remains an optional, deliberately deferred
 improvement, so no hosted URL is provided.

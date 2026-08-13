@@ -135,7 +135,37 @@ Copy-Item backend/.env.example backend/.env
 Set `TICKET_HMAC_SECRET` and, optionally, `TICKETMASTER_API_KEY` as described in the containerless
 setup above. Compose supplies its own internal `DATABASE_URL`.
 
-### Docker Compose
+### Project Command: Docker or Podman
+
+The project command detects a running Docker engine first and otherwise uses the validated Podman
+path. It builds and starts PostgreSQL, applies migrations and seed data, starts FastAPI, and serves
+the built React application:
+
+```powershell
+npm run app:up
+```
+
+Inspect or stop the stack with:
+
+```powershell
+npm run app:status
+npm run app:logs
+npm run app:down
+```
+
+Force one provider when both are installed:
+
+```powershell
+$env:COMPOSE_PROVIDER = "Docker" # or "Podman"
+npm run app:up
+```
+
+Docker uses its installed Compose plugin and does not require `uv`. The validated Windows/Podman
+fallback resolves Podman Desktop and runs a pinned Compose provider through `uv`.
+
+### Direct Docker Compose Alternative
+
+Run Compose directly:
 
 ```powershell
 docker compose up --detach --build --wait
@@ -148,28 +178,6 @@ docker compose ps
 docker compose logs --tail 100
 docker compose down
 ```
-
-### Podman
-
-The project hook is the validated Windows/Podman path. It resolves Podman Desktop, runs the pinned
-Compose provider through `uvx`, handles Podman WSL address differences, waits for health checks, and
-prints the reachable URLs:
-
-```powershell
-npm run app:up
-```
-
-Inspect or stop the Podman stack with:
-
-```powershell
-npm run app:status
-npm run app:logs
-npm run app:down
-```
-
-The project hook requires Node.js/npm and `uv`; they support this specialized local orchestration,
-not the containerized application itself. A separately installed Podman Compose provider may use
-the checked-in `compose.yaml` directly.
 
 Both container paths build and start PostgreSQL, apply Alembic migrations, run the idempotent seed,
 start FastAPI and the built React application, and preserve PostgreSQL data when stopped normally.
@@ -188,26 +196,9 @@ The seed also creates the published `Aurora Live 2030` event with available inve
 
 ## Troubleshooting
 
-- **PostgreSQL connection fails without containers:** confirm that the server is running, the
-  database exists, the login can create its schema, and `DATABASE_URL` uses the correct host and
-  port.
-- **Python cannot import `backend` in the `pip` workflow:** run the commands from the repository
-  root and set `$env:PYTHONPATH = (Resolve-Path backend/src)` in the backend terminal.
-- **Docker or Podman services do not become healthy:** inspect the corresponding Compose status and
-  logs. Backend logs include migration, seed, environment, and database connection failures.
-- **Port 5432, 8000, or 5173 is already in use:** stop the conflicting process. Advanced port
-  overrides are documented in the [database workflow](docs/development/database.md).
-- **Ticket or Gate endpoints return `503`:** confirm that `TICKET_HMAC_SECRET` in `backend/.env` is
-  stable and contains at least 32 bytes, then restart the backend or Compose stack.
-- **Ticketmaster search fails:** confirm `TICKETMASTER_API_KEY`, network access, and provider quota.
-  The seeded event does not depend on Ticketmaster.
-- **Login succeeds but the browser loses the session or cannot call the API:** keep
-  `FRONTEND_ORIGIN` and `VITE_API_URL` aligned with the exact URLs being used, then restart both
-  applications after environment changes.
-- **Camera access fails:** use `localhost` or HTTPS, grant browser permission, and close other
-  software using the camera. Manual ticket entry remains available in the Gate screen.
-- **A clean container database is required:** `npm run db:reset` deletes this project's PostgreSQL
-  volume. This is destructive; use it only when existing local data can be discarded.
+See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for Docker/Podman selection, database recovery, LAN and
+phone access, CORS diagnosis, nested npm arguments, Windows/Podman networking, camera security
+requirements, and destructive reset guidance.
 
 ## Complementary Documentation
 

@@ -35,7 +35,7 @@ def get_settings() -> Settings:
     """
 
     load_dotenv(BACKEND_ROOT / ".env", override=False)
-    load_dotenv(BACKEND_ROOT / ".env.podman", override=False)
+    load_dotenv(BACKEND_ROOT / ".env.compose", override=False)
 
     environment = os.getenv("APP_ENV", "development")
     secure_cookie_default = environment != "development"
