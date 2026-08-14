@@ -2,13 +2,14 @@
 
 ## Current Status
 
-The mandatory application and all 26 planned increments are complete. Railway publication is
-prepared without changing the validated local or Quick Tunnel topologies.
+The mandatory application and all 27 planned increments are complete. The final increment repairs
+two Railway-only failures found during candidate-owned publication without changing the validated
+local or Quick Tunnel topologies.
 
-Commit progress: 26 of 26 planned increments complete; 0 remain.
+Commit progress: 27 of 27 planned increments complete; 0 remain.
 
-The local `main` branch contains the completed plan and remains ahead of tracked `origin/main`.
-Local project commits stay unpushed until the candidate chooses to publish them.
+The candidate has published the previous plan and created the Railway services. This final hotfix
+is committed locally and remains unpushed until the candidate reviews and publishes it.
 
 ## Accepted Architecture Direction
 
@@ -1078,6 +1079,44 @@ all previously documented local workflows remain valid.
 
 Candidate GitHub push, Railway service/secret configuration, live URL verification, and challenge
 submission. Remote actions remain under candidate control.
+
+---
+
+## Done - fix(deploy): repair Railway authentication startup
+
+### Goal
+
+Make the live Railway backend seed evaluation data during pre-deploy and serialize opaque-session
+cookie expiration consistently with Python 3.14.
+
+### Implemented
+
+- Invoke the compound migration and seed command through an explicit POSIX shell.
+- Normalize database-provided UTC datetimes to `datetime.UTC` at the HTTP cookie boundary.
+- Cover the Railway `ZoneInfo("Etc/UTC")` regression deterministically.
+- Record diagnosis, manual recovery, expected logs, and live redeployment order.
+
+### Expected result
+
+The pre-deploy log includes the seed summary, seeded credentials return HTTP 200 from login, and
+Starlette emits a persistent secure session cookie instead of raising a UTC formatting error.
+
+### Validation
+
+- Parsed `backend/railway.toml` and confirmed the explicit `/bin/sh -c` command is preserved.
+- Reproduced Python 3.14 rejecting `ZoneInfo("Etc/UTC")` for an HTTP GMT date and accepting the
+  normalized `datetime.UTC` value.
+- Passed formatting, Ruff, strict frontend/backend type checks, both production builds, all 30
+  frontend tests, and all 52 backend tests with 95% coverage.
+- Built and started the Compose images; container logs showed Alembic, the idempotent seed summary,
+  Uvicorn, and healthy API checks in sequence.
+- Completed a disposable in-container Organizer login, session restoration, and logout with HTTP
+  200, 200, and 204 respectively; the cookie included a valid GMT expiration.
+
+### Next
+
+Candidate push, backend redeploy, confirmation of the pre-deploy seed summary, frontend redeploy to
+refresh its private upstream, and final live challenge verification.
 
 ---
 

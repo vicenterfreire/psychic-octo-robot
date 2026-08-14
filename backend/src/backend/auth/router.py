@@ -1,3 +1,4 @@
+from datetime import UTC
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
@@ -44,7 +45,7 @@ def login(
         key=settings.session_cookie_name,
         value=issued_session.raw_token,
         max_age=settings.session_lifetime_seconds,
-        expires=issued_session.expires_at,
+        expires=issued_session.expires_at.astimezone(UTC),
         path="/",
         secure=settings.session_cookie_secure,
         httponly=True,

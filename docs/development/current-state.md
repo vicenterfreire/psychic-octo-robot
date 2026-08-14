@@ -3,9 +3,9 @@
 ## Snapshot
 
 - Date: 2026-08-13.
-- Branch: local `main`; project commits remain ahead of tracked `origin/main` and unpushed.
-- Phase: all 26 planned increments are complete; remote Railway publication and submission remain
-  under candidate control.
+- Branch: local `main`; the Railway authentication hotfix remains unpushed until candidate review.
+- Phase: all 27 planned increments are complete; the Railway services exist and the final hotfix
+  awaits candidate-owned publication and live verification.
 - Frontend: React, Vite, and TypeScript application initialized.
 - Backend: Python 3.14 and FastAPI application initialized.
 - Database: PostgreSQL 17 schema migrated and seeded through Docker/Podman-compatible Compose.
@@ -17,7 +17,7 @@
 - Checkout: deterministic approval/decline with atomic, idempotent ticket-row issuance.
 - Tickets: versioned HMAC credentials, private QR collection, and minimized bearer sharing views.
 - Gate: explicit camera/manual input with atomic valid, invalid, already-used, or wrong-event decisions.
-- Automated baseline: 30 frontend tests, 51 backend tests, and one Playwright cross-role browser
+- Automated baseline: 30 frontend tests, 52 backend tests, and one Playwright cross-role browser
   flow all pass with the secure-context and camera-API prerequisite checks enabled.
 - Frontend organization: feature-first, with local component/hook directories and explicit shared
   navigation and formatting ownership under ADR-009.
@@ -27,8 +27,8 @@
   security, concurrency, time-authority, integration, and lifecycle contracts.
 - Local execution: direct host processes or a healthy three-service Docker/Podman Compose stack,
   with an optional fourth Quick Tunnel service for temporary phone-camera HTTPS.
-- Hosted topology: prepared Railway frontend gateway, private FastAPI service, and managed
-  PostgreSQL; the candidate has not yet performed the remote deployment.
+- Hosted topology: active Railway frontend gateway, private FastAPI service, and managed
+  PostgreSQL. Public health is verified; the authentication hotfix awaits redeployment.
 - API documentation: generated OpenAPI plus interactive Swagger UI with domain metadata, examples,
   and the configured opaque-cookie security boundary.
 
@@ -134,7 +134,7 @@
 - Two simultaneous validations of one unused ticket consistently produce exactly one `valid` and one `already_used` result.
 - A live Ticketmaster search returned 12 normalized results, and a live detail fetch confirmed identifier matching and credential absence from the snapshot body.
 - A live local HTTP query returned only the seeded published event with the expected availability and no management fields.
-- All 51 backend tests pass with 95% coverage of the current backend.
+- All 52 backend tests pass with 95% coverage of the current backend.
 - Frontend formatting, linting, type checking, production build, and all 30 frontend tests succeed
   after the secure-context and `getUserMedia` prerequisite checks were restored.
 - The Chromium cross-role test passes at a 360-pixel viewport through Organizer edit, Customer
@@ -173,6 +173,14 @@
   30-frontend/51-backend/1-browser regression suites all passed.
 - A disposable Railway-like Nginx runtime rendered `backend.railway.internal:8000` and passed
   configuration validation with a simulated private DNS entry.
+- Live Railway logs showed that the original Dockerfile pre-deploy executed Alembic without the
+  seed because its compound expression lacked an explicit shell. The versioned command now gives
+  `/bin/sh -c` ownership of fail-fast migration and seed sequencing.
+- After a manual Railway seed, valid credentials reached cookie serialization and exposed Python
+  3.14 rejecting PostgreSQL's `ZoneInfo("Etc/UTC")` value for an HTTP GMT date. A deterministic
+  regression covers normalization to `datetime.UTC` at that boundary.
+- The rebuilt backend container completed Organizer login, session restoration, and logout with
+  HTTP 200, 200, and 204; its cookie contained a valid GMT expiration.
 - The post-Railway local Quick Tunnel regression passed frontend, API health, Swagger, OpenAPI,
   Gate login, session restoration, and secure HTTP-only cookie checks before the URL was removed.
 - All local Markdown links resolve, and all five challenge pages were extracted, rendered, visually
@@ -210,8 +218,9 @@
 ## Delivery Status
 
 The mandatory application, concise evaluator workflows, full-stack Compose execution, interactive
-API documentation, shared host binding, and temporary HTTPS camera evaluation are complete. A
-Railway deployment is configured but does not exist until the candidate pushes, creates the remote
-services, supplies secrets, and verifies the URL. The same `DATABASE_URL` continues to support an
-already-running PostgreSQL instance without containers. Public GitHub publication, Railway actions,
-and challenge-form submission remain candidate-owned; no permanent hosted URL is recorded yet.
+API documentation, shared host binding, and temporary HTTPS camera evaluation are complete. The
+candidate created the permanent Railway topology and verified public API health. The local hotfix
+for pre-deploy seeding and Python 3.14 cookie expiration must still be pushed, redeployed, and
+verified through the public frontend before challenge submission. The same `DATABASE_URL` continues
+to support an already-running PostgreSQL instance without containers. Remote publication and the
+challenge-form submission remain candidate-owned.

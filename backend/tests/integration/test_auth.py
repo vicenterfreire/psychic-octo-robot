@@ -1,15 +1,19 @@
 from datetime import datetime, timedelta
 from typing import cast
+from zoneinfo import ZoneInfo
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session as DatabaseSession
 from sqlalchemy.sql import func
 
-from backend.auth.service import digest_session_token
+from backend.auth import router as auth_router
+from backend.auth.service import IssuedSession, digest_session_token
 from backend.core.settings import Settings
 from backend.database.engine import get_engine
 from backend.database.models import Session as SessionRecord
+from backend.database.models import User
 from backend.database.seed import CUSTOMER_ONE_ID
 from backend.main import create_app
 
@@ -166,3 +170,33 @@ def test_production_cookie_is_secure() -> None:
         assert "Secure" in response.headers["set-cookie"]
     finally:
         remove_session(raw_token)
+
+
+def test_login_normalizes_zoneinfo_utc_for_cookie_expiration(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    railway_expiration = datetime(2030, 1, 1, 12, tzinfo=ZoneInfo("Etc/UTC"))
+
+    def issue_railway_session(
+        database: DatabaseSession,
+        user: User,
+        lifetime_seconds: int,
+    ) -> IssuedSession:
+        del database, user, lifetime_seconds
+        return IssuedSession(
+            raw_token="railway-session-token",
+            expires_at=railway_expiration,
+        )
+
+    monkeypatch.setattr(auth_router, "issue_session", issue_railway_session)
+
+    client = TestClient(create_app(TEST_SETTINGS))
+    response = client.post(
+        "/api/auth/login",
+        json={"email": "organizer@example.com", "password": "Organizer123!"},
+    )
+
+    assert response.status_code == 200
+    set_cookie = response.headers["set-cookie"]
+    assert "gather_session=railway-session-token" in set_cookie
+    assert "expires=Tue, 01 Jan 2030 12:00:00 GMT" in set_cookie

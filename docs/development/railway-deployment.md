@@ -49,8 +49,10 @@ Connect the GitHub repository and configure:
 | Config File Path | `/backend/railway.toml` |
 | Public domain | None |
 
-The committed config selects `backend/Dockerfile`, runs Alembic and the idempotent seed as a
-pre-deploy command, checks `/api/health`, and restarts only on failure.
+The committed config selects `backend/Dockerfile`, runs Alembic and the idempotent seed as one
+pre-deploy shell command, checks `/api/health`, and restarts only on failure. The explicit
+`/bin/sh -c` is significant: `&&` is shell syntax, while a Dockerfile-based command may otherwise
+execute only the first program rather than interpret the compound expression.
 
 Add these service variables through the Railway Raw Editor:
 
@@ -107,7 +109,9 @@ frontend.
 ## First Deployment Order
 
 1. Wait for `Postgres` to become healthy.
-2. Deploy `backend` and confirm its pre-deploy migration and seed succeed.
+2. Deploy `backend` and confirm its pre-deploy migration and seed succeed. A fresh database reports
+   `Seed completed: 4 users, 1 catalog snapshots, 1 events inserted.`; a repeated idempotent run
+   reports zero insertions.
 3. Deploy `frontend`.
 4. Generate or confirm the frontend public domain and redeploy after any variable change.
 
@@ -143,6 +147,24 @@ URL as the hosted differential.
 - Confirm `DATABASE_URL` references the actual PostgreSQL service name.
 - Inspect the pre-deploy logs for Alembic or connectivity errors.
 - Do not replace the internal database reference with a public TCP URL.
+
+If the log shows Alembic but no `Seed completed` line, the compound expression was not interpreted
+by a shell. Confirm the deployed revision wraps both commands with `/bin/sh -c`. To repair an
+already-running challenge database once, copy the backend SSH command from Railway and execute:
+
+```text
+railway ssh -s backend -e production -- python -m backend.database.seed
+```
+
+The manual command is safe to repeat because the seed is idempotent, but it does not replace the
+versioned pre-deploy fix.
+
+### Login Returns `500` After Accepting Seeded Credentials
+
+If the backend log contains `usegmt option requires a UTC datetime`, the user and password were
+accepted but Python could not serialize the database timezone object as an HTTP cookie date. The
+application normalizes the aware database value to `datetime.UTC` at the cookie boundary. Deploy a
+revision containing that normalization; rerunning the seed is unnecessary.
 
 ### Login Works but the Session Is Not Restored
 

@@ -3,7 +3,7 @@ builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-preDeployCommand = ["alembic upgrade head && python -m backend.database.seed"]
+preDeployCommand = ["/bin/sh -c \"alembic upgrade head && python -m backend.database.seed\""]
 healthcheckPath = "/api/health"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"

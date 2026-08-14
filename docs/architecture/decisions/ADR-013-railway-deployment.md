@@ -25,8 +25,9 @@ monorepo services.
 - Use each isolated project directory and Dockerfile as its Railway service root.
 - Version service build, pre-deploy, healthcheck, and restart configuration in service-local
   `railway.toml` files. Secrets and cross-service references remain Railway variables.
-- Run Alembic and the idempotent evaluation seed in the backend pre-deploy container before the new
-  application deployment becomes active.
+- Run Alembic and the idempotent evaluation seed through an explicit POSIX shell in the backend
+  pre-deploy container before the new application deployment becomes active. The shell owns the
+  fail-fast `&&` sequencing required by the Dockerfile deployment.
 - Normalize provider-generic PostgreSQL URL schemes to the installed Psycopg 3 SQLAlchemy scheme at
   the configuration boundary.
 
@@ -69,6 +70,8 @@ or availability guarantee. It does not earn the hosted differential.
 - Railway service names, root directories, config paths, fixed internal ports, and reference
   variables become part of deployment configuration and must remain aligned.
 - Migrations have one pre-deploy owner rather than running in every application replica.
+- Database timezone objects are normalized to `datetime.UTC` only when serialized as HTTP cookie
+  dates; PostgreSQL remains the authoritative session clock.
 - The seeded credentials and Swagger mutation surface are publicly reachable through the gateway;
   only disposable challenge data may be used.
 - Railway provides managed TLS and deployment lifecycle primitives, but this challenge deployment
